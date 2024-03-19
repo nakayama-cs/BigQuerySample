@@ -1,0 +1,351 @@
+syntax = "proto3";
+
+package mtechnavi.api.dataproxy;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "validate/validate.proto";
+import "embedded.proto";
+import "mtn/visibility.proto";
+import "record/record.proto";
+
+option go_package = 'mtechnavi/dataproxy/protobuf';
+
+service Dataproxy {
+  // レコード読み書き
+  rpc CreateRecord(CreateRecordRequest) returns (record.Record);
+  rpc GetRecord(GetRecordRequest) returns (record.Record);
+  rpc ListRecords(ListRecordsRequest) returns (ListRecordsResponse);
+  rpc UpdateRecord(UpdateRecordRequest) returns (record.Record);
+  rpc DeleteRecord(DeleteRecordRequest) returns (google.protobuf.Empty);
+
+  // レコード複数書込み（同一トランザクションで実行する）
+  rpc CreateRecords(CreateRecordsRequest) returns (CreateRecordsResponse);
+  rpc UpdateRecords(UpdateRecordsRequest) returns (UpdateRecordsResponse);
+  rpc DeleteRecords(DeleteRecordsRequest) returns (google.protobuf.Empty);
+  rpc CreateOrUpdateRecords(CreateOrUpdateRecordsRequest) returns (CreateOrUpdateRecordsResponse);
+
+  // レコードのStream
+  rpc StreamRecords(StreamRecordsRequest) returns (stream record.Record);
+
+  // レコード共有
+  rpc GetShareRecord(GetShareRecordRequest) returns (record.Record);
+  rpc ShareRecord(ShareRecordRequest) returns (google.protobuf.Empty);
+  rpc ListSharedTenants(ListSharedTenantsRequest) returns (ListSharedTenantsResponse);
+  rpc UnshareRecord(UnshareRecordRequest) returns (google.protobuf.Empty);
+
+  // アセット管理
+  rpc CreateAssetData(CreateAssetDataRequest) returns (AssetData);
+  rpc GetAssetData(GetAssetDataRequest) returns (AssetData);
+  rpc DeleteAssetData(DeleteAssetDataRequest) returns (google.protobuf.Empty);
+
+  rpc GenerateSignedUrl(SignedUrlRequest) returns (SignedUrlResponse);
+
+  // ログ
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+}
+
+enum SHARE_STATUS {
+  // 状態不明
+  UNKNOWN = 0;
+
+  // 共有済み
+  SHARED = 1;
+
+  // 共有解除済み
+  UNSHARED = 2;
+
+  // 共有実施中
+  SHARING = 3;
+}
+
+message GetRecordRequest {
+  record.Record record = 1 [(validate.rules).message.required = true];
+  // レコード取得先のテナントID
+  // 自テナントまたはグローバルテナントのみ指定可能
+  string tenant_id = 2;
+}
+
+// フィルター演算子
+enum Operator {
+  // {{Field}} == {{Value}}
+  EQ = 0;
+
+  // {{Field}} != {{Value}}
+  NEQ = 1;
+
+  // {{Field}} > {{Value}}
+  GT = 2;
+
+  // {{Field}} >= {{Value}}
+  GTE = 3;
+
+  // {{Field}} < {{Value}}
+  LT = 4;
+
+  // {{Field}} <= {{Value}}
+  LTE = 5;
+
+  // {{Field}} in {{Value}}
+  IN = 6;
+
+  // {{Field}} not-in {{Value}}
+  NIN = 7;
+}
+
+// データベースのインデックスを使用したフィルタ条件
+message IndexFilter {
+  // 利用するインデックス名
+  //
+  // フィルタの対象となるmessage型のフィールドに対して、 (mtn.dataproxy) オプションにより設定されているインデックス名を指定する。
+  string name = 1;
+
+  // クエリのフィルター演算子を指定する
+  Operator operator = 2;
+
+  // operatorに従い、フィルタ時に判定式で利用するJSON文字列
+  //
+  // インデックス化されたmessageのフィールドに対応するJSON化された文字列を指定する。
+  // よく使うだろう型に対する指定例を以下に記載する:
+  //
+  //   +-------------+-----------------------+
+  //   | proto3 type | example               |
+  //   +-------------+-----------------------+
+  //   | string      | "hoge" や "fuga" など |
+  //   | int64       | 0 や 1 など           |
+  //   +-------------+-----------------------+
+  //
+  // proto3における各型とJSONとのマッピングについては、以下ドキュメントを参照のこと:
+  // https://developers.google.com/protocol-buffers/docs/proto3#json
+  string value = 3;
+}
+
+// レコード一覧に対するリクエストパラメータ
+//
+// Dataproxyは、結果セットを以下のように生成する:
+//
+// 1. type_nameで指定されたmessage型の要素一覧を取得する
+// 2. 各要素に対し、フィルタ条件が真となる要素を結果セットに含める
+//
+// 要素一覧の取得時に評価されるパラメータは、以下:
+// - tenant_id
+// - type_name
+// - record_ids
+// - use_index
+//
+// 結果セットの生成時に評価されるパラメータは、以下:
+// - filter
+//
+// filterやuse_indexなど、各パラメータの仕様はフィールドコメントを参照のこと。
+message ListRecordsRequest {
+  string type_name = 1 [(validate.rules).string.min_len = 1];
+
+  // レコードの取得上限数
+  // 0以下で指定されている場合は、全取得を行う
+  int32  limit      = 2;
+  string page_token = 3;
+  // レコード取得先のテナントID
+  // 自テナントまたはグローバルテナントのみ指定可能
+  string tenant_id = 4;
+  // 取得先のレコードID一覧
+  // 指定されたIDで一括取得するため、このパラメータが指定された場合はページングによるLimit制御は行わない
+  repeated string record_ids = 5;
+
+  // フィルタに用いるCEL式
+  //
+  // 与えられたCEL式は、個々の要素単位で評価される。
+  // 別の要素に対する参照を行うことはできない。
+  //
+  // 式の中で利用できる変数一覧は、以下を参照:
+  //
+  // +--------+----------------------------+-------------------------+
+  // | 変数名 | 説明                       | 記述例                  |
+  // +--------+----------------------------+-------------------------+
+  // | record | 評価の対象となる単一の要素 | record.status == 'done' |
+  // +--------+----------------------------+-------------------------+
+  //
+  // CELについては、以下を参照:
+  // https://github.com/google/cel-spec
+  string filter = 6;
+
+  // インデックスによるフィルタ条件
+  IndexFilter use_index = 7;
+}
+
+message ListRecordsResponse {
+  repeated record.Record items           = 1;
+  string                 next_page_token = 2;
+}
+
+message CreateRecordRequest {
+  record.Record record = 1 [(validate.rules).message.required = true];
+}
+
+message UpdateRecordRequest {
+  record.Record record = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteRecordRequest {
+  record.Record record = 1 [(validate.rules).message.required = true];
+}
+
+message CreateRecordsRequest {
+  repeated record.Record records = 1 [(validate.rules).repeated = { max_items: 500 }];
+}
+
+message CreateRecordsResponse {
+  repeated record.Record items = 1;
+}
+
+message UpdateRecordsRequest {
+  repeated record.Record records = 1 [(validate.rules).repeated = { max_items: 500 }];
+}
+
+message UpdateRecordsResponse {
+  repeated record.Record items = 1;
+}
+
+message DeleteRecordsRequest {
+  repeated record.Record records = 1 [(validate.rules).repeated = { max_items: 500 }];
+}
+
+message CreateOrUpdateRecordsRequest {
+  repeated record.Record records = 1 [(validate.rules).repeated = { max_items: 500 }];
+}
+
+message CreateOrUpdateRecordsResponse {
+  repeated record.Record items = 1;
+}
+
+message StreamRecordsRequest {
+  string type_name = 1 [(validate.rules).string.min_len = 1];
+}
+
+message GetShareRecordRequest {
+  record.Record record = 1 [(validate.rules).message.required = true];
+}
+
+enum ShareToMode {
+  Complete    = 0;
+  Incremental = 1;
+}
+
+message ShareRecordRequest {
+  // 共有先テナントID
+  repeated string share_to = 2;
+
+  // 共有モード
+  ShareToMode mode = 4;
+
+  record.Record record = 1 [deprecated = true];
+  // 共有元のレコードを指定する
+  //
+  // フィルタの対象となるmessage型のフィールドに対して、 (mtn.visibility) オプションにより指定されているフィールドが共有される
+  // ただし、アセットデータの共有の場合は、AssetとAssetData型のフィールドを両方指定することで共有が可能。
+  repeated record.Record records = 3;
+}
+
+message ShareTenant {
+  string tenant_id    = 1;
+  string share_status = 2;
+  int64  shared_at    = 3;
+}
+
+message ListSharedTenantsRequest {
+  record.Record record = 1 [(validate.rules).message.required = true];
+  // 共有情報の取得先テナントID
+  //
+  // 未指定の場合は、共有中の全てのテナント情報を取得する
+  repeated string tenant_ids = 2;
+}
+
+message ListSharedTenantsResponse {
+  repeated ShareTenant share_tenants = 1;
+}
+
+message UnshareRecordRequest {
+  // 非共有先テナントID
+  //
+  // 未指定の場合は、共有中の全てのテナントを対象にする
+  repeated string unshare_to = 1;
+
+  repeated record.Record records = 2;
+}
+
+message AssetData {
+  string asset_data_id = 1;
+
+  // アセット作成時のオブジェクト取得元URL(Write-only)
+  // Create時にのみ指定する
+  string source_url = 2;
+
+  int64 generation = 3 [ //
+    (mtn.visibility) = { scope: GRANTED },
+    deprecated = true ];
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+
+  int64 deleted_at = 6;
+
+  // 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 7;
+}
+
+message GetAssetDataRequest {
+  string asset_data_id = 1 [(validate.rules).string.min_len = 1];
+}
+
+message CreateAssetDataRequest {
+  AssetData asset_data = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteAssetDataRequest {
+  AssetData asset_data = 1 [(validate.rules).message.required = true];
+}
+
+message SignedUrlRequest {
+  AssetData asset_data = 1 [(validate.rules).message.required = true];
+}
+
+message SignedUrlResponse {
+  string signed_url = 1;
+}
+
+message AuditLog {
+  // 共通 フィールド
+  string                 tenant_id          = 1;
+  string                 user_id            = 2;
+  string                 audit_category     = 3;
+  string                 audit_sub_category = 4;
+  google.protobuf.Struct parameters         = 5;
+  string                 message            = 6;
+  // データアクセスログ用 追加フィールド
+  string table      = 7;
+  string record_id  = 8;
+  string columns    = 9;
+  int64  created_at = 10;
+}
+
+message ListAuditLogsRequest {
+  string tenant_id          = 1;
+  string user_id            = 2;
+  string audit_category     = 3 [(validate.rules).string.min_len = 1];
+  string audit_sub_category = 4 [(validate.rules).string.min_len = 1];
+
+  string table     = 5;
+  string record_id = 6;
+
+  // ログの出力期間の開始日時（UNIXマイクロ）
+  // 未指定の場合は、過去24時間のログをデフォルトで指定する
+  int64  from       = 7;
+  int64  to         = 8;
+  int64  limit      = 9;
+  string page_token = 10;
+}
+
+message ListAuditLogsResponse {
+  repeated AuditLog items           = 1;
+  string            next_page_token = 2;
+}

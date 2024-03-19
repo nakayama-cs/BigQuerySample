@@ -1,0 +1,816 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "google/protobuf/empty.proto";
+
+import "import.proto";
+
+import "estimatebasictypes.proto";
+import "estimaterequestplan.proto";
+import "estimaterequest.proto";
+import "estimateresult.proto";
+import "estimateselection.proto";
+import "estimatestatus.proto";
+import "estimatefeedback.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// 立場ごとにサービスを分ける（発注者、発注承認者、受注者）
+// 発注企業が扱うサービス
+service EstimateOrdererService {
+  // 見積依頼予定
+  rpc CreateEstimateRequestPlan(CreateEstimateRequestPlanRequest) returns (EstimateRequestPlan);
+  rpc ListEstimateRequestPlans(ListEstimateRequestPlansRequest) returns (ListEstimateRequestPlansResponse);
+  rpc GetEstimateRequestPlan(GetEstimateRequestPlanRequest) returns (EstimateRequestPlan);
+  rpc UpdateEstimateRequestPlan(UpdateEstimateRequestPlanRequest) returns (EstimateRequestPlan);
+  rpc DeleteEstimateRequestPlan(DeleteEstimateRequestPlanRequest) returns (google.protobuf.Empty);
+
+  // 見積依頼予定取込
+  rpc ImportEstimateRequestPlans(ImportEstimateRequestPlansRequest) returns (ImportEstimateRequestPlansResponse);
+  // 取込フォーマット取得
+  rpc ListEstimateRequestPlanFormats(ListEstimateRequestPlanFormatsRequest) returns (ListEstimateRequestPlanFormatsResponse);
+
+  // 見積依頼予定を 完了 にする
+  rpc CompleteEstimateRequestPlan(CompleteEstimateRequestPlanRequest) returns (CompleteEstimateRequestPlanResponse);
+
+  // 見積依頼予定を 破棄 にする
+  rpc DiscardEstimateRequestPlan(DiscardEstimateRequestPlanRequest) returns (DiscardEstimateRequestPlanResponse);
+
+  // 見積依頼
+  //
+  // Implementation Note::
+  //   見積依頼先(EstimateUnit)を同一トランザクションで更新する
+  //
+  rpc CreateEstimateRequest(CreateEstimateRequestRequest) returns (EstimateRequest);
+  rpc ListEstimateRequests(ListEstimateRequestsRequest) returns (ListEstimateRequestsResponse);
+  rpc GetEstimateRequest(GetEstimateRequestRequest) returns (EstimateRequest);
+  // 見積依頼
+  //
+  // Implementation Note::
+  //   見積依頼先(EstimateUnit)を同一トランザクションで更新する
+  //
+  rpc UpdateEstimateRequest(UpdateEstimateRequestRequest) returns (EstimateRequest);
+  rpc DeleteEstimateRequest(DeleteEstimateRequestRequest) returns (google.protobuf.Empty);
+
+  // 見積依頼(公開依頼)
+  //
+  // Implementation Note::
+  //   1. 見積依頼情報の公開依頼情報を更新する
+  //   EstimateRequest.approval_request_properties
+  //   comment / approval_organization_unit / approval_staff / requested_at
+  //
+  rpc ApprovalRequestEstimateRequest(ApprovalRequestEstimateRequestRequest) returns (ApprovalRequestEstimateRequestResponse);
+
+  // 確定にする
+  rpc LockEstimateRequest(LockEstimateRequestRequest) returns (LockEstimateRequestResponse);
+
+  // 確定を戻す
+  rpc UnlockEstimateRequest(UnlockEstimateRequestRequest) returns (UnlockEstimateRequestResponse);
+
+  // 見積依頼を 締切 にする
+  rpc CloseEstimateRequest(CloseEstimateRequestRequest) returns (CloseEstimateRequestResponse);
+
+  // 見積依頼を 締切解除 にする
+  rpc UncloseEstimateRequest(UncloseEstimateRequestRequest) returns (UncloseEstimateRequestResponse);
+
+  // 見積依頼を 破棄 にする
+  rpc DiscardEstimateRequest(DiscardEstimateRequestRequest) returns (DiscardEstimateRequestResponse);
+
+  // 見積依頼を公開
+  //
+  // Implementation Note::
+  //   1. EstimateRequest.revised_at 更新する
+  //   2. 公開対象の EstimateUnit.revised_at を更新する
+  //   3. 公開対象の EstimateUnit.requested_at を初回のみ更新する
+  //   4. EstimateUnit.company_idに対してshareto処理を行う
+  //      EstimateRequestとestimate_request_idで紐づくEstimateUnitが対象
+  //
+  rpc SharetoEstimateRequest(SharetoEstimateRequestRequest) returns (SharetoEstimateRequestResponse);
+
+  // 公開中の見積依頼を取得
+  //
+  // Implementation Note::
+  //   最後に公開された見積依頼の情報を取得する
+  //
+  rpc SharedGetEstimateRequest(SharedGetEstimateRequestRequest) returns (SharedGetEstimateRequestResponse);
+
+  // 見積依頼の差分を取得する
+  //
+  // Implementation Note::
+  //   渡されたEstimateRequest(old)とEstimateRequest(new)を比較して差分を返す
+  //   対象のフィールドはShareの対象フィールド（GRANTED）に限定する
+  //
+  rpc DiffEstimateRequest(DiffEstimateRequestRequest) returns (DiffEstimateRequestResponse);
+
+  // 見積結果/見積選考
+  rpc ListEstimateSelections(ListEstimateSelectionsRequest) returns (ListEstimateSelectionsResponse);
+  rpc GetEstimateSelection(GetEstimateSelectionRequest) returns (EstimateSelection);
+  rpc UpdateEstimateSelection(UpdateEstimateSelectionRequest) returns (EstimateSelection);
+
+  // 見積選考(公開依頼)
+  //
+  // Implementation Note::
+  //   1. 見積選考情報の公開依頼情報を更新する
+  //   EstimateSelection.approval_request_properties
+  //   comment / approval_organization_unit / approval_staff / requested_at
+  //
+  rpc ApprovalRequestEstimateSelection(ApprovalRequestEstimateSelectionRequest) returns (ApprovalRequestEstimateSelectionResponse);
+
+  // 見積選考を 確定 にする
+  rpc LockEstimateSelection(LockEstimateSelectionRequest) returns (LockEstimateSelectionResponse);
+
+  // 見積選考を 確定解除 にする
+  rpc UnlockEstimateSelection(UnlockEstimateSelectionRequest) returns (UnlockEstimateSelectionResponse);
+
+  // 見積選考を公開する
+  //
+  // Implementation Note::
+  //   1. EstimateSelection.replyed_at を更新する
+  //   2. EstimateResult.shared_byに対してshareto処理を行う
+  //      EstimateSelection と estimate_result_id で紐づく EstimateResult が対象
+  //
+  rpc SharetoEstimateSelection(SharetoEstimateSelectionRequest) returns (SharetoEstimateSelectionResponse);
+
+  // 見積選考を 完了 にする
+  //
+  // Implementation Note::
+  //   1. estimate_selection_id をもとに Complete を更新する
+  //   2. 見積依頼（親レコード EstimateRequest）に紐づく 見積選考 が全て完了の場合
+  //      見積依頼（親レコード EstimateRequest）も完了にする
+  //      estimate_request_id をもとに Complete を更新する
+  //
+  rpc CompleteEstimateSelection(CompleteEstimateSelectionRequest) returns (CompleteEstimateSelectionResponse);
+
+  // 発注出力
+  //
+  // Implementation Note::
+  //   1. CSVの出力処理を行う
+  //   2. EstimateSelectionExportLog を作成する
+  //
+  rpc ExportOrders(ExportOrdersRequest) returns (ExportOrdersResponse);
+
+  // 発注出力フォーマット取得
+  rpc ListOrderFormats(ListOrderFormatsRequest) returns (ListOrderFormatsResponse);
+
+  // 見積依頼/見積結果/見積選考
+  rpc ListEstimateRequestAndEstimateResultAndEstimateSelections(ListEstimateRequestAndEstimateResultAndEstimateSelectionsRequest) returns (ListEstimateRequestAndEstimateResultAndEstimateSelectionsResponse);
+
+  // フィードバック（差し戻し）
+  rpc CreateEstimateResultFeedback(CreateEstimateResultFeedbackRequest) returns (EstimateResultFeedback);
+  rpc GetEstimateResultFeedback(GetEstimateResultFeedbackRequest) returns (EstimateResultFeedback);
+  rpc UpdateEstimateResultFeedback(UpdateEstimateResultFeedbackRequest) returns (EstimateResultFeedback);
+  rpc DeleteEstimateResultFeedback(DeleteEstimateResultFeedbackRequest) returns (google.protobuf.Empty);
+  rpc ListEstimateResultFeedbacks(ListEstimateResultFeedbacksRequest) returns (ListEstimateResultFeedbacksResponse);
+
+  // フィードバックを公開する
+  //
+  // Implementation Note::
+  //   1. EstimateResultFeedback.sended_atを更新する
+  //   2. EstimateResultFeedback.estimate_result_id に紐づく
+  //      EstimateResult.shared_properties.shared_byに対してshareto処理を行う
+  //
+  rpc SharetoEstimateResultFeedback(SharetoEstimateResultFeedbackRequest) returns (SharetoEstimateResultFeedbackResponse);
+}
+
+// 発注企業の承認者が扱うサービス
+service EstimateOrderApproverService {
+  // 見積依頼(承認)
+  //
+  // Implementation Note::
+  //   1. 見積依頼情報の承認情報を更新する
+  //   EstimateRequest.approval_properties
+  //   approval_organization_unit / approval_staff / approved_at
+  //
+  //   2. 見積依頼予定の 紐付けあり のステータスを更新する
+  //   処理を行うEstimateRequest.estimate_request_plan_idsに値が存在する場合
+  //   estimate_request_plan_idsから取得したEstimateRequestPlan.linked を true に更新する
+  //   更新は同一トランザクションで行う
+  //
+  //   3. 選考情報を削除する
+  //   見積依頼（伝票ステータス）が公開中で かつ 見積選考情報がある場合
+  //   対象のEstimateRequestに紐づくEstimateResult.estimate_result_idを取得し
+  //   EstimateResultに紐づくEstimateSelectionを削除する
+  //
+  rpc ApproveEstimateRequest(ApproveEstimateRequestRequest) returns (ApproveEstimateRequestResponse);
+
+  // 見積依頼(却下)
+  //
+  // Implementation Note::
+  //   1. 見積依頼情報の承認情報を更新する
+  //   EstimateRequest.approval_properties
+  //   comment / approval_organization_unit / approval_staff / rejected_at
+  //
+  rpc RejectEstimateRequest(RejectEstimateRequestRequest) returns (RejectEstimateRequestResponse);
+
+  // 見積選考(承認)
+  rpc ApproveEstimateSelection(ApproveEstimateSelectionRequest) returns (ApproveEstimateSelectionResponse);
+
+  // 見積選考(却下)
+  rpc RejectEstimateSelection(RejectEstimateSelectionRequest) returns (RejectEstimateSelectionResponse);
+}
+
+// 受注企業が扱うサービス
+service EstimateSupplierService {
+  // 見積依頼/見積結果/見積選考
+  rpc SharedListEstimateRequestAndEstimateResultAndEstimateSelections(SharedListEstimateRequestAndEstimateResultAndEstimateSelectionsRequest) returns (SharedListEstimateRequestAndEstimateResultAndEstimateSelectionsResponse);
+
+  // 見積結果
+  rpc CreateEstimateResult(CreateEstimateResultRequest) returns (EstimateResult);
+  rpc ListEstimateResults(ListEstimateResultsRequest) returns (ListEstimateResultsResponse);
+  rpc GetEstimateResult(GetEstimateResultRequest) returns (EstimateResult);
+  rpc UpdateEstimateResult(UpdateEstimateResultRequest) returns (EstimateResult);
+  rpc DeleteEstimateResult(DeleteEstimateResultRequest) returns (google.protobuf.Empty);
+
+  // 確定にする
+  rpc LockEstimateResult(LockEstimateResultRequest) returns (LockEstimateResultResponse);
+
+  // 確定を戻す
+  rpc UnlockEstimateResult(UnlockEstimateResultRequest) returns (UnlockEstimateResultResponse);
+
+  // 見積結果を 完了 にする
+  rpc CompleteEstimateResult(CompleteEstimateResultRequest) returns (CompleteEstimateResultResponse);
+
+  // 見積依頼を辞退する
+  //
+  // Implementation Note::
+  //     辞退のEstimateResultを作成する
+  //
+  rpc DeclineEstimateResult(DeclineEstimateResultRequest) returns (DeclineEstimateResultResponse);
+
+  // 見積結果を公開
+  //
+  // Implementation Note::
+  //   1. EstimatResult.replyed_atを更新する
+  //   2. 辞退の場合、EstimatResult.decline_properties.declined_atも同様に更新する
+  //   3. EstimatResult.estimate_reqest.shared_properties.shared_byに対してshareto処理を行う
+  //
+  rpc SharetoEstimateResult(SharetoEstimateResultRequest) returns (SharetoEstimateResultResponse);
+
+  // 見積依頼
+  rpc GetEstimateRequest(GetEstimateRequestRequest) returns (EstimateRequest);
+
+  // 見積依頼の差分を取得する
+  //
+  // Implementation Note::
+  //   渡されたEstimateRequest(old)とEstimateRequest(new)を比較して差分を返す
+  //   対象のフィールドはShareの対象フィールド（GRANTED）に限定する
+  //
+  rpc DiffEstimateRequest(DiffEstimateRequestRequest) returns (DiffEstimateRequestResponse);
+
+  // フィードバック（差し戻し）
+  rpc SharedListEstimateResultFeedbacks(SharedListEstimateResultFeedbacksRequest) returns (SharedListEstimateResultFeedbacksResponse);
+}
+
+// Do not use
+// テストでのみ使用する処理を扱うサービス
+service TestingService {
+  // 見積依頼予定を 完了解除 にする
+  //
+  // Implementation Note::
+  //   テストで使用するメソッド
+  //
+  rpc UncompleteEstimateRequestPlan(UncompleteEstimateRequestPlanRequest) returns (UncompleteEstimateRequestPlanResponse);
+
+  // 見積依頼予定を 破棄解除 にする
+  //
+  // Implementation Note::
+  //   テストで使用するメソッド
+  //
+  rpc UndiscardEstimateRequestPlan(UndiscardEstimateRequestPlanRequest) returns (UndiscardEstimateRequestPlanResponse);
+
+  // 見積依頼を 破棄解除 にする
+  //
+  // Implementation Note::
+  //   テストで使用するメソッド
+  //
+  rpc UndiscardEstimateRequest(UndiscardEstimateRequestRequest) returns (UndiscardEstimateRequestResponse);
+
+  // 見積選考を 完了解除 にする
+  //
+  // Implementation Note::
+  //   テストで使用するメソッド
+  //
+  rpc UncompleteEstimateSelection(UncompleteEstimateSelectionRequest) returns (UncompleteEstimateSelectionResponse);
+
+  // 見積結果を 完了解除 にする
+  //
+  // Implementation Note::
+  //   テストで使用するメソッド
+  //
+  rpc UncompleteEstimateResult(UncompleteEstimateResultRequest) returns (UncompleteEstimateResultResponse);
+}
+
+message EstimateRequestAndEstimateResultAndEstimateSelection {
+  // 見積依頼（自社）/ Sharedの場合（公開）
+  EstimateRequest estimate_request = 1;
+  // 見積結果（公開）/ Sharedの場合（自社）
+  EstimateResult estimate_result = 2;
+  // 見積選考（自社）/ Sharedの場合（公開）
+  EstimateSelection estimate_selection = 4;
+
+  // outputonly 見積ステータス（受注側）
+  // 旧名：見積ステータス
+  //
+  // Implementation Note::
+  //   estimate_result.status の全てと
+  //   回答中【未入力】 のステータスを表現する
+  //
+  EstimateResultStatus estimate_result_status = 3;
+}
+
+// 発注者
+// 見積依頼予定
+message CreateEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message ListEstimateRequestPlansRequest {
+  // ステータスでフィルタする
+  StatusFilter status_filter = 1;
+  // idで取得する
+  // estimate_request_plan_id
+  repeated string ids = 2;
+}
+
+message ListEstimateRequestPlansResponse {
+  int64 total = 1;
+
+  repeated EstimateRequestPlan items = 2;
+}
+
+message GetEstimateRequestPlanRequest {
+  string estimate_request_plan_id = 1;
+}
+
+message UpdateEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message DeleteEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message ImportEstimateRequestPlansRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportEstimateRequestPlansResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+message ListEstimateRequestPlanFormatsRequest {}
+
+message ListEstimateRequestPlanFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message CompleteEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message CompleteEstimateRequestPlanResponse {}
+
+message UncompleteEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message UncompleteEstimateRequestPlanResponse {}
+
+message DiscardEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message DiscardEstimateRequestPlanResponse {}
+
+message UndiscardEstimateRequestPlanRequest {
+  EstimateRequestPlan estimate_request_plan = 1;
+}
+
+message UndiscardEstimateRequestPlanResponse {}
+
+// 見積依頼
+message CreateEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+  // 見積依頼先
+  repeated EstimateUnit estimate_units = 2;
+}
+
+message ListEstimateRequestsRequest {
+  // ステータスでフィルタする
+  StatusFilter status_filter = 1;
+}
+
+message ListEstimateRequestsResponse {
+  int64 total = 1;
+
+  repeated EstimateRequest items = 2;
+}
+
+message GetEstimateRequestRequest {
+  string estimate_request_id = 1;
+}
+
+message UpdateEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+  // 見積依頼先
+  repeated EstimateUnit estimate_units = 2;
+}
+
+message DeleteEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message ApprovalRequestEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message ApprovalRequestEstimateRequestResponse {}
+
+message LockEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message LockEstimateRequestResponse {}
+
+message UnlockEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message UnlockEstimateRequestResponse {}
+
+message CloseEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message CloseEstimateRequestResponse {}
+
+message UncloseEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message UncloseEstimateRequestResponse {}
+
+message CompleteEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message CompleteEstimateRequestResponse {}
+
+message DiscardEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message DiscardEstimateRequestResponse {}
+
+message UndiscardEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message UndiscardEstimateRequestResponse {}
+
+message SharetoEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+  // 見積依頼先
+  repeated EstimateUnit estimate_units = 2;
+}
+
+message SharetoEstimateRequestResponse {}
+
+message SharedGetEstimateRequestRequest {
+  string estimate_request_id = 1;
+}
+
+message SharedGetEstimateRequestResponse {
+  EstimateRequest estimate_request = 1;
+}
+
+message CompleteEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message CompleteEstimateSelectionResponse {}
+
+message UncompleteEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message UncompleteEstimateSelectionResponse {}
+
+message SharetoEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message SharetoEstimateSelectionResponse {}
+
+message CreateEstimateResultFeedbackRequest {
+  EstimateResultFeedback estimate_result_feedback = 1;
+}
+
+message GetEstimateResultFeedbackRequest {
+  string estimate_result_feedback_id = 1;
+}
+
+message UpdateEstimateResultFeedbackRequest {
+  EstimateResultFeedback estimate_result_feedback = 1;
+}
+
+message DeleteEstimateResultFeedbackRequest {
+  EstimateResultFeedback estimate_result_feedback = 1;
+}
+
+message ListEstimateResultFeedbacksRequest {
+  repeated string estimate_result_ids = 1;
+}
+
+message ListEstimateResultFeedbacksResponse {
+  int64 total = 1;
+
+  repeated EstimateResultFeedback items = 2;
+}
+
+message SharetoEstimateResultFeedbackRequest {
+  EstimateResultFeedback estimate_result_feedback = 1;
+}
+
+message SharetoEstimateResultFeedbackResponse {}
+
+// 発注承認者
+message ApproveEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message ApproveEstimateRequestResponse {}
+
+message RejectEstimateRequestRequest {
+  EstimateRequest estimate_request = 1;
+}
+
+message RejectEstimateRequestResponse {}
+
+message ApproveEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message ApproveEstimateSelectionResponse {}
+
+message RejectEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message RejectEstimateSelectionResponse {}
+
+// 見積選考
+message ListEstimateSelectionsRequest {
+  // ステータスでフィルタする
+  StatusFilter status_filter = 1;
+}
+
+message ListEstimateSelectionsResponse {
+  int64 total = 1;
+
+  repeated EstimateSelection items = 2;
+}
+
+message GetEstimateSelectionRequest {
+  string estimate_selection_id = 1;
+}
+
+message UpdateEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message ApprovalRequestEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message ApprovalRequestEstimateSelectionResponse {}
+
+message LockEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message LockEstimateSelectionResponse {}
+
+message UnlockEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message UnlockEstimateSelectionResponse {}
+
+message ExportOrdersRequest {
+  // estimate_selection_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportOrdersResponse {
+  string asset_id = 1;
+}
+
+message ListOrderFormatsRequest {}
+
+message ListOrderFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+// 見積結果一覧（発注企業側）
+message ListEstimateRequestAndEstimateResultAndEstimateSelectionsRequest {
+  StatusFilter status_filter = 1;
+}
+message ListEstimateRequestAndEstimateResultAndEstimateSelectionsResponse {
+  int64 total = 1;
+
+  repeated EstimateRequestAndEstimateResultAndEstimateSelection items = 2;
+}
+
+// 受注者
+// 見積一覧（受注企業側）
+message SharedListEstimateRequestAndEstimateResultAndEstimateSelectionsRequest {
+  StatusFilter status_filter = 1;
+}
+message SharedListEstimateRequestAndEstimateResultAndEstimateSelectionsResponse {
+  int64 total = 1;
+
+  repeated EstimateRequestAndEstimateResultAndEstimateSelection items = 2;
+}
+
+// 見積結果
+message CreateEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message ListEstimateResultsRequest {
+  // ステータスでフィルタする
+  StatusFilter status_filter = 1;
+}
+
+message ListEstimateResultsResponse {
+  int64 total = 1;
+
+  repeated EstimateResult items = 2;
+}
+
+message GetEstimateResultRequest {
+  string estimate_result_id = 1;
+}
+
+message UpdateEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message DeleteEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message LockEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message LockEstimateResultResponse {}
+
+message UnlockEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message UnlockEstimateResultResponse {}
+
+message CompleteEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message CompleteEstimateResultResponse {}
+
+message UncompleteEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message UncompleteEstimateResultResponse {}
+
+message DeclineEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message DeclineEstimateResultResponse {
+  EstimateResult estimate_result = 1;
+}
+
+message SharetoEstimateResultRequest {
+  EstimateResult estimate_result = 1;
+}
+
+message SharetoEstimateResultResponse {}
+
+message DiffEstimateRequestRequest {
+  EstimateRequest old = 1;
+  EstimateRequest new = 2;
+}
+
+message DiffEstimateRequestResponse {
+  // 差分のあった フィールド / 値 を格納
+  repeated DiffItem diff_items = 1;
+}
+
+message DiffItem {
+  // フィールド
+  // e.g. 希望納期に変更があった場合
+  //   "desiredReciveDt.timestamp"
+  string field_path = 1;
+  // 比較元の値
+  // JSON形式
+  string old_value = 2;
+  // 最新の値
+  // JSON形式
+  string new_value = 3;
+
+  // ルートの型
+  // e.g.
+  // "mtechnavi.api.estimation.EstimateRequest"
+  // "mtechnavi.api.estimation.EstimateRequestDetail"
+  string type_name = 4;
+
+  // 比較対象のキー
+  //
+  // Implementation Note::
+  //   EstimateRequest の比較の場合 estimate_request_id の値
+  //   EstimateRequestDetail の比較の場合 detail_name の値
+  //
+  string key_value = 5;
+
+  // 差分データの種類
+  //
+  // Implementation Note::
+  //  "[data_type].[diff_type]"で表現される
+  //  data_type: 0 通常 / 1 配列
+  //  diff_type:"added" / "deleted" / "changed"
+  //
+  // e.g.
+  //   通常のデータ比較で変更があった場合 "0.changed"
+  //   配列のデータ比較で追加があった場合 "1.added"
+  //   配列のデータ比較で削除があった場合 "1.deleted"
+  //   配列のデータ比較で変更があった場合 "1.changed"
+  //
+  string category_name = 6;
+}
+
+message SharedListEstimateResultFeedbacksRequest {
+  repeated string estimate_result_ids = 1;
+}
+
+message SharedListEstimateResultFeedbacksResponse {
+  int64 total = 1;
+
+  repeated EstimateResultFeedback items = 2;
+}
+
+// EstimationInternal
+message CreateEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+message DeleteEstimateSelectionRequest {
+  EstimateSelection estimate_selection = 1;
+}
+
+// トリガー
+message OnRecordSharedRequest {
+  // 型名
+  // e.g. "mtechnavi.api.estimation.EstimateResult"
+  string type_name = 1;
+  // レコードID(リソース)
+  // e.g. "{estimate_result_id}"
+  string record_id = 2;
+}
+
+message OnRecordSharedResponse {}
+
+message OnRecordSharetoRequest {
+  // 型名
+  // e.g. "EstimateResult"
+  string type_name = 1;
+  // レコードID(リソース)
+  // e.g. "{estimate_result_id}"
+  string record_id = 2;
+}
+
+message OnRecordSharetoResponse {}

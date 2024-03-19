@@ -1,0 +1,609 @@
+syntax = "proto3";
+
+package mtechnavi.api.worktask;
+
+import "google/protobuf/empty.proto";
+import "import.proto";
+import "reference.proto";
+import "nameoption.proto";
+import "datetime.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+import "attachment.proto";
+
+import "history.proto";
+import "worktaskcatalog.proto";
+import "worktaskrelation.proto";
+
+option go_package = "mtechnavi/worktask/protobuf";
+
+service WorkTaskService {
+  // 履歴
+  rpc ListHistorys(ListHistorysRequest) returns (ListHistorysResponse);
+
+  // 指図案件カタログ
+  rpc CreateWorkTaskCatalog(CreateWorkTaskCatalogRequest) returns (WorkTaskCatalog);
+  rpc ListWorkTaskCatalogs(ListWorkTaskCatalogsRequest) returns (ListWorkTaskCatalogResponse);
+  rpc GetWorkTaskCatalog(GetWorkTaskCatalogRequest) returns (WorkTaskCatalog);
+  rpc UpdateWorkTaskCatalog(UpdateWorkTaskCatalogRequest) returns (WorkTaskCatalog);
+  rpc DeleteWorkTaskCatalog(DeleteWorkTaskCatalogRequest) returns (google.protobuf.Empty);
+
+  // 指図案件
+  rpc CreateWorkTask(CreateWorkTaskRequest) returns (WorkTask);
+  rpc ListWorkTasks(ListWorkTasksRequest) returns (ListWorkTasksResponse);
+  rpc GetWorkTask(GetWorkTaskRequest) returns (WorkTask);
+  rpc UpdateWorkTask(UpdateWorkTaskRequest) returns (WorkTask);
+  rpc DeleteWorkTask(DeleteWorkTaskRequest) returns (google.protobuf.Empty);
+  rpc ExportWorkTasks(ExportWorkTasksRequest) returns (ExportWorkTasksResponse);
+
+  // 指図案件 ステータス変更
+  rpc ApprovalRequestWorkTask(ApprovalRequestWorkTaskRequest) returns (ApprovalRequestWorkTaskResponse);
+  rpc ApproveWorkTask(ApproveWorkTaskRequest) returns (ApproveWorkTaskResponse);
+  rpc RejectWorkTask(RejectWorkTaskRequest) returns (RejectWorkTaskResponse);
+  rpc ActivateWorkTask(ActivateWorkTaskRequest) returns (ActivateWorkTaskResponse);
+  rpc DiscardWorkTask(DiscardWorkTaskRequest) returns (DiscardWorkTaskResponse);
+  rpc CompleteWorkTask(CompleteWorkTaskRequest) returns (CompleteWorkTaskResponse);
+  rpc UncompleteWorkTask(UncompleteWorkTaskRequest) returns (UncompleteWorkTaskResponse);
+
+  // 指図案件チケット変更
+  rpc CompleteWorkTaskTicket(CompleteWorkTaskTicketRequest) returns (CompleteWorkTaskTicketResponse);
+  rpc UncompleteWorkTaskTicket(UncompleteWorkTaskTicketRequest) returns (UncompleteWorkTaskTicketResponse);
+
+  // 指図案件フォーマット
+  rpc ListWorkTaskFormats(ListWorkTaskFormatsRequest) returns (ListWorkTaskFormatsResponse);
+
+  // 作業案件紐付け
+  rpc CreateWorkTaskRelation(CreateWorkTaskRelationRequest) returns (WorkTaskRelation);
+  rpc DeleteWorkTaskRelation(DeleteWorkTaskRelationRequest) returns (google.protobuf.Empty);
+  rpc ListWorkTaskRelationContents(ListWorkTaskRelationContentsRequest) returns (ListWorkTaskRelationContentsResponse);
+  rpc GetWorkTaskRelationContent(GetWorkTaskRelationContentRequest) returns (WorkTaskRelationContent);
+}
+
+// タスクリスト
+service WorkTaskTaskListService {
+  // 未完了作業
+  rpc UncompletedListWorkTaskTickets(UncompletedListWorkTaskTicketsRequest) returns (UncompletedListWorkTaskTicketsResponse);
+  // 未完了案件
+  rpc UncompletedListWorkTasks(UncompletedListWorkTasksRequest) returns (UncompletedListWorkTasksResponse);
+}
+
+// 履歴
+message ListHistorysRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // レコードタイプ
+  string type_name = 2;
+
+  // レコードID
+  repeated string record_ids = 3;
+}
+
+message ListHistorysResponse {
+  // 件数
+  int64 total = 1;
+
+  // 履歴
+  repeated History items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// 指図案件カタログ
+// required work_task_catalog
+message CreateWorkTaskCatalogRequest {
+  // required code
+  WorkTaskCatalog work_task_catalog = 1;
+}
+
+message ListWorkTaskCatalogsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message ListWorkTaskCatalogResponse {
+  // 件数
+  int64 total = 1;
+
+  // 指図案件カタログ
+  repeated WorkTaskCatalog items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required work_task_catalog_id
+message GetWorkTaskCatalogRequest {
+  // 指図案件カタログID
+  string work_task_catalog_id = 1;
+}
+
+// required work_task_catalog
+message UpdateWorkTaskCatalogRequest {
+  // required work_task_catalog_id
+  // required updated_at
+  WorkTaskCatalog work_task_catalog = 1;
+}
+
+// required work_task_catalog
+message DeleteWorkTaskCatalogRequest {
+  // required work_task_catalog_id
+  // required updated_at
+  WorkTaskCatalog work_task_catalog = 1;
+}
+
+// 指図案件
+// required work_task
+message CreateWorkTaskRequest {
+  // 指図案件データ
+  WorkTask work_task = 1;
+}
+
+message ListWorkTasksRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // データフィルタ
+  DataFilter data_filter = 2;
+
+  message DataFilter {
+    // ステータス
+    //
+    // Implementation Note:
+    //   status.code が渡され、BEで名称マスタを取得する（種別 category_name: "A2010001"）
+    //   status.system_nameが "B06"案件完了 を含まない場合、completed = false で indexFilterをかける
+    repeated string status_codes = 1;
+
+    // 指図案件カタログID
+    repeated string work_task_catalog_ids = 2;
+
+    // 作業依頼日 開始
+    int64 requested_at_from = 3;
+
+    // 作業依頼日 終了
+    int64 requested_at_to = 4;
+  }
+}
+
+message ListWorkTasksResponse {
+  // 件数
+  int64 total = 1;
+
+  // 指図案件データ
+  repeated WorkTask items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required work_task_id
+message GetWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+}
+
+// required work_task
+message UpdateWorkTaskRequest {
+  // 指図案件データ
+  // required work_task_id
+  // required updated_at
+  WorkTask work_task = 1;
+}
+
+// required work_task
+message DeleteWorkTaskRequest {
+  // 指図案件データ
+  // required work_task_id
+  // required updated_at
+  WorkTask work_task = 1;
+}
+
+// 指図案件データ出力
+// required file_format
+message ExportWorkTasksRequest {
+  // work_task_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportWorkTasksResponse {
+  // アセットID（一時領域）
+  string asset_id = 1;
+}
+
+// 指図案件データ を 承認依頼 する
+// required work_task_id
+message ApprovalRequestWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // 承認予定担当
+  sharelib.StaffReference approval_plan_staff = 2;
+
+  // 承認予定部門
+  sharelib.ComponentUnitReference approval_plan_organization = 3;
+
+  // 承認依頼コメント
+  string comment = 4;
+}
+
+message ApprovalRequestWorkTaskResponse {}
+
+// 指図案件データ を 承認 する
+// required work_task_id
+message ApproveWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message ApproveWorkTaskResponse {}
+
+// 指図案件データ を 却下 する
+// required work_task_id
+message RejectWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message RejectWorkTaskResponse {}
+
+// 指図案件フォーマット取得
+message ListWorkTaskFormatsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message ListWorkTaskFormatsResponse {
+  // 件数
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// 作業案件紐付け
+// required work_task_relation
+message CreateWorkTaskRelationRequest {
+  // 作業案件紐付けデータ
+  // required type_name
+  // required record_id
+  // required system_category
+  WorkTaskRelation work_task_relation = 1;
+}
+
+// required work_task_relation
+message DeleteWorkTaskRelationRequest {
+  // 作業案件紐付けデータ
+  // required work_task_relation_id
+  // required updated_at
+  WorkTaskRelation work_task_relation = 1;
+}
+
+message ListWorkTaskRelationContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  DataFilter data_filter = 2;
+
+  message DataFilter {
+    // 親指図案件ID
+    repeated string linked_work_task_ids = 1;
+
+    // type_name
+    string type_name = 2;
+
+    // record_id
+    repeated string record_ids = 3;
+  }
+}
+
+message ListWorkTaskRelationContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 作業案件紐付けコンテンツ
+  repeated WorkTaskRelationContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// 作業案件紐付けコンテンツ 取得
+// required work_task_relation_id
+message GetWorkTaskRelationContentRequest {
+  // 作業案件紐付けID
+  string work_task_relation_id = 1;
+}
+
+// 指図案件データ を アクティブ にする
+// required work_task_id
+message ActivateWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+}
+
+message ActivateWorkTaskResponse {}
+
+// 指図案件データ を 破棄　する
+// required work_task_id
+message DiscardWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message DiscardWorkTaskResponse {}
+
+// 指図案件データ を 完了 にする
+// required work_task_id
+message CompleteWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+}
+
+message CompleteWorkTaskResponse {}
+
+// 指図案件データ を 未完了 にする
+// required work_task_id
+message UncompleteWorkTaskRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+}
+
+message UncompleteWorkTaskResponse {}
+
+// 指図案件チケット を 完了 にする
+// required work_task_id
+message CompleteWorkTaskTicketRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // 作業結果メモ
+  string result_remarks = 2;
+
+  // 作業結果ファイルリスト
+  repeated sharelib.Attachment result_attachments = 3;
+}
+
+message CompleteWorkTaskTicketResponse {}
+
+// 指図案件チケット を 未完了 にする
+// required work_task_id
+message UncompleteWorkTaskTicketRequest {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message UncompleteWorkTaskTicketResponse {}
+
+// 指図案件データ
+message WorkTask {
+  // 指図案件ID
+  string work_task_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 2;
+
+  // readonly 指図案件番号
+  int64 work_task_auto_name = 3;
+
+  // readonly ステータス
+  // 名称マスタにおける種別 A2010001 (指図案件ステータス) を参照
+  sharelib.NameOption status = 4;
+
+  // readonly 完了
+  bool completed = 5 [(mtn.dataproxy) = { index: { name: "completed" } }];
+
+  // 件名
+  string display_name = 6;
+
+  // ASAP
+  bool asap = 7;
+
+  // ASAP理由
+  string asap_comment = 8;
+
+  // 指図案件カタログ
+  WorkTaskCatalog work_task_catalog = 9;
+
+  // readonly 指図案件カタログID
+  string work_task_catalog_id = 10 [(mtn.dataproxy) = { index: { name: "work_task_catalog_id" } }];
+
+  // 作業依頼内容
+  string contents = 11;
+
+  // 承認必要
+  bool approval = 12;
+
+  // 管理部門
+  sharelib.ComponentUnitReference management_organization = 13;
+
+  // 管理担当
+  sharelib.StaffReference management_staff = 14;
+
+  // readonly 管理担当変更情報
+  Process management_staff_change_process = 15;
+
+  // 作業部門
+  sharelib.ComponentUnitReference work_organization = 16;
+
+  // 作業担当
+  sharelib.StaffReference work_staff = 17;
+
+  // readonly 作業担当変更情報
+  Process work_staff_change_process = 18;
+
+  // 依頼メモ
+  string request_remarks = 19;
+
+  // 依頼ファイルリスト
+  repeated sharelib.Attachment request_attachments = 20;
+
+  // readonly 作業依頼日
+  int64 requested_at = 21 [(mtn.dataproxy) = { index: { name: "requested_at" } }];
+
+  // readonly 作業依頼ユーザー
+  sharelib.EmbeddedUser requested_by = 22;
+
+  // 作業情報
+  Ticket ticket = 23;
+
+  // readonly 作業再開情報
+  Process ticket_restart_process = 24;
+
+  // readonly 破棄情報
+  Process discard_process = 25;
+
+  // reeadonly 案件完了情報
+  Process complete_process = 26;
+
+  // 案件完了期日
+  sharelib.Datetime worktask_due_date_dt = 27;
+
+  // readonly 案件完了期日変更情報
+  Process worktask_due_date_change_process = 28;
+
+  // 作業完了期日
+  sharelib.Datetime worktask_ticket_due_date_dt = 29;
+
+  // readonly 作業完了期日変更情報
+  Process worktask_ticket_due_date_change_process = 30;
+
+  // 作業完了予定日
+  sharelib.Datetime worktask_ticket_scheduled_date_dt = 31;
+
+  // readonly 作業完了予定日変更情報
+  Process worktask_ticket_scheduled_date_change_process = 32;
+
+  // readonly 承認ステータス
+  sharelib.NameOption approval_status = 33;
+
+  // readonly 承認依頼情報
+  ApprovalRequest approval_request = 34;
+
+  // readonly 承認実績情報
+  ApprovalResult approval_result = 35;
+
+  // created_at
+  int64 created_at = 36;
+
+  // updated_at
+  int64 updated_at = 37;
+
+  // deleted_at
+  int64 deleted_at = 38;
+}
+
+// 承認依頼
+message ApprovalRequest {
+  // 承認依頼日時
+  int64 requested_at = 1;
+  // 承認依頼ユーザー
+  sharelib.EmbeddedUser requested_by = 2;
+  // 承認依頼担当者
+  sharelib.StaffReference requested_staff = 3;
+  // 承認依頼部門
+  sharelib.ComponentUnitReference requested_organization = 4;
+  // 承認担当者（予定）
+  sharelib.StaffReference approval_plan_staff = 5;
+  // 承認部門（予定）
+  sharelib.ComponentUnitReference approval_plan_organization = 6;
+  // 承認依頼コメント
+  string requested_comment = 7;
+}
+
+// 承認実績
+message ApprovalResult {
+  // 承認実績日時
+  int64 decided_at = 1;
+
+  // 承認実績ユーザー
+  sharelib.EmbeddedUser decided_by = 2;
+
+  // 承認担当者（実績）
+  sharelib.StaffReference decided_staff = 3;
+
+  // 承認部門（実績）
+  sharelib.ComponentUnitReference decided_organization = 4;
+
+  // 承認実績コメント
+  string decided_comment = 5;
+}
+
+// 作業情報
+message Ticket {
+  // 作業メモ
+  string remarks = 1;
+
+  // 作業結果メモ
+  string result_remarks = 2;
+
+  // 作業結果ファイルリスト
+  repeated sharelib.Attachment result_attachments = 3;
+
+  // 作業完了日時
+  int64 completed_at = 4;
+
+  // 作業完了ユーザー
+  sharelib.EmbeddedUser completed_by = 5;
+}
+
+// 実行情報
+message Process {
+  // 実行日時
+  int64 processed_at = 1;
+
+  // 実行ユーザー
+  sharelib.EmbeddedUser processed_by = 2;
+
+  // 実行コメント
+  string processed_comment = 3;
+}
+
+message UncompletedListWorkTaskTicketsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message UncompletedListWorkTaskTicketsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 指図案件データ
+  repeated WorkTask items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+message UncompletedListWorkTasksRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message UncompletedListWorkTasksResponse {
+  // 件数
+  int64 total = 1;
+
+  // 指図案件データ
+  repeated WorkTask items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}

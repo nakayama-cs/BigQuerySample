@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package mtechnavi.testdata;
+
+option go_package = 'mtechnavi/testdata';
+
+import "datetime.proto";
+
+enum TestEnum {
+  A = 0;
+  B = 1;
+  C = 2;
+}
+
+message TestRecord {
+  double   double_   = 1;
+  float    float_    = 3;
+  int32    int32_    = 5;
+  int64    int64_    = 7;
+  uint32   uint32_   = 9;
+  uint64   uint64_   = 11;
+  sint32   sint32_   = 13;
+  sint64   sint64_   = 15;
+  fixed32  fixed32_  = 17;
+  fixed64  fixed64_  = 19;
+  sfixed32 sfixed32_ = 21;
+  sfixed64 sfixed64_ = 23;
+  bool     bool_     = 25;
+  string   string_   = 27;
+  //   RootEnum        enum_            = 29;
+  repeated string repeated_string_ = 31;
+  repeated int64  repeated_int64_  = 33;
+
+  double   double_base_   = 35;
+  float    float_base_    = 37;
+  int32    int32_base_    = 39;
+  int64    int64_base_    = 41;
+  uint32   uint32_base_   = 43;
+  uint64   uint64_base_   = 45;
+  sint32   sint32_base_   = 47;
+  sint64   sint64_base_   = 49;
+  fixed32  fixed32_base_  = 51;
+  fixed64  fixed64_base_  = 53;
+  sfixed32 sfixed32_base_ = 55;
+  sfixed64 sfixed64_base_ = 56;
+  bool     bool_base_     = 58;
+  string   string_base_   = 61;
+  //   RootEnum        enum_            = 29;
+  repeated string repeated_string_base_ = 63;
+  repeated int64  repeated_int64_base_  = 65;
+
+  string test_record_id = 100;
+  int64  deleted_at     = 101;
+  int64  created_at     = 102;
+  int64  updated_at     = 103;
+}
+
+message DatetimeRecord {
+  sharelib.Datetime datetime1_ = 1;
+  sharelib.Datetime datetime3_ = 3;
+  sharelib.Datetime datetime5_ = 5;
+  sharelib.Datetime datetime7_ = 7;
+  sharelib.Datetime datetime9_ = 9;
+}

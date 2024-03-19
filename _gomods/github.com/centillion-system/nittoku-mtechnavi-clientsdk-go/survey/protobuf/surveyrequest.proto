@@ -1,0 +1,255 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+import "datetime.proto";
+import "nameoption.proto";
+import "attachment.proto";
+import "surveybasictypes.proto";
+import "surveyrequestcatalog.proto";
+import "reference.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 依頼伝票データ
+message SurveyBaseRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 25;
+
+  // readonly 依頼番号
+  //
+  // Implementation Note:
+  //   依頼伝票データの作成時に採番される
+  //
+  int64 survey_request_auto_name = 24;
+
+  // 依頼名
+  string display_name = 4;
+
+  // 回答期日
+  sharelib.Datetime reply_due_date_dt = 5;
+
+  // 依頼カタログ
+  SurveyRequestCatalog survey_request_catalog = 6;
+
+  // readonly 依頼カタログID
+  string survey_request_catalog_id = 7 [(mtn.dataproxy) = { index: { name: "survey_request_catalog_id" } }];
+
+  // 案内文
+  string guidance = 8;
+
+  // 承認必要
+  bool approval = 9;
+
+  // 完了区分
+  // 名称マスタにおける種別 A1000002 (完了区分) を参照
+  sharelib.NameOption complete_condition = 10;
+
+  // 部分回答許可
+  bool partial_reply = 11;
+
+  // 辞退許可
+  bool decline = 12;
+
+  // 自動催促設定
+  repeated AutoReminderSetting auto_reminder_settings = 13;
+
+  // 依頼元名称
+  repeated string requesters = 14;
+
+  // 共通依頼ファイルリスト
+  repeated sharelib.Attachment common_request_attachments = 15;
+
+  // 個別依頼ファイルリスト
+  repeated AttachmentAttribute business_unit_request_attachments = 29;
+
+  // 送信先取引先
+  repeated BusinessUnitProperties request_units = 17;
+
+  // readonly 依頼送信日時
+  int64 sended_at = 18 [(mtn.dataproxy) = { index: { name: "sended_at" } }];
+
+  // readonly 承認ステータス
+  sharelib.NameOption approval_status = 26;
+
+  // readonly 承認依頼情報
+  ApprovalRequest approval_request = 27;
+
+  // readonly 承認実績情報
+  ApprovalResult approval_result = 28;
+
+  // readonly 完了
+  bool completed = 19 [(mtn.dataproxy) = { index: { name: "completed" } }];
+
+  // readonly 最終更新日時
+  int64 survey_base_request_updated_at = 20;
+
+  int64 created_at = 21;
+
+  int64 updated_at = 22;
+
+  int64 deleted_at = 23;
+
+  reserved 2, 3, 16;
+}
+
+// 依頼明細データ
+message SurveyRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+
+  // 依頼伝票ID
+  string survey_base_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_base_request_id" } }];
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 29;
+
+  // readonly 依頼番号
+  int64 survey_request_auto_name = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 依頼明細番号
+  int64 survey_request_detail_auto_name = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 完了
+  bool completed = 6 [(mtn.dataproxy) = { index: { name: "completed" } }];
+
+  // 依頼名
+  string display_name = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 回答期日
+  sharelib.Datetime reply_due_date_dt = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 依頼カタログ
+  SurveyRequestCatalog survey_request_catalog = 9;
+
+  // readonly 依頼カタログID
+  string survey_request_catalog_id = 28 [(mtn.dataproxy) = { index: { name: "survey_request_catalog_id" } }];
+
+  // 案内文
+  string guidance = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 承認必要
+  bool approval = 11;
+
+  // 完了区分
+  // 名称マスタにおける種別 A1000002 (完了区分) を参照
+  sharelib.NameOption complete_condition = 12 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 部分回答許可
+  bool partial_reply = 13 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 辞退許可
+  bool decline = 14 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 自動催促設定
+  repeated AutoReminderSetting auto_reminder_settings = 15;
+
+  // 依頼元名称
+  repeated string requesters = 16 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 共通依頼ファイル
+  repeated sharelib.Attachment common_request_attachments = 17 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 個別依頼ファイルリスト
+  repeated sharelib.Attachment business_unit_request_attachments = 18 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 取引先情報
+  BusinessUnitProperties request_unit = 19 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 回答代行ファイルリスト
+  repeated sharelib.Attachment proxy_attachments = 20;
+
+  // 社内メモ
+  string remarks = 21;
+
+  // readonly 依頼送信日時
+  int64 sended_at = 22 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "sended_at" } }];
+
+  // readonly 回答出力日時
+  int64 survey_result_exported_at = 23 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 24;
+
+  int64 created_at = 25;
+
+  int64 updated_at = 26;
+
+  int64 deleted_at = 27;
+
+  reserved 5;
+}
+
+// 回答期日変更依頼データ
+message SurveyReplyDueDateChangeRequest {
+  // 回答期日変更依頼ID
+  string survey_reply_due_date_change_request_id = 1;
+
+  // 依頼明細ID
+  string survey_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_request_id" } }];
+
+  // readonly 回答期日変更依頼日時
+  int64 requested_at = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 変更後回答期日
+  sharelib.Datetime reply_due_date_dt = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // コメント
+  string comment = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 回答期日変更ID（参考）
+  //
+  // Implementation Note:
+  //   回答期日変更がない場合は空白
+  //
+  string survey_reply_due_date_change_id = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 7;
+
+  int64 created_at = 8;
+
+  int64 updated_at = 9;
+
+  int64 deleted_at = 10;
+}
+
+// 回答期日変更データ
+message SurveyReplyDueDateChangeResult {
+  // 回答期日変更ID
+  string survey_reply_due_date_change_result_id = 1;
+
+  // 依頼明細ID
+  string survey_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_request_id" } }];
+
+  // readonly 回答期日変更日時
+  int64 changed_at = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 変更後回答期日
+  sharelib.Datetime reply_due_date_dt = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // コメント
+  string comment = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 回答期日変更依頼ID（参考）
+  //
+  // Implementation Note:
+  //   回答期日変更依頼がない場合は空白
+  //
+  string survey_reply_due_date_change_request_id = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 7;
+
+  int64 created_at = 8;
+
+  int64 updated_at = 9;
+
+  int64 deleted_at = 10;
+}

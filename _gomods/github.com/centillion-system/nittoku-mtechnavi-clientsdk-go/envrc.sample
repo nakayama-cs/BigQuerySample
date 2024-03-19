@@ -1,0 +1,3 @@
+export PATH="$(pwd)/.local/bin:${PATH}"
+
+export MTECHNAVI_CONTRIB_DIR="$(pwd)/.local/opt/mtechnavi-contrib"

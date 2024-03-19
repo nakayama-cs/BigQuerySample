@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "mtn/index.proto";
+import "embedded.proto";
+import "nameoption.proto";
+import "surveybasictypes.proto";
+import "attachment.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 依頼カタログマスタ
+message SurveyRequestCatalog {
+  // 依頼カタログID
+  string survey_request_catalog_id = 1;
+
+  // readonly 依頼カタログコード
+  //
+  // Implementation Note:
+  //   create時に保存した値を変更しない
+  //
+  string code = 2 [(mtn.dataproxy) = { index: { name: "code" } }];
+
+  // 依頼カタログ名
+  string display_name = 3;
+
+  // 依頼カタログ分類
+  // 名称マスタにおける種別 A1000001 (依頼カタログ分類) を参照
+  sharelib.NameOption category = 4;
+
+  // 案内文
+  string guidance = 5;
+
+  // 承認必要
+  bool approval = 6;
+
+  // 完了区分
+  // 名称マスタにおける種別 A1000002 (完了区分) を参照
+  sharelib.NameOption complete_condition = 7;
+
+  // 部分回答許可
+  bool partial_reply = 8;
+
+  // 辞退許可
+  bool decline = 9;
+
+  // 自動催促設定
+  repeated AutoReminderSetting auto_reminder_settings = 10;
+
+  // 依頼元名称
+  repeated string requesters = 11;
+
+  // 共通ファイルリスト
+  repeated sharelib.Attachment common_attachments = 12;
+
+  // readonly 最終更新日時
+  int64 survey_request_catalog_updated_at = 13;
+
+  // readonly 最終更新アカウント情報
+  sharelib.EmbeddedUser survey_request_catalog_updated_by = 14;
+
+  int64 created_at = 15;
+
+  int64 updated_at = 16;
+
+  int64 deleted_at = 17;
+}

@@ -1,0 +1,210 @@
+syntax = "proto3";
+
+package mtechnavi.api.assetinventory;
+
+import "google/protobuf/empty.proto";
+import "mtn/visibility.proto";
+import "nameoption.proto";
+import "import.proto";
+import "embedded.proto";
+
+option go_package = 'mtechnavi/assetinventory/protobuf';
+
+service AssetInventory {
+  rpc GenerateWritableSignedUrl(GenerateWritableSignedUrlRequest) returns (SignedUrl);
+  rpc GenerateReadableSignedUrl(GenerateReadableSignedUrlRequest) returns (SignedUrl);
+
+  rpc CreateAsset(CreateAssetRequest) returns (Asset);
+  rpc GetAsset(GetAssetRequest) returns (Asset);
+  rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
+  rpc UpdateAsset(UpdateAssetRequest) returns (Asset);
+  rpc DeleteAsset(DeleteAssetRequest) returns (google.protobuf.Empty);
+
+  // zipアセットの作成
+  rpc CreateZippedAsset(CreateZippedAssetRequest) returns (CreateZippedAssetResponse);
+
+  // 図面個別情報取込
+  rpc ImportBlueprintPropertiess(ImportBlueprintPropertiessRequest) returns (ImportBlueprintPropertiessResponse);
+  // 図面個別情報取込フォーマット出力
+  rpc ExportBlueprintPropertiess(ExportBlueprintPropertiessRequest) returns (ExportBlueprintPropertiessResponse);
+  // 図面個別情報取込フォーマット取得
+  rpc ListBlueprintPropertiesFormats(ListBlueprintPropertiesFormatsRequest) returns (ListBlueprintPropertiesFormatsResponse);
+}
+
+message SignedUrl {
+  string url = 1;
+}
+
+message GenerateWritableSignedUrlRequest {
+  int64 expires = 1;
+
+  string content_type = 2;
+}
+
+message GenerateReadableSignedUrlRequest {
+  int64 expires = 1;
+
+  // GenerateWritableSignedUrl または GenerateReadableSignedUrl によって発行された署名URL
+  string signed_url = 2;
+}
+
+message Asset {
+  string asset_id = 1;
+
+  // ファイル名
+  string filename = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // ファイルタイプ
+  // read only
+  string mime_type = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 管理用名称
+  string display_name = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // ファイルID
+  string asset_data_id = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 用途
+  // 名称マスタにおける種別 A0000033 （用途）を参照
+  repeated sharelib.NameOption purpose_units = 9;
+
+  // 個別情報
+  // 用途は名称マスタにおける種別 A0000033 （用途）を参照
+  // 項目名で指定する辞書IDは辞書ID一覧を参照
+  // key:[識別コード]_[用途（コード）]_[項目名（辞書ID）]
+  // value:JSON形式
+  //   "xxx",  // string型の場合
+  //   99, // number型の場合
+  //   true, // bool型の場合
+  //
+  // e.g.
+  // 識別コード：101
+  // 用途：図面(B01)
+  // 項目名：図番(BlueprintPropertiesFormatDefault_blueprint_number)
+  // 値（図番）：XXXX-XXXXX-XX の場合
+  //
+  //
+  // "101_B01_BlueprintPropertiesFormatDefault.blueprint_number":"\"XXXX-XXXXX-XX\""
+  //
+  map<string, string> purpose_unit_properties = 10;
+
+  // 作成者
+  // User.Email
+  sharelib.EmbeddedUser created_by = 11;
+
+  // 最終更新者
+  // User.Email
+  sharelib.EmbeddedUser updated_by = 12;
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 13;
+
+  // outputonly ファイルステータス
+  AssetStatus status = 14;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 4;
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+}
+
+// ファイルステータス
+message AssetStatus {
+  // ステータス
+  // 状態（category）と状態の詳細（detail）の組み合わせを専用に表現したもの
+  //
+  // 名称マスタにおける種別 A0010019 (ファイルステータス) を参照
+  sharelib.NameOption status = 1;
+
+  // 状態
+  // 名称マスタにおける種別 A0010020 (ファイルステータス（状態）) を参照
+  sharelib.NameOption category = 2;
+
+  // 状態の詳細
+  // 名称マスタにおける種別 A0010021 (ファイルステータス（状態の詳細）) を参照
+  sharelib.NameOption detail = 3;
+}
+
+message CreateAssetRequest {
+  Asset asset = 1;
+
+  string source_url = 2;
+}
+
+message GetAssetRequest {
+  string asset_id = 1;
+}
+
+message ListAssetsRequest {
+  // asset_id
+  repeated string ids = 1;
+}
+
+message ListAssetsResponse {
+  int64 total = 1;
+
+  repeated Asset items = 2;
+}
+
+message UpdateAssetRequest {
+  Asset asset = 1;
+
+  string source_url = 2;
+}
+
+message DeleteAssetRequest {
+  Asset asset = 1;
+}
+
+message ImportBlueprintPropertiessRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportBlueprintPropertiessResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+message ExportBlueprintPropertiessRequest {
+  // transaction_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportBlueprintPropertiessResponse {
+  string asset_id = 1;
+}
+
+message ListBlueprintPropertiesFormatsRequest {}
+
+message ListBlueprintPropertiesFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message CreateZippedAssetRequest {
+  repeated string asset_ids = 1;
+
+  int64 expires = 2;
+}
+
+message CreateZippedAssetResponse {
+  string asset_id = 1;
+}

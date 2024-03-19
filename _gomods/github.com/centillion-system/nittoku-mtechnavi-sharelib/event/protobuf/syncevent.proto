@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package mtechnavi.api.sharelib.event;
+
+option go_package = 'mtechnavi/sharelib/event/protobuf';
+
+message Event {
+  string name = 1;
+
+  bytes data = 2;
+}

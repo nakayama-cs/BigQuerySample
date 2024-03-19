@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+message NameOption {
+  // 種別
+  // 名称マスタ一覧で管理する
+  string category_name = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // コード値
+  string code = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 名称値
+  // ja:日本語名
+  map<string, string> display_name_lang = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  // システムコード値
+  // 名称マスタ一覧で管理する
+  string system_name = 4 [(mtn.visibility) = { scope: INHERIT }];
+}

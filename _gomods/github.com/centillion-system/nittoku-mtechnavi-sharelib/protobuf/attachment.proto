@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+import "nameoption.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+message Attachment {
+  // アセットID
+  string asset_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 分類
+  // 名称マスタにおける種別 A0000016 (ファイル分類) を参照
+  sharelib.NameOption category = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // ファイル名
+  string filename = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 備考
+  string remarks = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+  // ファイル種類
+  string mime_type = 5 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 種別
+  // 名称マスタにおける種別 A0000017 (ファイル種別) を参照
+  sharelib.NameOption link_type = 6 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 添付日時
+  int64 attached_at = 7 [(mtn.visibility) = { scope: INHERIT }];
+}

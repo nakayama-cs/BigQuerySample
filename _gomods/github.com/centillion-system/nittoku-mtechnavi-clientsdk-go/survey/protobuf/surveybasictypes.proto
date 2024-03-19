@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "mtn/visibility.proto";
+import "reference.proto";
+import "nameoption.proto";
+import "embedded.proto";
+import "attachment.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 自動催促設定
+message AutoReminderSetting {
+  // 自動催促
+  bool auto_reminder = 1;
+
+  // 初回サイト
+  int64 offset = 2;
+
+  // 初回前後区分
+  // 名称マスタにおける種別 A1000006 (初回前後区分) を参照
+  sharelib.NameOption offset_type = 3;
+
+  // 繰り返し
+  bool repeat = 4;
+
+  // 繰り返しサイト
+  int64 repeat_interval = 5;
+
+  // メッセージ区分
+  // 名称マスタにおける種別 A1000003 (催促メッセージ区分) を参照
+  sharelib.NameOption content_type = 6;
+
+  // メッセージ内容
+  string content = 7;
+
+  // システム通知先リスト
+  // 名称マスタにおける種別 A1000005 (通知先設定) を参照
+  repeated sharelib.NameOption system_notification_tos = 8;
+}
+
+// 取引先情報
+message BusinessUnitProperties {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+  // 取引先コード
+  string code = 2;
+  // 取引先名
+  string display_name = 3 [(mtn.visibility) = { scope: INHERIT }];
+  // 取引先担当者
+  repeated sharelib.UserReference main_contact = 4 [(mtn.visibility) = { scope: INHERIT }];
+  // 取引先アシスタント
+  repeated sharelib.UserReference main_contact_assistant = 5 [(mtn.visibility) = { scope: INHERIT }];
+  // 自社担当者
+  repeated sharelib.UserReference staff = 6 [(mtn.visibility) = { scope: INHERIT }];
+  // 自社アシスタント
+  repeated sharelib.UserReference staff_assistant = 7 [(mtn.visibility) = { scope: INHERIT }];
+  // 取引先会社ID
+  string company_id = 8;
+}
+
+// 承認依頼
+message ApprovalRequest {
+  // 承認依頼日時
+  int64 requested_at = 1;
+  // 承認依頼ユーザー
+  sharelib.EmbeddedUser requested_by = 2;
+  // 承認依頼担当者
+  sharelib.StaffReference requested_staff = 3;
+  // 承認依頼部門
+  sharelib.ComponentUnitReference requested_organization = 4;
+  // 承認担当者（予定）
+  sharelib.StaffReference approval_plan_staff = 5;
+  // 承認部門（予定）
+  sharelib.ComponentUnitReference approval_plan_organization = 6;
+  // 承認依頼コメント
+  string requested_comment = 7;
+}
+
+// 承認実績
+message ApprovalResult {
+  // 承認実績日時
+  int64 decided_at = 1;
+  // 承認実績ユーザー
+  sharelib.EmbeddedUser decided_by = 2;
+  // 承認担当者（実績）
+  sharelib.StaffReference decided_staff = 3;
+  // 承認部門（実績）
+  sharelib.ComponentUnitReference decided_organization = 4;
+  // 承認実績コメント
+  string decided_comment = 5;
+}
+
+// 付属情報付き添付ファイル
+message AttachmentAttribute {
+  // 添付ファイル
+  sharelib.Attachment attachment = 1;
+  // 取引先管理ID
+  string business_unit_management_id = 2;
+  // 取引先名
+  string display_name = 3;
+}
+
+// 実行情報
+message Process {
+  // 実行日時
+  int64 processed_at = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 実行ユーザー
+  sharelib.EmbeddedUser processed_by = 2 [(mtn.visibility) = { scope: INHERIT }];
+}

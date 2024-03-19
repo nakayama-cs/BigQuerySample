@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package mtechnavi.api.batch;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "mtechnavi/batch/protobuf";
+
+service BatchService {
+  rpc ScheduleJobDailyMail(ScheduleJobDailyMailRequest) returns (google.protobuf.Empty);
+  rpc ScheduleJobSharetoSurveyReminder(ScheduleJobSharetoSurveyReminderRequest) returns (google.protobuf.Empty);
+  rpc ScheduleJobSharetoBusinessUnitManagement(ScheduleJobSharetoBusinessUnitManagementRequest) returns (google.protobuf.Empty);
+}
+
+message ScheduleJobDailyMailRequest {
+  // 処理対象開始時間
+  // e.g. HHMMSS
+  string since = 1;
+
+  // 処理対象終了時間
+  // e.g. HHMMSS
+  string until = 2;
+}
+
+message ScheduleJobSharetoSurveyReminderRequest {}
+
+message ScheduleJobSharetoBusinessUnitManagementRequest {}

@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package mtechnavi.api.programoption;
+
+import "google/protobuf/empty.proto";
+import "import.proto";
+
+option go_package = 'mtechnavi/programoption/protobuf';
+
+service ProgramOptionService {
+  rpc CreateProgramOption(CreateProgramOptionRequest) returns (ProgramOption);
+  rpc ListProgramOptions(ListProgramOptionsRequest) returns (ListProgramOptionsResponse);
+  rpc GetProgramOption(GetProgramOptionRequest) returns (ProgramOption);
+  rpc UpdateProgramOption(UpdateProgramOptionRequest) returns (ProgramOption);
+  rpc DeleteProgramOption(DeleteProgramOptionRequest) returns (google.protobuf.Empty);
+
+  rpc ImportProgramOptions(ImportProgramOptionsRequest) returns (ImportProgramOptionsResponse);
+  rpc ExportProgramOptions(ExportProgramOptionsRequest) returns (ExportProgramOptionsResponse);
+  rpc ListProgramOptionFormats(ListProgramOptionFormatsRequest) returns (ListProgramOptionFormatsResponse);
+
+  rpc MaintenanceProgramOptionFormats(MaintenanceProgramOptionsRequest) returns (MaintenanceProgramOptionsResponse);
+  rpc ProvisionProgramOptions(ProvisionProgramOptionsRequest) returns (ProvisionProgramOptionsResponse);
+}
+
+// Implementation Note:
+// システムが用意する名称マスタについては、GCS上にオブジェクト群として用意する。
+// テナント作成時に、GCSからDataproxyに対して投入する想定。
+message ProgramOption {
+  string program_option_id = 1;
+
+  // 名称
+  // Note:命名規約遵守のため型を用意してネストしている
+  message DisplayNameLang {
+    map<string, string> display_name_lang = 1;
+  }
+
+  // 種別
+  string category_name = 2;
+
+  // 種別名
+  DisplayNameLang category = 3;
+
+  // コード値
+  string code = 4;
+
+  // 名称値
+  map<string, string> display_name_lang = 5;
+
+  // システムコード値
+  string system_name = 6;
+
+  // システム名称値
+  DisplayNameLang system = 7;
+
+  // 並び順
+  int32 order = 8;
+
+  // readonly ユーザー編集可
+  bool user_editable = 12;
+
+  // readonly ユーザー編集済
+  bool user_edited = 13;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+}
+
+message CreateProgramOptionRequest {
+  ProgramOption program_option = 1;
+}
+
+message ListProgramOptionsRequest {}
+
+message ListProgramOptionsResponse {
+  int64 total = 1;
+
+  repeated ProgramOption items = 2;
+}
+
+message GetProgramOptionRequest {
+  string program_option_id = 1;
+}
+
+message UpdateProgramOptionRequest {
+  ProgramOption program_option = 1;
+}
+
+message DeleteProgramOptionRequest {
+  ProgramOption program_option = 1;
+}
+
+message ImportProgramOptionsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportProgramOptionsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+message ExportProgramOptionsRequest {
+  // transaction_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportProgramOptionsResponse {
+  string asset_id = 1;
+}
+
+message ListProgramOptionFormatsRequest {}
+
+message ListProgramOptionFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message MaintenanceProgramOptionsRequest {
+  repeated ProgramOption program_options = 1;
+  MaintenanceMode        mode            = 2;
+}
+
+message MaintenanceProgramOptionsResponse {}
+
+enum MaintenanceMode {
+  Complete    = 0;
+  Incremental = 1;
+}
+
+message ProvisionProgramOptionsRequest {}
+
+message ProvisionProgramOptionsResponse{}

@@ -1,0 +1,1 @@
+# nittoku-mtechnavi-sharelib

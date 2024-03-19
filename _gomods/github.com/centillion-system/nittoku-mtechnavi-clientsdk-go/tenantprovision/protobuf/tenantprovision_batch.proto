@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package mtechnavi.api.tenantprovision;
+
+import "identity.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "mtechnavi/tenantprovision/protobuf";
+
+service tenantprovisionBatchService {
+  // テナント申請データ作成
+  rpc TaskCreateTenentRequest(TaskCreateTenentRequestRequest) returns (google.protobuf.Empty);
+}
+
+message TaskCreateTenentRequestRequest {
+  // テナント申請ID
+  string tenant_request_id = 9;
+
+  // 招待テナント情報
+  // Implementation Note::
+  // tenant_code/domain/display_nameを設定
+  mtechnavi.api.idp.Tenant tenant = 1;
+
+  // 招待テナント管理者情報
+  // Implementation Note::
+  // email/display_nameを設定
+  mtechnavi.api.idp.User tenant_admin = 2;
+
+  // テナントに組み込むライセンスの種類
+  repeated string license_labels = 3;
+
+  // 招待日時
+  int64 invited_at = 4;
+
+  // 招待元テナントID
+  string invite_by = 5;
+
+  // 招待元取引先管理ID
+  string business_unit_management_id = 6;
+
+  // 招待個別メッセージ
+  string individual_message = 7;
+
+  // 招待問い合わせ先メッセージ
+  string contact_information_message = 8;
+}

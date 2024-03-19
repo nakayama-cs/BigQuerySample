@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package mtechnavi.api.company;
+
+import "google/protobuf/empty.proto";
+import "reference.proto";
+import "notificationsetting.proto";
+
+option go_package = "mtechnavi/company/protobuf";
+
+service CompanyBatchService {
+  rpc TaskLinkBusinessUnitManagement(TaskLinkBusinessUnitManagementRequest) returns (google.protobuf.Empty);
+
+  // 非同期Queue(バッチ) 履歴作成
+  rpc TaskCreateHistory(TaskCreateHistoryRequest) returns (google.protobuf.Empty);
+
+  // 非同期Queue(バッチ) メール送信
+  rpc TaskNotification(TaskNotificationRequest) returns (google.protobuf.Empty);
+
+  // 日次（夜間）スケジュール実行
+  rpc ScheduleTaskSharetoBusinessUnitManagement(ScheduleTaskSharetoBusinessUnitManagementRequest) returns (google.protobuf.Empty);
+
+  // 非同期Queue(バッチ) 自社企業情報公開
+  rpc TaskSharetoBusinessUnitManagement(TaskSharetoBusinessUnitManagementRequest) returns (google.protobuf.Empty);
+
+  // 非同期Queue(バッチ) 自社代表連絡先作成
+  rpc TaskCreateMainContact(TaskCreateMainContactRequest) returns (google.protobuf.Empty);
+
+  // 非同期Queue(バッチ) 取引先管理（連絡先）公開
+  rpc TaskSharetoBusinessUnitContact(TaskSharetoBusinessUnitContactRequest) returns (google.protobuf.Empty);
+
+  // 非同期Queue(バッチ) 更新/通知有効化
+  rpc TaskActivateBusinessUnit(TaskActivateBusinessUnitRequest) returns (google.protobuf.Empty);
+}
+
+message TaskLinkBusinessUnitManagementRequest {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+  // 紐づけるテナントID
+  string link_tenant_id = 2;
+  // 会社名
+  string company_display_name = 4;
+  // 招待テナントID
+  string invite_by = 3;
+  // Adminユーザー
+  sharelib.UserReference admin_user = 5;
+}
+
+// 非同期Queue(バッチ) 履歴作成
+// required tenant_id
+// required history_category_name
+// required content_name
+// required occurred_at
+// required type_name
+// required record_id
+message TaskCreateHistoryRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 分類
+  string history_category_name = 2;
+  // 内容
+  string content_name = 3;
+  // 内容パラメータ
+  repeated string content_paramaters = 4;
+  // 発生日
+  int64 occurred_at = 5;
+  // 通知レベル
+  int64 level = 6;
+  // 伝票種類
+  string type_name = 7;
+  // 伝票ID
+  string record_id = 8;
+}
+
+// 非同期Queue(バッチ) メール送信
+message TaskNotificationRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 通知ID
+  string notification_id = 2;
+  // 通知先企業名
+  string notification_company_name = 3;
+  // 通知先アカウント
+  sharelib.UserReference notification_user = 4;
+  // 通知内容
+  sharelib.NotificationSetting notification_setting = 5;
+}
+
+// 日次（夜間）スケジュール実行
+message ScheduleTaskSharetoBusinessUnitManagementRequest {}
+
+// 非同期Queue(バッチ) 自社企業情報公開
+// required tenant_id
+message TaskSharetoBusinessUnitManagementRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 重複チェック用UUID
+  string schedule_task_id = 2;
+  // バッチ開始時間
+  int64 occurred_at = 3;
+}
+
+// 非同期Queue(バッチ) 自社代表連絡先作成
+message TaskCreateMainContactRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 取引先管理ID
+  string business_unit_management_id = 2;
+  // 代表連絡先
+  sharelib.UserReference main_contact = 3;
+}
+
+// 非同期Queue(バッチ) 取引先管理（連絡先）公開
+message TaskSharetoBusinessUnitContactRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 取引先管理ID
+  string business_unit_management_id = 2;
+}
+
+// 非同期Queue(バッチ) 更新/通知有効化
+message TaskActivateBusinessUnitRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 紐づけるテナントID
+  string link_tenant_id = 2;
+}

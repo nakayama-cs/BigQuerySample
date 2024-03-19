@@ -1,0 +1,6 @@
+export PATH="`pwd`/.local/bin:${PATH}"
+export MTECHNAVI_CONTRIB_DIR="`pwd`/.local/opt/mtechnavi-contrib"
+
+export GOOGLE_CLOUD_PROJECT=FIXME
+export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/_creds/FIXME.json
+

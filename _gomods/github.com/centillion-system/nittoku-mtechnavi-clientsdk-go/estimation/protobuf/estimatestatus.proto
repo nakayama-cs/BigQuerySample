@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+
+import "nameoption.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// 確定状態の管理
+message Lock {
+  string lock_id = 1;
+
+  // "urn:mtechnavi.api.estimation.EstimateRequest:{{estimate_request_id}}"
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.estimation.EstimateRequest"
+  string type_name = 6 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // "{{estimate_request_id}}"
+  string record_id = 7;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 3;
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+}
+
+// 締切状態の管理
+message Close {
+  string close_id = 1;
+
+  // "urn:mtechnavi.api.estimation.EstimateRequest:{{estimate_request_id}}"
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "mtechnavi.api.estimation.EstimateRequest"
+  string type_name = 6 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{estimate_request_id}}"
+  string record_id = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 締切日時
+  // create時のtimestamp
+  int64 closed_at = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 3;
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+}
+
+// 完了状態の管理
+message Complete {
+  string complete_id = 1;
+
+  // "urn:mtechnavi.api.estimation.EstimateRequest:{{estimate_request_id}}"
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.estimation.EstimateRequest"
+  string type_name = 6 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // "{{estimate_request_id}}"
+  string record_id = 7;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 3;
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+}
+
+// 破棄状態の管理
+message Discard {
+  string discard_id = 1;
+
+  // "urn:mtechnavi.api.estimation.EstimateRequest:{{estimate_request_id}}"
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "mtechnavi.api.estimation.EstimateRequest"
+  string type_name = 6 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{estimate_request_id}}"
+  string record_id = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 3;
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+}
+
+// 見積依頼予定ステータス
+message EstimateRequestPlanStatus {
+  // ステータス
+  // 名称マスタにおける種別 A0010007 (見積依頼予定ステータス) を参照
+  sharelib.NameOption status = 1;
+}
+
+// 見積依頼ステータス
+message EstimateRequestStatus {
+  // ステータス
+  // 各種ステータスの組み合わせを専用に表現したもの
+  //
+  // 名称マスタにおける種別 A0010008 (見積依頼ステータス) を参照
+  sharelib.NameOption status = 1;
+
+  // 伝票ステータス
+  // 名称マスタにおける種別 A0010009 (見積依頼伝票ステータス) を参照
+  sharelib.NameOption data_status = 2;
+
+  // 保存承認ステータス
+  // 名称マスタにおける種別 A0010010 (見積依頼保存承認ステータス) を参照
+  sharelib.NameOption approval_status = 3;
+}
+
+// 見積（発注側）ステータス
+// 旧名：見積結果ステータス
+message EstimateSelectionStatus {
+  // ステータス
+  // 各種ステータスの組み合わせを専用に表現したもの
+  //
+  // 名称マスタにおける種別 A0010011 (見積結果ステータス) を参照
+  sharelib.NameOption status = 1;
+
+  // 伝票ステータス
+  // 名称マスタにおける種別 A0010012 (見積結果伝票ステータス) を参照
+  sharelib.NameOption data_status = 2;
+
+  // 保存承認ステータス
+  // 名称マスタにおける種別 A0010013 (見積選考保存承認ステータス) を参照
+  sharelib.NameOption approval_status = 3;
+}
+
+// 見積（受注側）ステータス
+// 旧名：見積ステータス
+// 受注側で見積情報を管理するためのステータス
+message EstimateResultStatus {
+  // ステータス
+  // 各種ステータスの組み合わせを専用に表現したもの
+  //
+  // 名称マスタにおける種別 A0010014 (見積ステータス) を参照
+  sharelib.NameOption status = 1;
+
+  // 伝票ステータス
+  // 名称マスタにおける種別 A0010015 (見積伝票ステータス) を参照
+  sharelib.NameOption data_status = 2;
+
+  // 保存承認ステータス
+  // 名称マスタにおける種別 A0010016 (見積保存承認ステータス) を参照
+  sharelib.NameOption approval_status = 3;
+}

@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package mtechnavi.api.systemreport;
+
+import "systemreport_mailmanagement.proto";
+
+option go_package = "mtechnavi/systemreport/protobuf";
+
+service SystemReportService {
+  // 単発メール管理データ
+  rpc CreateOneOffMailManagement(CreateOneOffMailManagementRequest) returns (OneOffMailManagement);
+  rpc GetOneOffMailManagement(GetOneOffMailManagementRequest) returns (OneOffMailManagement);
+}
+
+// 単発メール管理データ
+// required one_off_mail_management
+message CreateOneOffMailManagementRequest {
+  // 単発メール管理データ
+  // required daily_mail_management_id
+  OneOffMailManagement one_off_mail_management = 1;
+}
+
+// required one_off_mail_management_id
+message GetOneOffMailManagementRequest {
+  // 単発メール管理ID
+  string one_off_mail_management_id = 1;
+}

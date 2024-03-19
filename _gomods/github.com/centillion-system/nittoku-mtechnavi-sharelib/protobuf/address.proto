@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+// 住所
+message Address {
+  // 国コード
+  // e.g. 日本であれば、"81"
+  // 空の場合、デフォルトは"81"とする
+  string country_code = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 郵便番号
+  // ハイフン付きで格納する
+  string postal_code = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 住所
+  string address_line = 3 [(mtn.visibility) = { scope: INHERIT }];
+}

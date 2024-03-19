@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package mtechnavi.api.worktask;
+
+import "mtn/index.proto";
+import "nameoption.proto";
+
+option go_package = "mtechnavi/worktask/protobuf";
+
+// 作業案件紐付けデータ
+message WorkTaskRelation {
+  // 作業案件紐付けID
+  string work_task_relation_id = 1;
+
+  // 親指図案件ID
+  string linked_work_task_id = 2 [(mtn.dataproxy) = { index: { name: "linked_work_task_id" } }];
+
+  // readonly 子伝票urn
+  string urn = 3 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // type_name
+  string type_name = 4 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // record_id
+  string record_id = 5;
+
+  // システム分類
+  // 名称マスタにおける種別 A2000002 (システム分類) を参照
+  sharelib.NameOption system_category = 6;
+
+  // created_at
+  int64 created_at = 7;
+
+  // updated_at
+  int64 updated_at = 8;
+
+  // deleted_at
+  int64 deleted_at = 9;
+}
+
+// 指図案件紐付けコンテンツ
+message WorkTaskRelationContent {
+  // 指図案件紐付けデータ
+  WorkTaskRelation work_task_relation = 1;
+
+  // 番号
+  string code = 2;
+
+  // 件名
+  string display_name = 3;
+
+  // ステータス
+  // 名称マスタにおける種別 A0000040 (完了ステータス) を参照
+  sharelib.NameOption status = 4;
+}

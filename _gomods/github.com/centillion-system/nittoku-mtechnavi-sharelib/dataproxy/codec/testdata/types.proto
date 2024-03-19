@@ -1,0 +1,234 @@
+syntax = "proto3";
+
+package mtechnavi.testdata;
+
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+
+option go_package = 'mtechnavi/testdata';
+
+message ScalarTypes {
+  double   double_   = 1;
+  float    float_    = 3;
+  int32    int32_    = 5;
+  int64    int64_    = 7;
+  uint32   uint32_   = 9;
+  uint64   uint64_   = 11;
+  sint32   sint32_   = 13;
+  sint64   sint64_   = 15;
+  fixed32  fixed32_  = 17;
+  fixed64  fixed64_  = 19;
+  sfixed32 sfixed32_ = 21;
+  sfixed64 sfixed64_ = 23;
+  bool     bool_     = 25;
+  string   string_   = 27;
+  bytes    bytes_    = 29;
+}
+
+message RepeatedTypes {
+  // repeated
+  repeated double   repeated_double_   = 101;
+  repeated float    repeated_float_    = 103;
+  repeated int32    repeated_int32_    = 105;
+  repeated int64    repeated_int64_    = 107;
+  repeated uint32   repeated_uint32_   = 109;
+  repeated uint64   repeated_uint64_   = 111;
+  repeated sint32   repeated_sint32_   = 113;
+  repeated sint64   repeated_sint64_   = 115;
+  repeated fixed32  repeated_fixed32_  = 117;
+  repeated fixed64  repeated_fixed64_  = 119;
+  repeated sfixed32 repeated_sfixed32_ = 121;
+  repeated sfixed64 repeated_sfixed64_ = 123;
+  repeated bool     repeated_bool_     = 125;
+  repeated string   repeated_string_   = 127;
+  repeated bytes    repeated_bytes_    = 129;
+}
+
+message MapTypes {
+  // map
+  map<string, double>      map_string_double_     = 201;
+  map<string, float>       map_string_float_      = 202;
+  map<string, int32>       map_string_int32_      = 203;
+  map<string, int64>       map_string_int64_      = 204;
+  map<string, uint32>      map_string_uint32_     = 205;
+  map<string, uint64>      map_string_uint64_     = 206;
+  map<string, sint32>      map_string_sint32_     = 207;
+  map<string, sint64>      map_string_sint64_     = 208;
+  map<string, fixed32>     map_string_fixed32_    = 209;
+  map<string, fixed64>     map_string_fixed64_    = 210;
+  map<string, sfixed32>    map_string_sfixed32_   = 211;
+  map<string, sfixed64>    map_string_sfixed64_   = 212;
+  map<string, bool>        map_string_bool_       = 213;
+  map<string, string>      map_string_string_     = 214;
+  map<string, bytes>       map_string_bytes_      = 215;
+  map<string, RootMessage> map_string_message_    = 216;
+  map<string, string>      nil_map_string_string_ = 217;
+
+  map<int32, double>      map_int32_double_     = 221;
+  map<int32, float>       map_int32_float_      = 222;
+  map<int32, int32>       map_int32_int32_      = 223;
+  map<int32, int64>       map_int32_int64_      = 224;
+  map<int32, uint32>      map_int32_uint32_     = 225;
+  map<int32, uint64>      map_int32_uint64_     = 226;
+  map<int32, sint32>      map_int32_sint32_     = 227;
+  map<int32, sint64>      map_int32_sint64_     = 228;
+  map<int32, fixed32>     map_int32_fixed32_    = 229;
+  map<int32, fixed64>     map_int32_fixed64_    = 230;
+  map<int32, sfixed32>    map_int32_sfixed32_   = 231;
+  map<int32, sfixed64>    map_int32_sfixed64_   = 232;
+  map<int32, bool>        map_int32_bool_       = 233;
+  map<int32, string>      map_int32_string_     = 234;
+  map<int32, bytes>       map_int32_bytes_      = 235;
+  map<int32, RootMessage> map_int32_message_    = 236;
+  map<int32, string>      nil_map_int32_string_ = 237;
+
+  map<int64, double>      map_int64_double_     = 241;
+  map<int64, float>       map_int64_float_      = 242;
+  map<int64, int32>       map_int64_int32_      = 243;
+  map<int64, int64>       map_int64_int64_      = 244;
+  map<int64, uint32>      map_int64_uint32_     = 245;
+  map<int64, uint64>      map_int64_uint64_     = 246;
+  map<int64, sint32>      map_int64_sint32_     = 247;
+  map<int64, sint64>      map_int64_sint64_     = 248;
+  map<int64, fixed32>     map_int64_fixed32_    = 249;
+  map<int64, fixed64>     map_int64_fixed64_    = 250;
+  map<int64, sfixed32>    map_int64_sfixed32_   = 251;
+  map<int64, sfixed64>    map_int64_sfixed64_   = 252;
+  map<int64, bool>        map_int64_bool_       = 253;
+  map<int64, string>      map_int64_string_     = 254;
+  map<int64, bytes>       map_int64_bytes_      = 255;
+  map<int64, RootMessage> map_int64_message_    = 256;
+  map<int64, string>      nil_map_int64_string_ = 257;
+
+  map<uint32, double>      map_uint32_double_     = 261;
+  map<uint32, float>       map_uint32_float_      = 262;
+  map<uint32, int32>       map_uint32_int32_      = 263;
+  map<uint32, int64>       map_uint32_int64_      = 264;
+  map<uint32, uint32>      map_uint32_uint32_     = 265;
+  map<uint32, uint64>      map_uint32_uint64_     = 266;
+  map<uint32, sint32>      map_uint32_sint32_     = 267;
+  map<uint32, sint64>      map_uint32_sint64_     = 268;
+  map<uint32, fixed32>     map_uint32_fixed32_    = 269;
+  map<uint32, fixed64>     map_uint32_fixed64_    = 270;
+  map<uint32, sfixed32>    map_uint32_sfixed32_   = 271;
+  map<uint32, sfixed64>    map_uint32_sfixed64_   = 272;
+  map<uint32, bool>        map_uint32_bool_       = 273;
+  map<uint32, string>      map_uint32_string_     = 274;
+  map<uint32, bytes>       map_uint32_bytes_      = 275;
+  map<uint32, RootMessage> map_uint32_message_    = 276;
+  map<uint32, string>      nil_map_uint32_string_ = 277;
+
+  map<uint64, double>      map_uint64_double_     = 281;
+  map<uint64, float>       map_uint64_float_      = 282;
+  map<uint64, int32>       map_uint64_int32_      = 283;
+  map<uint64, int64>       map_uint64_int64_      = 284;
+  map<uint64, uint32>      map_uint64_uint32_     = 285;
+  map<uint64, uint64>      map_uint64_uint64_     = 286;
+  map<uint64, sint32>      map_uint64_sint32_     = 287;
+  map<uint64, sint64>      map_uint64_sint64_     = 288;
+  map<uint64, fixed32>     map_uint64_fixed32_    = 289;
+  map<uint64, fixed64>     map_uint64_fixed64_    = 290;
+  map<uint64, sfixed32>    map_uint64_sfixed32_   = 291;
+  map<uint64, sfixed64>    map_uint64_sfixed64_   = 292;
+  map<uint64, bool>        map_uint64_bool_       = 293;
+  map<uint64, string>      map_uint64_string_     = 294;
+  map<uint64, bytes>       map_uint64_bytes_      = 295;
+  map<uint64, RootMessage> map_uint64_message_    = 296;
+  map<uint64, string>      nil_map_uint64_string_ = 297;
+}
+
+message OneOfTypes {
+  oneof test_oneof {
+    RootMessage message1 = 3 [(mtn.dataproxy) = { index: { name: "__message1" } }];
+    RootMessage message2 = 5 [(mtn.dataproxy) = { index: { name: "__message2" } }];
+  }
+}
+
+enum RootEnum {
+  A = 0;
+  B = 1;
+  C = 2;
+}
+
+message EnumTypes {
+  RootEnum          root_enum1 = 1;
+  repeated RootEnum root_enum2 = 3;
+
+  enum ScopedEnum {
+    X = 0;
+    Y = 1;
+    Z = 2;
+  }
+  ScopedEnum          scoped_enum1 = 5;
+  repeated ScopedEnum scoped_enum2 = 7;
+}
+
+message RootMessage {
+  string x = 1;
+
+  sharelib.EmbeddedSharedProperties shared_properties = 2;
+  int64                             created_at        = 3;
+  int64                             updated_at        = 4;
+  int64                             deleted_at        = 5;
+}
+
+message MessageTypes {
+  RootMessage          root_message1 = 1;
+  repeated RootMessage root_message2 = 2;
+
+  message ScopedMessage {
+    string y = 1;
+  }
+  ScopedMessage          scoped_message1 = 3;
+  repeated ScopedMessage scoped_message2 = 4;
+}
+
+message WellKnownTypes {
+  google.protobuf.Empty empty = 1;
+}
+
+message ValidateTypes {
+  string x = 1 [(validate.rules).string.email = true];
+}
+
+message VisibilityTypes {
+  string private1 = 1;
+  string private2 = 2 [(mtn.visibility) = { scope: PRIVATE }];
+  string granted  = 3 [(mtn.visibility) = { scope: GRANTED }];
+  string public   = 4 [(mtn.visibility) = { scope: PUBLIC }];
+}
+
+message IndexTypes {
+  double               double_            = 1 [(mtn.dataproxy) = { index: { name: "__double" } }];
+  float                float_             = 3 [(mtn.dataproxy) = { index: { name: "__float" } }];
+  int32                int32_             = 5 [(mtn.dataproxy) = { index: { name: "__int32" } }];
+  int64                int64_             = 7 [(mtn.dataproxy) = { index: { name: "__int64" } }];
+  uint32               uint32_            = 9 [(mtn.dataproxy) = { index: { name: "__uint32" } }];
+  uint64               uint64_            = 11 [(mtn.dataproxy) = { index: { name: "__uint64" } }];
+  sint32               sint32_            = 13 [(mtn.dataproxy) = { index: { name: "__sint32" } }];
+  sint64               sint64_            = 15 [(mtn.dataproxy) = { index: { name: "__sint64" } }];
+  fixed32              fixed32_           = 17 [(mtn.dataproxy) = { index: { name: "__fixed32" } }];
+  fixed64              fixed64_           = 19 [(mtn.dataproxy) = { index: { name: "__fixed64" } }];
+  sfixed32             sfixed32_          = 21 [(mtn.dataproxy) = { index: { name: "__sfixed32" } }];
+  sfixed64             sfixed64_          = 23 [(mtn.dataproxy) = { index: { name: "__sfixed64" } }];
+  bool                 bool_              = 25 [(mtn.dataproxy) = { index: { name: "__bool" } }];
+  string               string_            = 27 [(mtn.dataproxy) = { index: { name: "__string" } }];
+  RootEnum             enum_              = 29 [(mtn.dataproxy) = { index: { name: "__enum" } }];
+  RootMessage          message_           = 31 [(mtn.dataproxy) = { index: { name: "__message" } }];
+  MessageTypes         nested_message_    = 33 [(mtn.dataproxy) = { index: { name: "__nested_message" } }];
+  map<string, string>  map_string_string_ = 35 [(mtn.dataproxy) = { index: { name: "__map_string_string" } }];
+  map<int64, string>   map_int64_string_  = 37 [(mtn.dataproxy) = { index: { name: "__map_int64_string" } }];
+  repeated int32       repeated_int32_    = 39 [(mtn.dataproxy) = { index: { name: "__repeated_int32" } }];
+  repeated int64       repeated_int64_    = 41 [(mtn.dataproxy) = { index: { name: "__repeated_int64" } }];
+  repeated bool        repeated_bool_     = 43 [(mtn.dataproxy) = { index: { name: "__repeated_bool" } }];
+  repeated string      repeated_string_   = 45 [(mtn.dataproxy) = { index: { name: "__repeated_string" } }];
+  repeated RootMessage repeated_message_  = 47 [(mtn.dataproxy) = { index: { name: "__repeated_message" } }];
+
+  string index_types_id = 1003;
+  int64  created_at     = 1000;
+  int64  updated_at     = 1001;
+  int64  deleted_at     = 1002;
+}

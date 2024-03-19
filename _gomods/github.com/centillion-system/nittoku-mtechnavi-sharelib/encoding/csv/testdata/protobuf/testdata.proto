@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package mtechnavi.api.sharelib.encoding.csv.testdata;
+
+option go_package = 'mtechnavi/sharelib/encoding/csv/testdata/protobuf';
+
+import "mtn/csv.proto";
+
+message SampleRecord {
+  option (mtn.csv_default_format) = {
+    header: true,
+    comma: COMMA,
+    encoding: SHIFT_JIS,
+  };
+
+  string user_id = 1 [(mtn.csv) = { column: 2, header: "ID" }];
+
+  string email = 2 [(mtn.csv) = { column: 1, header: "EMAIL" }];
+
+  string display_name = 3 [(mtn.csv) = { column: 3, header: "DISPLAY_NAME" }];
+
+  string password = 4;
+
+  int32 age = 5 [(mtn.csv) = { column: 5, header: "AGE", default: "0" }];
+
+  double weight = 7 [(mtn.csv) = { column: 6, header: "" }];
+
+  repeated string tags = 6 [(mtn.csv) = { column: 7, default: "default001,default002" }];
+
+  bool enable_single_sign_on = 8 [(mtn.csv) = { column: 8, header: "SINGLE_SIGN_ON", default: "1" }];
+}
+
+message SampleRecordWithError {
+  SampleRecord base = 1;
+
+  string error_content = 2 [(mtn.csv) = { column: 9 }];
+}

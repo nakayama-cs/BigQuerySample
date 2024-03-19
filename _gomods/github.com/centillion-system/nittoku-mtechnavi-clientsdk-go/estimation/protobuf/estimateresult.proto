@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+
+import "nameoption.proto";
+import "embedded.proto";
+import "amount.proto";
+import "datetime.proto";
+
+import "estimatebasictypes.proto";
+import "estimatestatus.proto";
+import "estimaterequest.proto";
+
+import "company_table.proto";
+
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// オーナー：受注企業
+// 見積結果
+message EstimateResult {
+  string estimate_result_id = 1;
+
+  // outputonly 見積（受注側）ステータス
+  // 旧名：見積ステータス
+  //
+  // Implementation Note::
+  //   回答中【未入力】 以外のステータスを表現する
+  //
+  EstimateResultStatus status = 2;
+
+  // reaadonly 回答日
+  // 見積結果が公開された日付
+  int64 replyed_at = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 見積結果情報
+  oneof result_content {
+    // 見積
+    EstimateProperties estimate_properties = 4 [(mtn.visibility) = { scope: GRANTED }];
+    // 辞退
+    DeclineProperties decline_properties = 5 [(mtn.visibility) = { scope: GRANTED }];
+  }
+
+  // 登録者情報
+  Issuer issuer = 6;
+
+  // 依頼データ
+  EstimateRequest estimate_request = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 依頼
+  string estimate_request_id = 17 [(mtn.dataproxy) = { index: { name: "estimate_request_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // outputonly 辞退
+  // decline_propertiesが存在する場合 true
+  bool decline = 8;
+
+  // ouputonly 完了
+  bool completed = 9;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 10;
+
+  // outputonly 見積依頼先
+  // shared_properties.shared_byに紐づく企業情報
+  mtechnavi.api.company.Company issuer_company = 11;
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 12;
+
+  // outputonly 確定
+  bool locked = 13;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 14;
+
+  int64 created_at = 15;
+
+  int64 updated_at = 16;
+
+  message EstimateProperties {
+    // 回答納期（分納は完納の日）
+    // Accuracy.DAY
+    sharelib.Datetime delivery_time_dt = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 参考リードタイム(日数)
+    int32 lead_time = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+    // outputonly 分納有り
+    //
+    // Implementation Note:
+    //   内訳明細に分納が存在する場合　true
+    //   estimate_result_details.detail_type.system_name = "2" (分納) が存在
+    //
+    bool partial_delivery = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 見積有効期限
+    // Accuracy.DAY
+    sharelib.Datetime estimate_expire_dt = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 見積金額
+    sharelib.MonetaryAmount amount = 5 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 見積数量 / 見積単位
+    sharelib.QuantityAmount quantity = 6 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 見積単価
+    sharelib.MonetaryAmount unit_price = 7 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 備考
+    string replyed_remarks = 8 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 内訳明細
+    repeated EstimateResultDetail estimate_result_details = 9 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 添付情報
+    repeated Attachment attachments = 10 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 見積番号（外部システム用）
+    string private_code = 11;
+
+    // 社内備考
+    string remarks = 12;
+
+    // 原価明細（社内管理用）
+    repeated EstimateResultCostDetail estimate_result_cost_details = 13;
+  }
+
+  message DeclineProperties {
+    // コメント
+    string comment = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // readonly 辞退日
+    // 辞退が公開された日付
+    int64 declined_at = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+}
+
+message EstimateResultDetail {
+  // 明細番号
+  string detail_name = 1 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 区分
+  // 名称マスタにおける種別 A0000020 (見積明細区分) を参照
+  sharelib.NameOption detail_type = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 詳細情報
+  oneof detail_content {
+    // 金額内訳
+    BreakdownProperties breakdown_properties = 3 [(mtn.visibility) = { scope: GRANTED }];
+    // 分納
+    PartialDeliveryProperties partial_delivery_properties = 4 [(mtn.visibility) = { scope: GRANTED }];
+  }
+
+  // 備考
+  string remarks = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  message BreakdownProperties {
+    // 費目
+    // 名称マスタにおける種別 A0000018 (見積費目（回答）) を参照
+    sharelib.NameOption expense_item = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 費目名
+    string display_name = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 数量 / 数量単位
+    sharelib.QuantityAmount quantity = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 単価
+    sharelib.MonetaryAmount unit_price = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 金額
+    sharelib.MonetaryAmount amount = 5 [(mtn.visibility) = { scope: INHERIT }];
+  }
+
+  message PartialDeliveryProperties {
+    // 項目(件名)
+    string display_name = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 分納対象明細番号
+    string estimate_request_detail_name = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 数量 / 数量単位
+    sharelib.QuantityAmount quantity = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 回答納期（分納）
+    // Accuracy.DAY
+    sharelib.Datetime delivery_time_dt = 4 [(mtn.visibility) = { scope: INHERIT }];
+  }
+}
+
+message EstimateResultCostDetail {
+  // 明細番号
+  string detail_name = 1;
+
+  // 費目コード
+  // 費目
+  // 名称マスタにおける種別 A0000019 (見積費目（社内）) を参照
+  sharelib.NameOption expense_item = 2;
+
+  // 費目名
+  string display_name = 3;
+
+  // 数量 / 数量単位
+  sharelib.QuantityAmount quantity = 4;
+
+  // 単価
+  sharelib.MonetaryAmount unit_price = 5;
+
+  // 金額
+  sharelib.MonetaryAmount amount = 6;
+
+  // 備考
+  string remarks = 7;
+}

@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package mtechnavi.api.tenantprovision;
+
+import "identity.proto";
+
+option go_package = "mtechnavi/tenantprovision/protobuf";
+
+service TenantProvisionService {
+  // テナント申請取得
+  rpc GetTenantRequest(GetTenantRequestRequest) returns (GetTenantRequestResponse);
+  // テナント申請確認
+  rpc VerifyTenantRequest(VerifyTenantRequestRequest) returns (VerifyTenantRequestResponse);
+  // テナント申請確定
+  rpc ApplyTenantRequest(ApplyTenantRequestRequest) returns (ApplyTenantRequestResponse);
+}
+
+// required tenant_request_id
+message GetTenantRequestRequest {
+  // テナント申請ID
+  string tenant_request_id = 1;
+}
+
+message GetTenantRequestResponse {
+  // テナント申請
+  TenantRequest tenant_request = 1;
+}
+
+// required tenant_request
+message VerifyTenantRequestRequest {
+  // テナント申請
+  // required tenant_request_id
+  // required tenant_display_name_lang
+  // required admin_display_name
+  // required admin_email
+  TenantRequest tenant_request = 1;
+}
+
+message VerifyTenantRequestResponse {
+  // No fields
+}
+
+// required tenant_request_id
+// required verify_tenant_request_id
+message ApplyTenantRequestRequest {
+  // テナント申請ID
+  string tenant_request_id = 1;
+  // テナント申請確認ID
+  string verify_tenant_request_id = 2;
+}
+
+message ApplyTenantRequestResponse {
+  // No fields
+}
+
+message TenantRequest {
+  // テナント申請ID
+  string tenant_request_id = 1;
+
+  mtechnavi.api.idp.Tenant tenant = 2;
+
+  mtechnavi.api.idp.User tenant_admin = 3;
+
+  // 招待日時 readonly
+  // Implementation Note::
+  // 格納Format：yyyy/MM/dd HH:mm:ss(JST)
+  string invited_at = 4;
+
+  // 申請受付日時 readonly
+  // Implementation Note::
+  // 格納Format：yyyy/MM/dd HH:mm:ss(JST)
+  string request_verified_at = 5;
+
+  // ライセンスラベル readonly
+  // テナントに組み込むライセンスの種類
+  repeated string license_labels = 6;
+
+  // 招待元テナントID readonly
+  // 招待元テナントのテナントID
+  string invite_by = 7;
+
+  // 招待元取引先管理ID readonly
+  // 招待元の取引先管理マスタのrecord_id
+  string releate_business_unit_management_id = 8;
+}

@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+import "nameoption.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+message MonetaryAmount {
+  // 通貨コード
+  // JPY：日本
+  string currency_code = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 整数
+  int64 integral_amount = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 少数（４桁）
+  int32 fractional_amount = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message DistantAmount {
+  enum Unit {
+    NONE        = 0;
+    METER       = 1;
+    CENTI_METER = 2;
+    MILLI_METER = 3;
+    MICRO_METER = 4;
+    NANO_METER  = 5;
+  }
+  // 単位コード
+  Unit unit = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 整数
+  int64 integral_amount = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 少数（４桁）
+  int32 fractional_amount = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 数量
+message QuantityAmount {
+  // 名称マスタにおける種別 A0000005 (数量単位) を参照
+  NameOption unit = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 整数
+  int64 integral_amount = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 小数（４桁）
+  int32 fractional_amount = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 数値
+message Amount {
+  // 整数
+  int64 integral_amount = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 小数
+  int32 fractional_amount = 2 [(mtn.visibility) = { scope: INHERIT }];
+}

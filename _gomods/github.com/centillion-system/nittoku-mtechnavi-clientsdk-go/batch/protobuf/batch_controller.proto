@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package mtechnavi.api.batch;
+
+import "batch_task.proto";
+
+option go_package = "mtechnavi/batch/protobuf";
+
+service BatchControllerService {
+  rpc CreateBatchTask(CreateBatchTaskRequest) returns (CreateBatchTaskResponse);
+  rpc CreateBatchScheduleTask(CreateBatchScheduleTaskRequest) returns (CreateBatchScheduleTaskResponse);
+}
+
+message CreateBatchTaskRequest {
+  // 実行タスク
+  // required service
+  // required method
+  // required reqeust_json
+  BatchTask batch_task = 1;
+}
+
+message CreateBatchTaskResponse {}
+
+message CreateBatchScheduleTaskRequest {}
+
+message CreateBatchScheduleTaskResponse {}

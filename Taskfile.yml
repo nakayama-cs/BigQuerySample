@@ -1,0 +1,117 @@
+# https://taskfile.dev
+
+version: '3'
+
+includes:
+  _:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile._.yml'
+    optional: true
+  cred:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.cred.yml'
+    optional: true
+  envoy:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.envoy.yml'
+    optional: true
+  go:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.go.yml'
+    optional: true
+  image:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.image.yml'
+    optional: true
+  protoc:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.protoc.yml'
+    optional: true
+
+vars:
+  SERVICE_NAME: mtechnavi-form
+
+  IMAGE: asia-northeast2-docker.pkg.dev/mtn-share/r/{{.SERVICE_NAME}}
+
+  # 参照する内部ライブラリのブランチ/タグ名
+  CONTRIB_VERSION: 20230413r0
+  SHARELIB_VERSION: 20240130r0
+  CLIENTSDK_VERSION: 20240110r0
+
+tasks:
+  test:
+    - task: go:test
+
+  lint:
+    - task: go:lint
+
+  format:
+    cmds:
+      - { task: protoc:format, vars: { DIR: protobuf/ } }
+
+  protoc:
+    desc: .protoファイルのコンパイルを実行する
+    vars:
+      PROTO_PATH_FLAGS: --proto_path='{{.PWD}}/_gomods/github.com/centillion-system/nittoku-mtechnavi-sharelib/protobuf'
+      PLUGIN_FLAGS: --csv_opt=paths=source_relative --csv_out='.'
+    cmds:
+      - { task: protoc:go, vars: { DIR: protobuf/, PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:descriptor, vars: { DIR: protobuf/, PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+
+  build:
+    cmds:
+      - { task: image:build, vars: { IMAGE: '{{.IMAGE}}' } }
+
+  push:
+    cmds:
+      # snapを使用してインストールしているGoogleCloudCLIの問題により
+      # Docker (containerd) 構成が ~/.docker/config.json ではなく ~/snap/docker/current/.docker/config.json にあるという事実によって引き起こされるため、承認中に gcloud によって行われた更新は無意味…
+      - |
+        if [ {{OS}} == 'linux' ]; then
+          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin asia-northeast2-docker.pkg.dev
+        fi
+      - { task: image:push, vars: { IMAGE: '{{.IMAGE}}' } }
+
+  init:cred:
+    cmds:
+      - { task: cred:credjson, vars: { NAME: '{{.SERVICE_NAME}}' } }
+
+  init:gomods:
+    cmds:
+      - { task: _:rmdir, vars: { DIR: _gomods } }
+      - { task: go:gomod, vars: { URL: https://github.com/centillion-system/nittoku-mtechnavi-clientsdk-go,  VERSION: '{{.CLIENTSDK_VERSION}}' } }
+      - { task: go:gomod, vars: { URL: https://github.com/centillion-system/nittoku-mtechnavi-sharelib,  VERSION: '{{.SHARELIB_VERSION}}' } }
+      - task: init:protoc-gen-csv
+
+  init:protoc-gen-csv:
+    env:
+      GOBIN: '{{.PWD}}/.local/bin'
+    dir: _gomods/github.com/centillion-system/nittoku-mtechnavi-sharelib
+    cmds:
+      - go install ./cmd/protoc-gen-csv/
+  # XXX: Taskfileの実行環境を整えるために実行するため、contribの用意しているスクリプトは使用不可
+  init:contrib:
+    cmds:
+      - cmd: rm -rf .local/opt/mtechnavi-contrib
+        ignore_error: true
+      - |
+        git clone \
+            --branch '{{.CONTRIB_VERSION}}' \
+            --single-branch \
+            --depth 1 \
+            --recurse-submodules \
+            --shallow-submodules \
+            https://github.com/centillion-system/nittoku-mtechnavi-contrib \
+            .local/opt/mtechnavi-contrib
+      - |
+        if [[ -z "${MTECHNAVI_CONTRIB_DIR}" ]]; then
+          export MTECHNAVI_CONTRIB_DIR="{{.PWD}}/.local/opt/mtechnavi-contrib"
+        fi
+        task _:init
+        task envoy:init
+        task cred:init
+        task go:init
+        task image:init
+        task protoc:init
+
+  # 初回実行時には、本Taskfile実行時点で参照先のTaskfileが存在しないため、task呼び出しができない。
+  # 外部コマンドとしてtaskを実行することで、再度参照先のTaskfileを評価し、回避する。
+  init:
+    cmds:
+      - task: init:contrib
+      - task: init:protoc-gen-csv
+      - cp --no-clobber --verbose envrc.sample .envrc

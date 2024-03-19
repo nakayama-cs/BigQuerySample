@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+import "nameoption.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 催促データ
+message SurveyReminder {
+  // 催促ID
+  string survey_reminder_id = 1;
+
+  // 依頼明細ID
+  string survey_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_request_id" } }];
+
+  // readonly 催促日時
+  int64 reminded_at = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 催促メッセージ区分
+  // 名称マスタにおける種別 A1000003 (催促メッセージ区分) を参照
+  sharelib.NameOption content_type = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 催促メッセージ内容
+  string content = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 通知先
+  // 名称マスタにおける種別 A1000005 (通知先設定) を参照
+  repeated sharelib.NameOption notify_tos = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // TO
+  repeated string tos = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // CC
+  repeated string ccs = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 手動送信
+  bool manual = 9 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 回答期日変更ID
+  string survey_reply_due_date_change_id = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 11;
+
+  int64 created_at = 12;
+
+  int64 updated_at = 13;
+
+  int64 deleted_at = 14;
+}
+
+// 履歴データ
+message History {
+  // 履歴ID
+  string history_id = 1;
+
+  // urn
+  // "urn:mtechnavi.api.survey.SurveyRequest:{{survey_request_id}}"
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.survey.SurveyRequest"
+  string type_name = 10 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{survey_request_id}}"
+  string record_id = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 履歴分類
+  // メッセージにおける種別 HISTORY / コード H[XXXXXXX]a を参照
+  // e.g. H0000001a
+  string history_category_name = 3;
+
+  // 内容
+  // メッセージにおける種別 HISTORY / コード H[XXXXXXX]b を参照
+  // e.g. H0000001b
+  string content_name = 4;
+
+  // 内容パラメータ
+  repeated string content_paramaters = 5;
+
+  // readonly 発生日時
+  int64 occurred_at = 6;
+
+  // 通知レベル
+  int64 level = 12;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+
+  int64 deleted_at = 9;
+}

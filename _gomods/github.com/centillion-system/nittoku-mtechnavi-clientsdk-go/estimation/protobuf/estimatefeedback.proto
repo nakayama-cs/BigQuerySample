@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// オーナー：発注企業
+// 見積結果フィードバック
+// e.g. 差戻の処理で利用
+message EstimateResultFeedback {
+  string estimate_result_feedback_id = 1;
+
+  string estimate_result_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "estimate_result_id" } }];
+
+  // コメント
+  string comment = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 送信日
+  // フィードバック情報がshareされた日時
+  int64 sended_at = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 5;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 6;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package sharelib;
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+enum ErrorLevel {
+  NONE    = 0;
+  ERROR   = 1;
+  WARNING = 2;
+}
+
+enum Error {
+  UNKNOWN                           = 0;
+  BAD_REQUEST                       = 1;
+  INVALID_ARGUMENT                  = 2;
+  INTERNAL_ERROR                    = 3;
+  UNAUTHORIZED                      = 4;
+  FORBIDDEN                         = 5;
+  NOT_FOUND                         = 6;
+  RESOURCE_ALREADY_UPDATED_BY_OTHER = 7;
+}

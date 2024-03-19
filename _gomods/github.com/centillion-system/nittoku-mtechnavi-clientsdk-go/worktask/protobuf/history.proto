@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package mtechnavi.api.worktask;
+
+import "mtn/index.proto";
+
+option go_package = "mtechnavi/worktask/protobuf";
+
+// 履歴データ
+message History {
+  // 履歴ID
+  string history_id = 1;
+
+  // readonly urn
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // readonly type_name
+  string type_name = 3 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // readonly record_id
+  string record_id = 4;
+
+  // 履歴分類
+  string history_category_name = 5;
+
+  // 内容
+  string content_name = 6;
+
+  // 内容パラメータ
+  repeated string content_paramaters = 7;
+
+  // readonly 発生日時
+  int64 occurred_at = 8;
+
+  // created_at
+  int64 created_at = 9;
+
+  // updated_at
+  int64 updated_at = 10;
+
+  // deleted_at
+  int64 deleted_at = 11;
+
+  // 通知レベル
+  int64 level = 12;
+}

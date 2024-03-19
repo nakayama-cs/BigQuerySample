@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package mtechnavi.api.company;
+
+import "reference.proto";
+import "nameoption.proto";
+
+import "company_table.proto";
+import "company_datatype.proto";
+
+option go_package = 'mtechnavi/company/protobuf';
+
+// 取引先管理コンテンツ
+message BusinessUnitManagementContent {
+  // 取引先管理マスタ
+  BusinessUnitManagement business_unit_management = 1;
+
+  // テナントステータス
+  sharelib.NameOption tenant_status = 2;
+
+  // 自社通知先アカウント
+  repeated sharelib.UserReference aggregated_notification_users = 3;
+
+  // 通知/更新ステータス
+  sharelib.NameOption active_status = 4;
+
+  // 自社企業（基本情報）マスタ
+  BusinessUnitProfile business_unit_profile = 5;
+
+  // 基本情報
+  CompanyProfile profile = 6;
+}
+
+// 取引先管理フォーマットコンテンツ
+message BusinessUnitManagementFormatContent {
+  // 取引先管理マスタ
+  BusinessUnitManagement business_unit_management = 1;
+
+  // テナントステータス
+  sharelib.NameOption tenant_status = 2;
+
+  // 自社企業（基本情報）マスタ
+  BusinessUnitProfile business_unit_profile = 3;
+
+  // 取引先管理（連絡先）マスタ 代表連絡先
+  BusinessUnitContact business_unit_main_contact = 5;
+
+  // 取引先管理（連絡先）社内管理マスタ
+  BusinessUnitContactAttribute business_unit_contact_attribute = 4;
+}
+
+// 取引先管理（連絡先）コンテンツ
+message BusinessUnitContactContent {
+  // 自社企業（連絡先）マスタ
+  BusinessUnitContact business_unit_contact = 1;
+
+  // 取引先管理（連絡先）依頼データ
+  BusinessUnitContactHeader business_unit_contact_header = 2;
+
+  // 取引先管理（連絡先）社内管理データ
+  BusinessUnitContactAttribute business_unit_contact_attribute = 3;
+
+  // 連絡先ステータス
+  sharelib.NameOption status = 4;
+}
+
+// 取引先管理（第三者情報）コンテンツ
+message BusinessUnitScoreContent {
+  // 識別コード
+  string code = 1;
+
+  // データ種類
+  sharelib.NameOption category = 2;
+
+  // 取引先管理（第三者情報）情報
+  repeated ItemValue item_values = 3;
+
+  // 第三者情報ファイルデータ
+  BusinessUnitScoreAsset business_unit_score_asset = 4;
+}
+
+message StaffAndComponentUnit {
+  // 担当者（自社内）
+  Staff staff = 1;
+  // 組織（自社内）
+  ComponentUnit component_unit = 2;
+}
+
+message PostUnitAndCompanyAndComponentUnitAndBusinessUnit {
+  // 取引窓口（自社内）
+  PostUnit post_unit = 1;
+  // 管理場所（グローバル）
+  //
+  // Implementation Note::
+  // post_unit.component_unit_idに紐づく管理場所情報
+  //
+  ComponentUnit component_unit = 2;
+  // 会社情報（グローバル）
+  //
+  // Implementation Note::
+  // component_unit.company_idに紐づく企業情報
+  //
+  Company company = 3;
+  // 取引先情報（自社内）
+  //
+  // Implementation Note::
+  // post_unitが埋め込まれている親エンティティの情報
+  //
+  BusinessUnit business_unit = 4;
+}
+
+message CompanyAndComponentUnitAndBusinessUnit {
+  // 会社情報（グローバル）
+  Company company = 1;
+  // 事業所/取引窓口（グローバル）
+  repeated ComponentUnit component_units = 2;
+  // 取引先情報（自社内）
+  BusinessUnit business_unit = 3;
+}
+
+message CompanyAndBusinessUnit {
+  // 会社情報（グローバル）
+  Company company = 1;
+  // 取引先情報（自社内）
+  BusinessUnit business_unit = 2;
+  // outputonly 企業ステータス
+  // CompanyStatus company_status = 3;
+  reserved 3;
+}
+
+// リスト全体
+message BusinessUnitSkillTree {
+  repeated BusinessUnitSkillItem skill_items = 1;
+}
+
+// 技術要素(カテゴリor技術要素)
+message BusinessUnitSkillItem {
+  // ID
+  string business_unit_skill_item_id = 1;
+
+  // 名称
+  // ja:日本語名
+  // en:英語名
+  map<string, string> display_name_lang = 2;
+
+  // さらに子のカテゴリがあれば持つ
+  // なければ末端(チェックボックス)とみなす
+  repeated BusinessUnitSkillItem children = 3;
+}

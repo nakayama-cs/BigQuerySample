@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package mtechnavi.api.notification;
+import "validate/validate.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "mtechnavi/notification/protobuf";
+
+service Notification {
+  // 通知送信
+  rpc Notify(NotifyRequest) returns (NotifyResponse);
+
+  // 通知監視先取得
+  rpc ListenChannel(ListenChannelRequest) returns (ListenChannelResponse);
+}
+
+message Email {
+  // テンプレートID
+  string template_id = 1;
+
+  // 送信元
+  string from = 2 [(validate.rules).string.email = true];
+
+  // 宛先（複数指定可能）
+  repeated string to = 3 [(validate.rules).repeated = { items: { string: { email: true } } }];
+  // CC（複数指定可能）
+  repeated string cc = 4 [(validate.rules).repeated = { items: { string: { email: true } } }];
+  // BCC（複数指定可能）
+  repeated string bcc = 5 [(validate.rules).repeated = { items: { string: { email: true } } }];
+
+  // テンプレートパラメータ
+  map<string, string> parameters = 6;
+
+  // スケジュール指定（送信日時）
+  int64 send_at = 7;
+}
+
+message NotifyRequest {
+  oneof request {
+    NotifyEmailRequest   email   = 1;
+    NotifyChannelRequest channel = 2;
+  }
+}
+
+message PasswordResetParameter {
+  // パスワードリセットURL
+  string reset_url = 1 [(validate.rules).string.uri = true];
+  // パスワードリセットURL有効期限
+  string reset_url_expired_at = 2;
+}
+
+message SendHeader {
+  // 宛先（複数指定可能）
+  repeated string to = 1 [(validate.rules).repeated = { items: { string: { email: true } } }];
+  // CC（複数指定可能）
+  repeated string cc = 2 [(validate.rules).repeated = { items: { string: { email: true } } }];
+  // BCC（複数指定可能）
+  repeated string bcc = 3 [(validate.rules).repeated = { items: { string: { email: true } } }];
+  // スケジュール指定（送信日時）
+  int64 send_at = 4;
+  // 添付ファイル（複数指定可能）
+  // 具体的な添付方法はT.B.D
+  // repeated string attachment_file = X;
+}
+
+// 通知メール送信 リクエスト
+message NotifyEmailRequest {
+  // メールID
+  string email_id = 2;
+
+  SendHeader header = 1;
+
+  // メールテンプレートそれぞれを表すmessageを1つ指定する
+  // テンプレートそれぞれのパラメータは、指定するmessageに対して設定する。
+  oneof template {
+    option (validate.required)                                             = true;
+    TenantCreatedEmailTemplate            tenant_created_email             = 4;
+    AccountCreatedEmailTemplate           account_created_email            = 5;
+    PasswordResetEmailTemplate            password_reset_email             = 6;
+    AddressChangeProhibitionEmailTemplate address_change_prohibition_email = 7;
+    FreeStyleEmailTemplate                free_style_email                 = 8;
+    VerifyTenantRequestEmailTemplate      verify_tenant_request_email      = 9;
+    TenantInvitationEmailTemplate         tenant_invitation_email          = 10;
+  }
+}
+
+// テナント作成完了メール リクエスト
+message TenantCreatedEmailTemplate {
+  reserved 1;
+  reserved 3;
+
+  // 企業名
+  string tenant_display_name = 4;
+
+  // テナント管理者名
+  string admin_display_name = 5;
+
+  // テナントスペースURL
+  string tenant_space_url = 2 [(validate.rules).string.uri = true];
+
+  // パスワード
+  string password = 6;
+}
+
+// アカウント作成完了メール リクエスト
+message AccountCreatedEmailTemplate {
+  // テナントスペースURL
+  string tenant_space_url = 1 [(validate.rules).string.uri = true];
+
+  // 初期パスワード
+  string password = 2;
+}
+
+// パスワードリセットメール リクエスト
+message PasswordResetEmailTemplate {
+  // テナント名
+  string tenant_name = 1;
+
+  PasswordResetParameter password_reset_param = 2;
+}
+
+// Emailアドレス変更禁止メール
+message AddressChangeProhibitionEmailTemplate {}
+
+// フリースタイルメール リクエスト
+message FreeStyleEmailTemplate {
+  // タイトル
+  string title = 1;
+
+  // 本文ヘッダ
+  string content_header = 2;
+
+  // 本文
+  string content_body = 3;
+
+  // 本文フッタ
+  string content_footer = 4;
+}
+
+// テナント申請受付メール
+message VerifyTenantRequestEmailTemplate {
+  // 企業名
+  string tenant_display_name = 1;
+
+  // テナント管理者名
+  string admin_display_name = 2;
+
+  // 受付日時
+  string request_verified_at = 3;
+
+  // テナントスペースURL
+  string apply_tenant_request_url = 4;
+}
+
+// テナント申請受付メール
+message TenantInvitationEmailTemplate {
+  // 企業名
+  string tenant_display_name = 1;
+
+  // テナント管理者名
+  string admin_display_name = 2;
+
+  // 個別メッセージ
+  string individualMessage = 3;
+
+  // テナント申請URL
+  string tenant_request_url = 4;
+
+  // 問い合わせ先メッセージ
+  string contactInformationMessage = 5;
+}
+
+message NotifyChannelRequest {
+  // 通知先を示すチャンネル名一覧
+  repeated string channel_names = 1;
+
+  // 通知本文
+  // 送信/受信側の双方において、事前に定義されたJSONペイロードを用いる。
+  bytes data = 2;  // json payload
+}
+
+message NotifyResponse {
+  // 必要に応じて考える
+}
+
+message ListenChannelRequest {
+  string channel_name = 1;
+}
+
+message ListenChannelResponse {
+  string firestore_project_id      = 1;
+  string firestore_collection_path = 2;
+}
+
+message Event {
+  // イベント識別ID
+  string event_id = 1;
+
+  // イベント名称
+  // 監査イベントログの「auditSubCategory」が設定される
+  string event_name = 2;
+
+  // テナントID
+  // 監査イベントログを書いたテナントのID
+  string tenant_id = 3;
+
+  // ユーザID
+  // 監査イベントログを書いたユーザのID
+  string user_id = 4;
+
+  // イベントパラメータ
+  google.protobuf.Any parameters = 5;
+}

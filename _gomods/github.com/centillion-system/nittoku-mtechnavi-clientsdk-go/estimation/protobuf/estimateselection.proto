@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+
+import "nameoption.proto";
+import "embedded.proto";
+
+import "estimatebasictypes.proto";
+import "estimatestatus.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// オーナー：発注企業
+// 見積選考（公開）
+message EstimateSelection {
+  string estimate_selection_id = 1;
+
+  // outputonly 見積ステータス （発注側）
+  // 旧名：見積結果ステータス
+  EstimateSelectionStatus status = 2;
+
+  // 選考結果
+  // 名称マスタにおける種別 A0000029 (選考結果) を参照
+  sharelib.NameOption selection_result = 3;
+
+  // readonly 採用
+  //
+  // Implementation Note::
+  //   selection_result.system_name = "1" (採用) の場合 true
+  //
+  bool adoption = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 選考理由
+  SelectionFeedback selection_feedback = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // reaadonly 回答日
+  // 見積選考が公開された日付
+  int64 replyed_at = 19 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 登録者情報
+  //
+  // Implementation Note::
+  //   更新処理を実施したユーザーのアカウント情報をもとに更新する
+  //
+  Issuer issuer = 6;
+
+  // outputonly 発注出力
+  // EstimateSelectionExportLogが１つでもある場合 true
+  bool order_exported = 7;
+
+  // outputonly 発注日時
+  // EstimateSelectionExportLog.exported_atの最新のもの
+  int64 order_exported_at = 8;
+
+  // 見積結果
+  string estimate_result_id = 9 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "estimate_result_id" } }];
+
+  // readonly 公開依頼
+  ApprovalRequestProperties approval_request_properties = 10;
+
+  // readonly 承認
+  ApprovalProperties approval_properties = 11;
+
+  // outputonly 完了
+  bool completed = 12;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 13;
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 14;
+
+  // outputonly 確定
+  bool locked = 15;
+
+  // readonly 受付日時
+  // create時のtimestamp
+  int64 received_at = 20;
+
+  // readonly 選考日時
+  // update時のtimestamp
+  int64 selected_at = 21;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 16;
+
+  int64 created_at = 17;
+
+  int64 updated_at = 18;
+
+  message SelectionFeedback {
+    // 選考種別
+    // 名称マスタにおける種別 A0000030 (選考種別) を参照
+    sharelib.NameOption category = 1 [(mtn.visibility) = { scope: GRANTED }];
+
+    // 選考理由
+    // 名称マスタにおける種別 A0000031 (選考理由) を参照
+    sharelib.NameOption reason = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+    // 選考理由テキスト
+    string message = 3 [(mtn.visibility) = { scope: GRANTED }];
+  }
+}
+
+// 発注出力用
+message EstimateSelectionExportLog {
+  string estimate_selection_export_log_id = 1;
+
+  // 見積選考
+  string estimate_selection_id = 2 [(mtn.dataproxy) = { index: { name: "estimate_selection_id" } }];
+
+  // 出力日時
+  int64 exported_at = 3;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 4;
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+}

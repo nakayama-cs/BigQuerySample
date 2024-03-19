@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package mtechnavi.api.sharelib.validator.testdata;
+
+option go_package = 'mtechnavi/sharelib/validator/testdata/protobuf';
+
+import "validate/validate.proto";
+
+message Strings {
+  string const_foo         = 1 [(.validate.rules).string.const = "foo"];
+  string len_5             = 2 [(.validate.rules).string.len = 5];
+  string min_len_5         = 3 [(.validate.rules).string.min_len = 5];
+  string max_len_5         = 4 [(.validate.rules).string.max_len = 5];
+  string between_1_5       = 5 [(.validate.rules).string = { min_len: 1, max_len: 5 }];
+  string min_bytes_5       = 6 [(.validate.rules).string.min_bytes = 5];
+  string max_bytes_5       = 7 [(.validate.rules).string.max_bytes = 5];
+  string between_bytes_1_5 = 8 [(.validate.rules).string = { min_bytes: 1, max_bytes: 5 }];
+  string pattern           = 9 [(.validate.rules).string.pattern = "re2-compliant"];
+  string prefix            = 10 [(.validate.rules).string.prefix = "foo"];
+  string suffix            = 11 [(.validate.rules).string.suffix = "foo"];
+  string contains          = 12 [(.validate.rules).string.contains = "foo"];
+  string not_contains      = 13 [(.validate.rules).string.not_contains = "foo"];
+}
+
+message TestingRequest {
+  string x = 1;
+}
+
+message TestRecord {
+  double          double_          = 1;
+  float           float_           = 3;
+  int32           int32_           = 5;
+  int64           int64_           = 7;
+  uint32          uint32_          = 9;
+  uint64          uint64_          = 11;
+  sint32          sint32_          = 13;
+  sint64          sint64_          = 15;
+  fixed32         fixed32_         = 17;
+  fixed64         fixed64_         = 19;
+  sfixed32        sfixed32_        = 21;
+  sfixed64        sfixed64_        = 23;
+  bool            bool_            = 25;
+  string          string_          = 27;
+  repeated string repeated_string_ = 29;
+  repeated int64  repeated_int64_  = 31;
+
+  int64 deleted_at = 100;
+  int64 created_at = 101;
+  int64 updated_at = 102;
+}

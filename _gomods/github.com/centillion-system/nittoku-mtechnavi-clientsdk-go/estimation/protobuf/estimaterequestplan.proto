@@ -1,0 +1,401 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "datetime.proto";
+
+import "estimatebasictypes.proto";
+import "estimatestatus.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// 見積依頼予定
+message EstimateRequestPlan {
+  string estimate_request_plan_id = 1;
+
+  // outputonly 見積依頼予定ステータス
+  EstimateRequestPlanStatus status = 2;
+
+  // 見積依頼予定件名
+  // ja:日本語名
+  // ja-kana:日本語名かな
+  // 作業名 / 作業名(カナ)
+  map<string, string> display_name_lang = 3;
+
+  oneof linkage_content {
+    SAPWorkOrder sap_work_order = 4;
+  }
+
+  // 見積依頼予定登録者情報
+  Issuer issuer = 5;
+
+  // readonly 紐付けあり
+  // 紐づく見積依頼が作成済の場合 true を返す
+  //
+  // Implementation Note:
+  //   readonly項目 見積依頼予定固有の管理のため別途ステータス用のエンティティを用意しない
+  //
+  bool linked = 6;
+
+  // outputonly 完了
+  bool completed = 7;
+
+  // outputonly 破棄
+  bool discarded = 8;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 9;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 10;
+
+  int64 created_at = 11;
+
+  int64 updated_at = 12;
+
+  // SAP作業依頼情報
+  // SAPから取込まれたデータがそのまま格納される
+  // SAP固有項目の場合、フィールド名の命名規則はSAP側に合わせている
+  message SAPWorkOrder {
+    // 内部指図書番号
+    string tracking_code = 1;
+
+    // 指図タイプ
+    string order_type = 2;
+
+    // 原価センタ
+    // 原価センタコード / 元原価センタ名
+    CostCenter cost_center = 3;
+
+    // 会社
+    // 会社コード / 会社名
+    SAPCodeItem company = 4;
+
+    // 受付年月日 / 受付部門コード / 受付社員名
+    SAPReceiverProperties receiver_properties = 5;
+
+    // 申請者氏名 / 申請部門名
+    RequesterProperties requester_properties = 6;
+
+    // 作業分類コード / 作業分類名
+    SAPCodeItem work_category = 7;
+
+    // 作業用途コード / 作業用途名
+    SAPCodeItem work_usage = 8;
+
+    // 場所コード / 場所名
+    SAPCodeItem place = 9;
+
+    // 見積金額
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string amount = 10;
+
+    // 予算金額
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string budget = 11;
+
+    // 決済先勘定
+    SAPCodeItem settlement_account = 12;
+
+    // 完了予定年月
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string work_complete_plan_date = 13;
+
+    // 完了年月日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string work_completed_date = 14;
+
+    // 中止年月日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string work_stoped_date = 15;
+
+    // 削除年月日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string work_deleted_date = 16;
+
+    // 単月情報
+    MonthlyProperties monthly_properties = 17;
+
+    // 累計情報
+    AccumulatedProperties accumulated_properties = 18;
+
+    // 実績単価
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string actual_unit_price = 19;
+
+    // 設計費比率
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string design_cost_ratio = 20;
+
+    // 発注予定数
+    // 数量 / 基本数量単位
+    SAPUnitAmount quantity = 21;
+
+    // 見積単価
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string unit_price = 22;
+
+    // 売価
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string selling_price = 23;
+
+    // 売上税コード
+    string sales_tax_code = 24;
+
+    // 申請年月日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string request_date = 25;
+
+    // 承認日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string approved_date = 26;
+
+    // 不要なフィールドのため削除
+    reserved 27;
+
+    // 希望納期
+    // Accuracy.DAY
+    sharelib.Datetime desired_recive_dt = 28;
+
+    // 受付NO
+    string received_code = 29;
+
+    // 要求NO
+    string requested_code = 30;
+
+    // プロジェクトコード / プロジェクト名
+    SAPCodeItem project = 31;
+
+    // 得意先コード / 得意先名
+    SAPCodeItem customer = 32;
+
+    // 注文番号
+    string order_code = 33;
+
+    // 品種(利益センタ) / 品目コード / 品目名称
+    SAPTypeCodeItem material = 34;
+
+    // 支給会社情報
+    SAPCodeItem supplies_company = 35;
+
+    // 関連会社
+    SAPAssociatedCompany associated_company = 36;
+
+    // 添付資料有り
+    bool attachment = 37;
+
+    // 生技図面
+    string blueprint_content = 38;
+
+    // フリー
+    string free_item = 39;
+
+    // 受付時フリー
+    string received_free_item = 40;
+
+    // 資産コード①
+    string asset_code1 = 41;
+
+    // 資産コード②
+    string asset_code2 = 42;
+
+    // 資産コード③
+    string asset_code3 = 43;
+
+    // 資産コード④
+    string asset_code4 = 44;
+
+    // 資産コード⑤
+    string asset_code5 = 45;
+
+    // 資産コード⑥
+    string asset_code6 = 46;
+
+    // 資産コード⑦
+    string asset_code7 = 47;
+
+    // 資産コード⑧
+    string asset_code8 = 48;
+
+    // 資産コード⑨
+    string asset_code9 = 49;
+
+    // 資産コード⑩
+    string asset_code10 = 50;
+
+    // 投資委員会決済NO
+    string settlement_code = 51;
+
+    // 発注依頼書年月日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string purchase_order_date = 52;
+
+    // 決裁年月日
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string approval_date = 53;
+
+    // 稟申台数
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string approval_quantity = 54;
+
+    // 稟申金額
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string approval_amount = 55;
+
+    // 着工予定年月
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string start_date = 56;
+
+    // コスト分類１
+    string cost_category1 = 57;
+
+    // 環境投資金額１
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string environment_investment_amount1 = 58;
+
+    // 環境効果金額１
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    string environment_return_amount1 = 59;
+
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    message MonthlyProperties {
+      // 単月：作業時間
+      string work_time = 1;
+
+      // 単月：(内)設計時間
+      string design_time = 2;
+
+      // 単月：受付賦課基準
+      string received_assessment_amount = 3;
+
+      // 単月：購買賦課基準
+      string purchase_assessment_amount = 4;
+
+      // 単月：作業金額
+      string work_cost = 5;
+
+      // 単月：(内)設計金額
+      string design_cost = 6;
+
+      // 単月：受付金額
+      string received_amount = 7;
+
+      // 単月：発注金額
+      string order_amount = 8;
+
+      // 単月：直出金額
+      string direct_delivery_amount = 9;
+
+      // 単月：倉出金額
+      string delivery_amount = 10;
+
+      // 単月：振替金額
+      string reclassify_amount = 11;
+
+      // 単月：合計金額
+      string total_amount = 12;
+    }
+
+    //
+    // Implementation Note:
+    //   メモ項目のため、入力値をそのまま格納する
+    //
+    message AccumulatedProperties {
+      // 累計：作業時間
+      string work_time = 1;
+
+      // 累計：(内)設計時間
+      string design_time = 2;
+
+      // 累計：受付枚数
+      string received_document_amount = 3;
+
+      // 累計：発注枚数
+      string order_document_amount = 4;
+
+      // 累計：作業金額
+      string work_cost = 5;
+
+      // 累計：(内)設計金額
+      string design_cost = 6;
+
+      // 累計：受付金額
+      string received_amount = 7;
+
+      // 累計：発注金額
+      string order_amount = 8;
+
+      // 累計：直出金額
+      string direct_delivery_amount = 9;
+
+      // 累計：倉出金額
+      string delivery_amount = 10;
+
+      // 累計：振替金額
+      string reclassify_amount = 11;
+
+      // 累計：合計金額
+      string total_amount = 12;
+    }
+  }
+}

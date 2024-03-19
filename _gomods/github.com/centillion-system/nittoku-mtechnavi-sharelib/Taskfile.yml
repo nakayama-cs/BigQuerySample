@@ -1,0 +1,115 @@
+# https://taskfile.dev
+
+version: "3"
+
+includes:
+  _:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile._.yml'
+    optional: true
+  go:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.go.yml'
+    optional: true
+  protoc:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.protoc.yml'
+    optional: true
+
+vars:
+  # 参照する内部ライブラリのブランチ/タグ名
+  CONTRIB_VERSION: 20230120r0
+  CLIENTSDK_VERSION: 20240110r0
+
+tasks:
+  test:
+    - task: go:test
+
+  test:protoc-gen-csv:
+    env:
+      GOBIN: '{{.PWD}}/.local/bin'
+    cmds:
+      - go install ./cmd/protoc-gen-csv/
+      # cliの動作も含めて考える必要があるため、 task protoc では↓のコンパイルはさせず、ここでやる
+      - { task: protoc:go,
+          vars: {
+            DIR: encoding/csv/testdata/protobuf,
+            PROTO_PATH_FLAGS: "--proto_path='{{.PWD}}/protobuf/'",
+            PLUGIN_FLAGS: "--csv_opt=paths=source_relative --csv_out='.'"
+          } }
+      - go test ./encoding/csv/
+
+  lint:
+    - task: go:lint
+
+  format:
+    cmds:
+      - { task: protoc:format, vars: { DIR: protobuf } }
+      - { task: protoc:format, vars: { DIR: event/protobuf } }
+      - { task: protoc:format, vars: { DIR: validator/protobuf } }
+      - { task: protoc:format, vars: { DIR: validator/testdata/protobuf } }
+      - { task: protoc:format, vars: { DIR: compare/testdata/protobuf } }
+      - { task: protoc:format, vars: { DIR: visibility/testdata/protobuf } }
+      - { task: protoc:format, vars: { DIR: auditlog/protobuf } }
+      - { task: protoc:format, vars: { DIR: encoding/csv/testdata/protobuf } }
+      - { task: protoc:format, vars: { DIR: ioengine/testdata/protobuf } }
+      - { task: protoc:format, vars: { DIR: dataproxy/codec/testdata } }
+
+  protoc:
+    desc: .protoファイルのコンパイルを実行する
+    cmds:
+      - { task: protoc:go, vars: { DIR: protobuf } }
+      - { task: protoc:go, vars: { DIR: event/protobuf } }
+      - { task: protoc:go, vars: { DIR: validator/protobuf } }
+      - { task: protoc:go, vars: { DIR: validator/testdata/protobuf } }
+      - { task: protoc:go, vars: { DIR: compare/testdata/protobuf, PROTO_PATH_FLAGS: "--proto_path='{{.PWD}}/protobuf'" } }
+      - { task: protoc:go, vars: { DIR: visibility/testdata/protobuf, PROTO_PATH_FLAGS: "--proto_path='{{.PWD}}/protobuf'" } }
+      - { task: protoc:go, vars: { DIR: ioengine/testdata/protobuf, PROTO_PATH_FLAGS: "--proto_path='{{.PWD}}/protobuf'", PLUGIN_FLAGS: "--csv_opt=paths=source_relative --csv_out='.'" } }
+      - { task: protoc:go, vars: { DIR: dataproxy/codec/testdata, PROTO_PATH_FLAGS: "--proto_path='{{.PWD}}/protobuf'" } }
+      - { task: protoc:go, vars: { DIR: auditlog/protobuf } }
+      - { task: protoc:go, vars: { DIR: encoding/csv/testdata/protobuf, PROTO_PATH_FLAGS: "--proto_path='{{.PWD}}/protobuf'", PLUGIN_FLAGS: "--csv_opt=paths=source_relative --csv_out='.'" } }
+
+  init:gomods:
+    cmds:
+      - { task: _:rmdir, vars: { DIR: _gomods } }
+      - { task: go:gomod, vars: { URL: https://github.com/centillion-system/nittoku-mtechnavi-clientsdk-go, VERSION: '{{.CLIENTSDK_VERSION}}' } }
+
+  # XXX: Taskfileの実行環境を整えるために実行するため、contribの用意しているスクリプトは使用不可
+  init:contrib:
+    cmds:
+      - cmd: rm -rf .local/opt/mtechnavi-contrib
+        ignore_error: true
+      - |
+        git clone \
+            --branch '{{.CONTRIB_VERSION}}' \
+            --single-branch \
+            --depth 1 \
+            --recurse-submodules \
+            --shallow-submodules \
+            https://github.com/centillion-system/nittoku-mtechnavi-contrib \
+            .local/opt/mtechnavi-contrib
+      - |
+        if [[ -z "${MTECHNAVI_CONTRIB_DIR}" ]]; then
+          export MTECHNAVI_CONTRIB_DIR="{{.PWD}}/.local/opt/mtechnavi-contrib"
+        fi
+      - task _:init
+      - task go:init
+      - task protoc:init
+
+  init:tools:
+    env:
+      GOBIN: '{{.PWD}}/.local/bin/'
+    cmds:
+      - cmd: go install ./cmd/protoc-gen-csv/
+        ignore_error: true
+      - |
+        cd _tools/generate-nameoption-constants/ && \
+          go install .
+      - |
+        cd _tools/generate-message-constants/ && \
+          go install .
+
+  # 初回実行時には、本Taskfile実行時点で参照先のTaskfileが存在しないため、task呼び出しができない。
+  # 外部コマンドとしてtaskを実行することで、再度参照先のTaskfileを評価し、回避する。
+  init:
+    cmds:
+      - task: init:contrib
+      - task: init:tools
+      - cp --no-clobber --verbose envrc.sample .envrc

@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "mtn/visibility.proto";
+import "reference.proto";
+import "datetime.proto";
+import "nameoption.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+message Issuer {
+  // 登録部門
+  sharelib.ComponentUnitReference organization_unit = 1;
+
+  // 登録担当者
+  sharelib.StaffReference staff = 2;
+
+  // 登録日時
+  int64 issued_at = 3;
+}
+
+message RequesterProperties {
+  // 要求元部門
+  sharelib.ComponentUnitReference organization_unit = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 要求元担当者
+  sharelib.StaffReference staff = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 要求元連絡先
+  string phone_number = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message CostCenter {
+  // 要求元原価センタコード
+  string cost_center_code = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 要求元原価センタ名
+  string display_name = 2 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 共通フィルター
+// 基本はいずれかの条件を指定してListを取得する
+message StatusFilter {
+  // 完了
+  bool completed = 1;
+}
+
+// 画像ファイル
+message ImageFile {
+  // アセットID
+  string asset_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 添付ファイル
+message Attachment {
+  // アセットID
+  string asset_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 分類
+  // 名称マスタにおける種別 A0000016 (ファイル分類) を参照
+  sharelib.NameOption category = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // ファイル名
+  string filename = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 備考
+  string remarks = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+  // ファイル種類
+  string mime_type = 5 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 種別
+  // 名称マスタにおける種別 A0000017 (ファイル種別) を参照
+  sharelib.NameOption link_type = 6 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 明細番号
+  int32 detail_name = 7 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 公開依頼
+message ApprovalRequestProperties {
+  // 承認依頼コメント
+  string comment = 1;
+
+  // 承認部門（予定）
+  sharelib.ComponentUnitReference approval_organization_unit = 2;
+
+  // 承認担当者（予定）
+  sharelib.StaffReference approval_staff = 3;
+
+  // 依頼日時
+  int64 requested_at = 4;
+}
+
+// 公開承認
+message ApprovalProperties {
+  // 承認却下コメント
+  string comment = 1;
+
+  // 承認部門（実施）
+  sharelib.ComponentUnitReference approval_organization_unit = 2;
+
+  // 承認担当者（実施）
+  sharelib.StaffReference approval_staff = 3;
+
+  // 承認日時
+  int64 approved_at = 4;
+
+  // 承認却下日時
+  int64 rejected_at = 5;
+}
+
+message SAPCodeItem {
+  // コード
+  string item_code = 1;
+  // 名称
+  string display_name = 2;
+}
+
+message SAPUnitAmount {
+  // 単位
+  string unit = 1;
+  // 数量
+  string amount = 2;
+}
+
+message SAPTypeCodeItem {
+  // 種類
+  string item_type = 1;
+
+  // コード
+  string item_code = 2;
+
+  // 名称
+  string display_name = 3;
+}
+
+message SAPAssociatedCompany {
+  // 関連会社
+  string display_name = 1;
+
+  // 関連会社：原価センタ
+  string cost_center = 2;
+
+  // 関連会社：利益センタ
+  string profit_center = 3;
+}
+
+message SAPReceiverProperties {
+  // 受付部門
+  SAPCodeItem organization_unit = 1;
+  // 受付担当者
+  SAPCodeItem staff = 2;
+  // 受付年月日
+  // Accuracy.DAY
+  sharelib.Datetime received_dt = 3;
+}

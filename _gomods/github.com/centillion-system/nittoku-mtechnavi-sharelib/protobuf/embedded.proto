@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+// Implementation Note:
+// "mtechnavi/sharelib/to".ToEmbeddedUser を用いて生成すること。
+message EmbeddedUser {
+  string display_name = 1 [(mtn.visibility) = { scope: INHERIT }];
+  string email        = 2 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 他テナントから共有されたmessageに付与される、共有についての情報を格納するmessage
+// read-only
+//
+// このmessageはDataproxyが設定する。
+// 利用側は、直接設定してはならず、参照のみとすること。
+message EmbeddedSharedProperties {
+  // 共有元のテナントID
+  string shared_by = 1;
+
+  // 自テナントに共有が実施された時刻
+  int64 shared_at = 2;
+}
+
+// 最終更新情報
+message EmbeddedUpdatedProperties {
+  // 最終更新日時
+  int64 updated_at = 1;
+
+  // 最終更新ユーザー
+  sharelib.EmbeddedUser updated_by = 2;
+}
+
+// 企業情報
+message EmbeddedCompany {
+  // 企業ID
+  string company_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 企業名
+  // ja:企業名
+  // ja-kana:ふりがな
+  // en:英語名
+  map<string, string> display_name_lang = 2 [(mtn.visibility) = { scope: INHERIT }];
+}

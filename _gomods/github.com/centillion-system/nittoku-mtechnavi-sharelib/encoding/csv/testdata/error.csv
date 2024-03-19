@@ -1,0 +1,6 @@
+# この行は行コメントとして無視される。
+"user001@example.com","U001","取込 太郎",,"error10","error0","",true
+"user002@example.com","U002","取込 次郎",,２０,0.1,"a,b",1
+"user003@example.com","U003","取込 
+三郎",,"error
+30",0.01,"b,c",false

@@ -1,0 +1,436 @@
+syntax = "proto3";
+
+package mtechnavi.api.tenantadmin;
+
+import "google/protobuf/empty.proto";
+import "nameoption.proto";
+import "identity.proto";
+import "import.proto";
+import "embedded.proto";
+import "validate/validate.proto";
+
+option go_package = "mtechnavi/tenantadmin/protobuf";
+
+service TenantAdminService {
+  rpc CreateUserAttribute(CreateUserAttributeRequest) returns (UserAttribute);
+  rpc CreateUserAndUserAttribute(CreateUserAndUserAttributeRequest) returns (UserAttribute);
+  rpc ListUserAttributes(ListUserAttributesRequest) returns (ListUserAttributesResponse);
+  rpc GetUserAttribute(GetUserAttributeRequest) returns (UserAttribute);
+  rpc UpdateUserAttribute(UpdateUserAttributeRequest) returns (UserAttribute);
+  rpc UpdateUserAndUserAttribute(UpdateUserAndUserAttributeRequest) returns (UserAttribute);
+  rpc DeleteUserAttribute(DeleteUserAttributeRequest) returns (google.protobuf.Empty);
+  rpc DeleteUserAndUserAttribute(DeleteUserAndUserAttributeRequest) returns (google.protobuf.Empty);
+  rpc DisableUser(DisableUserRequest) returns (DisableUserResponse);
+  rpc EnableUser(EnableUserRequest) returns (EnableUserResponse);
+
+  // アカウント取込
+  rpc ImportUserAttributes(ImportUserAttributesRequest) returns (ImportUserAttributesResponse);
+  // 取込フォーマット出力
+  rpc ExportUserAttributes(ExportUserAttributesRequest) returns (ExportUserAttributesResponse);
+  // 取込フォーマット取得
+  rpc ListUserAttributeFormats(ListUserAttributeFormatsRequest) returns (ListUserAttributeFormatsResponse);
+
+  // ユーザ作成完了通知を送信
+  rpc SendEmailUserCreated(SendEmailUserCreatedRequest) returns (SendEmailUserCreatedResponse);
+
+  rpc CreateUserGroupAttribute(CreateUserGroupAttributeRequest) returns (UserGroupAttribute);
+  rpc CreateUserGroupAndUserGroupAttribute(CreateUserGroupAndUserGroupAttributeRequest) returns (UserGroupAttribute);
+  rpc ListUserGroupAttributes(ListUserGroupAttributesRequest) returns (ListUserGroupAttributesResponse);
+  rpc GetUserGroupAttribute(GetUserGroupAttributeRequest) returns (UserGroupAttribute);
+  rpc UpdateUserGroupAttribute(UpdateUserGroupAttributeRequest) returns (UserGroupAttribute);
+  rpc UpdateUserGroupAndUserGroupAttribute(UpdateUserGroupAndUserGroupAttributeRequest) returns (UserGroupAttribute);
+  rpc DeleteUserGroupAttribute(DeleteUserGroupAttributeRequest) returns (google.protobuf.Empty);
+  rpc DeleteUserAndUserGroupAttribute(DeleteUserGroupAndUserGroupAttributeRequest) returns (google.protobuf.Empty);
+
+  // メンバー取込
+  rpc ImportUserBelongsUserGroups(ImportUserBelongsUserGroupsRequest) returns (ImportUserBelongsUserGroupsResponse);
+  // 取込フォーマット出力
+  rpc ExportUserBelongsUserGroups(ExportUserBelongsUserGroupsRequest) returns (ExportUserBelongsUserGroupsResponse);
+  // 取込フォーマット取得
+  rpc ListUserBelongsUserGroupFormats(ListUserBelongsUserGroupFormatsRequest) returns (ListUserBelongsUserGroupFormatsResponse);
+
+  // ロール出力
+  rpc ExportAttachedRoles(ExportAttachedRolesRequest) returns (ExportAttachedRolesResponse);
+  // フォーマット取得
+  rpc ListUserGroupAttachedRolesFormats(ListUserGroupAttachedRolesFormatsRequest) returns (ListUserGroupAttachedRolesFormatsResponse);
+
+  // メニュー画面出力
+  rpc ExportAllowedMenuItems(ExportAllowedMenuItemsRequest) returns (ExportAllowedMenuItemsResponse);
+  // フォーマット取得
+  rpc ListUserGroupAllowedMenuItemFormats(ListUserGroupAllowedMenuItemFormatsRequest) returns (ListUserGroupAllowedMenuItemFormatsResponse);
+
+  // ロール
+  rpc CreateRoleAttribute(CreateRoleAttributeRequest) returns (RoleAttribute);
+  rpc ListRoleAttributes(ListRoleAttributesRequest) returns (ListRoleAttributesResponse);
+  rpc GetRoleAttribute(GetRoleAttributeRequest) returns (RoleAttribute);
+  rpc UpdateRoleAttribute(UpdateRoleAttributeRequest) returns (RoleAttribute);
+  rpc DeleteRoleAttribute(DeleteRoleAttributeRequest) returns (google.protobuf.Empty);
+}
+
+message UserAttribute {
+  // Implementation Note::
+  // mtechnavi.api.idp.Userのuser_idと同一
+  string user_attribute_id = 1;
+
+  // outputonly ユーザー
+  mtechnavi.api.idp.User user = 2;
+
+  // 補足情報
+  string remarks = 3;
+
+  // outputonly アカウントステータス
+  UserStatus status = 4;
+
+  // readonly 最終更新日時
+  int64 user_attribute_updated_at = 8;
+
+  // readonly 最終更新ユーザー
+  sharelib.EmbeddedUser user_attribute_updated_by = 9;
+
+  int64 deleted_at = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  // アカウントステータス
+  message UserStatus {
+    // ステータス
+    // 状態（category）と状態の詳細（detail）の組み合わせを専用に表現したもの
+    //
+    // 名称マスタにおける種別 A0010022 (アカウントステータス) を参照
+    sharelib.NameOption status = 1;
+
+    // 状態
+    // 名称マスタにおける種別 A0010023 (アカウントステータス（状態）) を参照
+    sharelib.NameOption category = 2;
+
+    // 状態の詳細
+    // 名称マスタにおける種別 A0010024 (アカウントステータス（状態の詳細）) を参照
+    sharelib.NameOption detail = 3;
+  }
+}
+
+message UserGroupAttribute {
+  // Implementation Note::
+  // mtechnavi.api.idp.UserGroupのuser_group_idと同一
+  string user_group_attribute_id = 1;
+
+  // outputonly ユーザーグループ
+  mtechnavi.api.idp.UserGroup user_group = 2;
+
+  // グループ詳細
+  string remarks = 3;
+
+  // readonly システムグループ
+  //
+  // Implementation Note::
+  //   Create時にuser_group_idで判定する
+  //   tenantが作成される時に作られる以下の２レコードは true (システム)
+  //     特権管理者グループ
+  //     全社グループ:
+  //   それ以外の場合は false (ユーザー) となる
+  //
+  bool system_group = 4;
+
+  // outputony メンバー数
+  UserSummary user_summary = 5;
+
+  // outputony 表示可能画面
+  repeated string view_ids = 6;
+
+  // outputony メニュー画面 (表示可能プリセット)
+  repeated string preset_ids = 7;
+
+  int64 deleted_at = 8;
+
+  int64 created_at = 9;
+
+  int64 updated_at = 10;
+
+  message UserSummary {
+    int64 total = 1;
+  }
+}
+
+message RoleAttribute {
+  // Implementation Note::
+  // role_nameと同一の粒度
+  string role_attribute_id = 1;
+  // ロール
+  string role_name = 2;
+  // 説明
+  string remarks = 3;
+
+  int64 deleted_at = 4;
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+}
+
+message CreateUserAttributeRequest {
+  UserAttribute user_attribute = 1;
+}
+
+// required user
+message CreateUserAndUserAttributeRequest {
+  // required email
+  // required display_name
+  mtechnavi.api.idp.User user           = 1 [(validate.rules).message.skip = true];
+  UserAttribute          user_attribute = 2;
+}
+
+message ListUserAttributesRequest {}
+
+message ListUserAttributesResponse {
+  int64 total = 1;
+
+  repeated UserAttribute items = 2;
+}
+
+// required user_attribute_id
+message GetUserAttributeRequest {
+  string user_attribute_id = 1;
+}
+
+message UpdateUserAttributeRequest {
+  UserAttribute user_attribute = 1;
+}
+
+// required user
+// Implementation Note:
+//   IDチェック
+//   ユーザー(グループ)IDと属性IDの整合性チェック
+message UpdateUserAndUserAttributeRequest {
+  // required user_id
+  // required updated_at
+  // required email
+  // required display_name
+  mtechnavi.api.idp.User user           = 1;
+  UserAttribute          user_attribute = 2;
+}
+
+message DeleteUserAttributeRequest {
+  UserAttribute user_attribute = 1;
+}
+
+// required user
+message DeleteUserAndUserAttributeRequest {
+  // required user_id
+  // required updated_at
+  // required email
+  // required display_name
+  mtechnavi.api.idp.User user           = 1;
+  UserAttribute          user_attribute = 2;
+}
+
+message DisableUserRequest {
+  mtechnavi.api.idp.User user = 1;
+}
+
+message DisableUserResponse {
+  mtechnavi.api.idp.User user = 1;
+}
+
+message EnableUserRequest {
+  mtechnavi.api.idp.User user = 1;
+}
+
+message EnableUserResponse {
+  mtechnavi.api.idp.User user = 1;
+}
+
+// required url
+// required file_format
+message ImportUserAttributesRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportUserAttributesResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+// required file_format
+message ExportUserAttributesRequest {
+  // user_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportUserAttributesResponse {
+  string asset_id = 1;
+}
+
+message ListUserAttributeFormatsRequest {}
+
+message ListUserAttributeFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message SendEmailUserCreatedRequest {
+  mtechnavi.api.idp.User user = 1;
+}
+
+message SendEmailUserCreatedResponse {}
+
+message CreateUserGroupAttributeRequest {
+  UserGroupAttribute user_group_attribute = 1;
+}
+
+message CreateUserGroupAndUserGroupAttributeRequest {
+  mtechnavi.api.idp.UserGroup user_group           = 1;
+  UserGroupAttribute          user_group_attribute = 2;
+}
+
+message ListUserGroupAttributesRequest {}
+
+message ListUserGroupAttributesResponse {
+  int64 total = 1;
+
+  repeated UserGroupAttribute items = 2;
+}
+
+message GetUserGroupAttributeRequest {
+  string user_group_attribute_id = 1;
+}
+
+message UpdateUserGroupAttributeRequest {
+  UserGroupAttribute user_group_attribute = 1;
+}
+
+message UpdateUserGroupAndUserGroupAttributeRequest {
+  mtechnavi.api.idp.UserGroup user_group           = 1;
+  UserGroupAttribute          user_group_attribute = 2;
+}
+
+message DeleteUserGroupAttributeRequest {
+  UserGroupAttribute user_group_attribute = 1;
+}
+
+message DeleteUserGroupAndUserGroupAttributeRequest {
+  mtechnavi.api.idp.UserGroup user_group           = 1;
+  UserGroupAttribute          user_group_attribute = 2;
+}
+
+message ImportUserBelongsUserGroupsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportUserBelongsUserGroupsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+message ExportUserBelongsUserGroupsRequest {
+  // user_group_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportUserBelongsUserGroupsResponse {
+  string asset_id = 1;
+}
+
+message ListUserBelongsUserGroupFormatsRequest {}
+
+message ListUserBelongsUserGroupFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message ExportAttachedRolesRequest {
+  // user_group_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportAttachedRolesResponse {
+  string asset_id = 1;
+}
+
+message ListUserGroupAttachedRolesFormatsRequest {}
+
+message ListUserGroupAttachedRolesFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message ExportAllowedMenuItemsRequest {
+  // user_group_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportAllowedMenuItemsResponse {
+  string asset_id = 1;
+}
+
+message ListUserGroupAllowedMenuItemFormatsRequest {}
+
+message ListUserGroupAllowedMenuItemFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message CreateRoleAttributeRequest {
+  RoleAttribute role_attribute = 1;
+}
+
+message ListRoleAttributesRequest {}
+
+message ListRoleAttributesResponse {
+  int64 total = 1;
+
+  repeated RoleAttribute items = 2;
+}
+
+message GetRoleAttributeRequest {
+  string role_attribute_id = 1;
+}
+
+message UpdateRoleAttributeRequest {
+  RoleAttribute role_attribute = 1;
+}
+
+message DeleteRoleAttributeRequest {
+  RoleAttribute role_attribute = 1;
+}

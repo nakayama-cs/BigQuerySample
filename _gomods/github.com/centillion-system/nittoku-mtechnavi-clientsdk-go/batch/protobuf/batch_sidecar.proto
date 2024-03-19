@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package mtechnavi.api.batch;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "mtechnavi/batch/protobuf";
+
+service BatchSidecarService {
+  rpc OnTriggerBatch(OnTriggerBatchRequest) returns (google.protobuf.Empty);
+}
+
+message OnTriggerBatchRequest {
+  string batch_id = 5;
+
+  string service = 1;
+
+  string method = 2;
+
+  string request_object_path = 3;
+
+  string tenant_id = 4;
+}

@@ -1,0 +1,2259 @@
+syntax = "proto3";
+
+package mtechnavi.api.company;
+
+import "google/protobuf/empty.proto";
+
+import "validate/validate.proto";
+import "import.proto";
+import "reference.proto";
+
+import "company_table.proto";
+import "company_content.proto";
+
+option go_package = 'mtechnavi/company/protobuf';
+
+// 企業を取り扱うサービス
+service CompanyService {
+  // 自社情報
+  rpc GetCompany(GetCompanyRequest) returns (Company);
+  rpc UpdateCompany(UpdateCompanyRequest) returns (Company);
+}
+
+// 管理場所を取り扱うサービス
+service ComponentUnitService {
+  // 管理場所
+  rpc CreateComponentUnit(CreateComponentUnitRequest) returns (ComponentUnit);
+  rpc ListComponentUnits(ListComponentUnitsRequest) returns (ListComponentUnitsResponse);
+  rpc GetComponentUnit(GetComponentUnitRequest) returns (ComponentUnit);
+  rpc UpdateComponentUnit(UpdateComponentUnitRequest) returns (ComponentUnit);
+  rpc DeleteComponentUnit(DeleteComponentUnitRequest) returns (google.protobuf.Empty);
+
+  // 管理場所取込
+  rpc ImportComponentUnits(ImportComponentUnitsRequest) returns (ImportComponentUnitsResponse);
+  // 取込フォーマット出力
+  rpc ExportComponentUnits(ExportComponentUnitsRequest) returns (ExportComponentUnitsResponse);
+  // 取込フォーマット取得
+  rpc ListComponentUnitFormats(ListComponentUnitFormatsRequest) returns (ListComponentUnitFormatsResponse);
+}
+
+// 取引先を取り扱うサービス
+service BusinessUnitService {
+  // 取引先
+  rpc ListBusinessUnits(ListBusinessUnitsRequest) returns (ListBusinessUnitsResponse);
+  rpc GetBusinessUnit(GetBusinessUnitRequest) returns (BusinessUnit);
+  rpc UpdateBusinessUnit(UpdateBusinessUnitRequest) returns (BusinessUnit);
+  rpc DeleteBusinessUnit(DeleteBusinessUnitRequest) returns (google.protobuf.Empty);
+
+  // 取引先取込
+  rpc ImportBusinessUnits(ImportBusinessUnitsRequest) returns (ImportBusinessUnitsResponse);
+  // 取込フォーマット出力
+  rpc ExportBusinessUnits(ExportBusinessUnitsRequest) returns (ExportBusinessUnitsResponse);
+  // 取込フォーマット取得
+  rpc ListBusinessUnitFormats(ListBusinessUnitFormatsRequest) returns (ListBusinessUnitFormatsResponse);
+}
+
+// 担当者を取り扱うサービス
+service StaffService {
+  rpc ListStaffs(ListStaffsRequest) returns (ListStaffsResponse);
+  // 担当者
+  rpc GetStaff(GetStaffRequest) returns (Staff);
+  // 担当者一覧
+  rpc ListStaffAndComponentUnits(ListStaffAndComponentUnitsRequest) returns (ListStaffAndComponentUnitsResponse);
+  // 担当者取込
+  rpc ImportStaffs(ImportStaffsRequest) returns (ImportStaffsResponse);
+  // 取込フォーマット出力
+  rpc ExportStaffs(ExportStaffsRequest) returns (ExportStaffsResponse);
+  // 取込フォーマット取得
+  rpc ListStaffFormats(ListStaffFormatsRequest) returns (ListStaffFormatsResponse);
+}
+
+// 公開企業を取り扱うサービス
+// Global領域を扱うメソッドはprefixにPublicをつける
+service PublicCompanyService {
+  // 公開企業
+  rpc PublicListCompanys(PublicListCompanysRequest) returns (PublicListCompanysResponse);
+  rpc PublicGetCompany(PublicGetCompanyRequest) returns (Company);
+
+  // 公開企業一覧（公開企業+取引先情報）
+  rpc PublicListCompanyAndBusinessUnits(PublicListCompanyAndBusinessUnitsRequest) returns (PublicListCompanyAndBusinessUnitsResponse);
+
+  // 公開管理場所（取引窓口/事業所）
+  rpc PublicListComponentUnits(PublicListComponentUnitsRequest) returns (PublicListComponentUnitsResponse);
+
+  // （公開企業+公開管理場所+取引先情報）
+  //  1レコードの粒度は企業粒度
+  rpc PublicListCompanyAndComponentUnitAndBusinessUnits(PublicListCompanyAndComponentUnitAndBusinessUnitsRequest) returns (PublicListCompanyAndComponentUnitAndBusinessUnitsResponse);
+
+  // 取引先検索（取引窓口+公開企業+公開管理場所+取引先）
+  // 1レコードの粒度は取引窓口粒度
+  //
+  // Implementation Note::
+  // 紐づく企業情報.企業ステータスが「取引あり」のみ対象
+  //
+  rpc PublicListPostUnitAndCompanyAndComponentUnitAndBusinessUnit(PublicListPostUnitAndCompanyAndComponentUnitAndBusinessUnitRequest) returns (PublicListPostUnitAndCompanyAndComponentUnitAndBusinessUnitResponse);
+
+  // 取引開始依頼
+  // 取引開始依頼の作成
+  //
+  // Implementation Note:
+  //   BusinessUnitを同一トランザクションで作成する
+  //
+  rpc CreateBusinessUnitRequest(CreateBusinessUnitRequestRequest) returns (BusinessUnitRequest);
+  rpc ListBusinessUnitRequests(ListBusinessUnitRequestsRequest) returns (ListBusinessUnitRequestsResponse);
+  rpc GetBusinessUnitRequest(GetBusinessUnitRequestRequest) returns (BusinessUnitRequest);
+  rpc UpdateBusinessUnitRequest(UpdateBusinessUnitRequestRequest) returns (BusinessUnitRequest);
+  rpc DeleteBusinessUnitRequest(DeleteBusinessUnitRequestRequest) returns (google.protobuf.Empty);
+
+  // 取引開始依頼を公開する
+  //
+  // Implementation Note::
+  //   BusinessUnitRequest.company_idに対してshareto処理を行う
+  //
+  rpc SharetoBusinessUnitRequest(SharetoBusinessUnitRequestRequest) returns (SharetoBusinessUnitRequestResponse);
+
+  // 取引開始依頼の承認情報
+  // 取引開始依頼の承認情報の作成
+  //
+  // Implementation Note:
+  //   1. BusinessUnitRequestをもとにBusinessUnitRequestResultを作成する
+  //   2. BusinessUnitを同一トランザクションで作成する
+  //
+  rpc CreateBusinessUnitRequestResult(CreateBusinessUnitRequestResultRequest) returns (BusinessUnitRequestResult);
+  rpc ListBusinessUnitRequestResults(ListBusinessUnitRequestResultsRequest) returns (ListBusinessUnitRequestResultsResponse);
+  rpc GetBusinessUnitRequestResult(GetBusinessUnitRequestResultRequest) returns (BusinessUnitRequestResult);
+  rpc UpdateBusinessUnitRequestResult(UpdateBusinessUnitRequestResultRequest) returns (BusinessUnitRequestResult);
+  rpc DeleteBusinessUnitRequestResult(DeleteBusinessUnitRequestResultRequest) returns (google.protobuf.Empty);
+
+  // 取引開始依頼の承認情報を公開する
+  //
+  // Implementation Note::
+  //   BusinessUnitRequestResult.business_unit_request.source_company_idに対してshareto処理を行う
+  //
+  rpc SharetoBusinessUnitRequestResult(SharetoBusinessUnitRequestResultRequest) returns (SharetoBusinessUnitRequestResultResponse);
+}
+
+// 取引先管理を取り扱うサービス
+service BusinessUnitManagementService {
+  // 取引先管理
+  rpc ListBusinessUnitManagements(ListBusinessUnitManagementsRequest) returns (ListBusinessUnitManagementsResponse);
+  rpc GetBusinessUnitManagement(GetBusinessUnitManagementRequest) returns (BusinessUnitManagement);
+  rpc CreateBusinessUnitManagement(CreateBusinessUnitManagementRequest) returns (BusinessUnitManagement);
+  rpc UpdateBusinessUnitManagement(UpdateBusinessUnitManagementRequest) returns (BusinessUnitManagement);
+  rpc DeleteBusinessUnitManagement(DeleteBusinessUnitManagementRequest) returns (google.protobuf.Empty);
+
+  // 取引先取込（旧フォーマット）
+  rpc ImportOldBusinessUnitManagements(ImportOldBusinessUnitManagementsRequest) returns (ImportOldBusinessUnitManagementsResponse);
+  // 取込フォーマット出力（旧フォーマット）
+  rpc ExportOldBusinessUnitManagements(ExportOldBusinessUnitManagementsRequest) returns (ExportOldBusinessUnitManagementsResponse);
+  // 取込フォーマット取得（旧フォーマット）
+  rpc ListOldBusinessUnitManagementFormats(ListOldBusinessUnitManagementFormatsRequest) returns (ListOldBusinessUnitManagementFormatsResponse);
+
+  // 取引先管理コンテンツ
+  rpc ListBusinessUnitManagementContents(ListBusinessUnitManagementContentsRequest) returns (ListBusinessUnitManagementContentsResponse);
+  rpc GetBusinessUnitManagementContent(GetBusinessUnitManagementContentRequest) returns (BusinessUnitManagementContent);
+
+  // 履歴データ
+  rpc ListHistorys(ListHistorysRequest) returns (ListHistorysResponse);
+
+  // 招待メール送信
+  rpc SendEmailTenantInvitation(SendEmailTenantInvitationRequest) returns (SendEmailTenantInvitationResponse);
+
+  // 自社企業（基本情報）マスタ
+  rpc ListBusinessUnitProfiles(ListBusinessUnitProfilesRequest) returns (ListBusinessUnitProfilesResponse);
+  rpc CreateBusinessUnitProfile(CreateBusinessUnitProfileRequest) returns (BusinessUnitProfile);
+  rpc GetBusinessUnitProfile(GetBusinessUnitProfileRequest) returns (BusinessUnitProfile);
+  rpc UpdateBusinessUnitProfile(UpdateBusinessUnitProfileRequest) returns (BusinessUnitProfile);
+  rpc DeleteBusinessUnitProfile(DeleteBusinessUnitProfileRequest) returns (google.protobuf.Empty);
+
+  // 自社企業（基本情報）マスタ.システム通知先
+  rpc UpdateSystemNotificationUsersInBusinessUnitProfile(UpdateSystemNotificationUsersInBusinessUnitProfileRequest) returns (BusinessUnitProfile);
+
+  // 自社企業（決算）マスタ
+  rpc ListBusinessUnitFinancials(ListBusinessUnitFinancialsRequest) returns (ListBusinessUnitFinancialsResponse);
+  rpc CreateBusinessUnitFinancial(CreateBusinessUnitFinancialRequest) returns (BusinessUnitFinancial);
+  rpc GetBusinessUnitFinancial(GetBusinessUnitFinancialRequest) returns (BusinessUnitFinancial);
+  rpc UpdateBusinessUnitFinancial(UpdateBusinessUnitFinancialRequest) returns (BusinessUnitFinancial);
+  rpc DeleteBusinessUnitFinancial(DeleteBusinessUnitFinancialRequest) returns (google.protobuf.Empty);
+
+  // 自社企業（拠点）マスタ
+  rpc ListBusinessUnitBranchs(ListBusinessUnitBranchsRequest) returns (ListBusinessUnitBranchsResponse);
+  rpc CreateBusinessUnitBranch(CreateBusinessUnitBranchRequest) returns (BusinessUnitBranch);
+  rpc GetBusinessUnitBranch(GetBusinessUnitBranchRequest) returns (BusinessUnitBranch);
+  rpc UpdateBusinessUnitBranch(UpdateBusinessUnitBranchRequest) returns (BusinessUnitBranch);
+  rpc DeleteBusinessUnitBranch(DeleteBusinessUnitBranchRequest) returns (google.protobuf.Empty);
+
+  // 自社企業（設備）マスタ
+  rpc ListBusinessUnitFacilitiess(ListBusinessUnitFacilitiessRequest) returns (ListBusinessUnitFacilitiessResponse);
+  rpc CreateBusinessUnitFacilities(CreateBusinessUnitFacilitiesRequest) returns (BusinessUnitFacilities);
+  rpc GetBusinessUnitFacilities(GetBusinessUnitFacilitiesRequest) returns (BusinessUnitFacilities);
+  rpc UpdateBusinessUnitFacilities(UpdateBusinessUnitFacilitiesRequest) returns (BusinessUnitFacilities);
+  rpc DeleteBusinessUnitFacilities(DeleteBusinessUnitFacilitiesRequest) returns (google.protobuf.Empty);
+
+  // 自社企業（認証）マスタ
+  rpc ListBusinessUnitCertificates(ListBusinessUnitCertificatesRequest) returns (ListBusinessUnitCertificatesResponse);
+  rpc CreateBusinessUnitCertificate(CreateBusinessUnitCertificateRequest) returns (BusinessUnitCertificate);
+  rpc GetBusinessUnitCertificate(GetBusinessUnitCertificateRequest) returns (BusinessUnitCertificate);
+  rpc UpdateBusinessUnitCertificate(UpdateBusinessUnitCertificateRequest) returns (BusinessUnitCertificate);
+  rpc DeleteBusinessUnitCertificate(DeleteBusinessUnitCertificateRequest) returns (google.protobuf.Empty);
+
+  // 自社企業（得意分野）マスタ
+  rpc ListBusinessUnitStrengths(ListBusinessUnitStrengthsRequest) returns (ListBusinessUnitStrengthsResponse);
+  rpc CreateBusinessUnitStrength(CreateBusinessUnitStrengthRequest) returns (BusinessUnitStrength);
+  rpc GetBusinessUnitStrength(GetBusinessUnitStrengthRequest) returns (BusinessUnitStrength);
+  rpc UpdateBusinessUnitStrength(UpdateBusinessUnitStrengthRequest) returns (BusinessUnitStrength);
+  rpc DeleteBusinessUnitStrength(DeleteBusinessUnitStrengthRequest) returns (google.protobuf.Empty);
+
+  // 自社企業（技術情報）マスタ
+  rpc ListBusinessUnitSkills(ListBusinessUnitSkillsRequest) returns (ListBusinessUnitSkillsResponse);
+  rpc CreateBusinessUnitSkill(CreateBusinessUnitSkillRequest) returns (BusinessUnitSkill);
+  rpc GetBusinessUnitSkill(GetBusinessUnitSkillRequest) returns (BusinessUnitSkill);
+  rpc UpdateBusinessUnitSkill(UpdateBusinessUnitSkillRequest) returns (BusinessUnitSkill);
+  rpc DeleteBusinessUnitSkill(DeleteBusinessUnitSkillRequest) returns (google.protobuf.Empty);
+  rpc GetBusinessUnitSkillTree(GetBusinessUnitSkillTreeRequest) returns (BusinessUnitSkillTree);
+
+  // 取引先管理（連絡先）依頼データ
+  rpc ListBusinessUnitContactHeaders(ListBusinessUnitContactHeadersRequest) returns (ListBusinessUnitContactHeadersResponse);
+  rpc CreateBusinessUnitContactHeader(CreateBusinessUnitContactHeaderRequest) returns (BusinessUnitContactHeader);
+  rpc GetBusinessUnitContactHeader(GetBusinessUnitContactHeaderRequest) returns (BusinessUnitContactHeader);
+  rpc UpdateBusinessUnitContactHeader(UpdateBusinessUnitContactHeaderRequest) returns (BusinessUnitContactHeader);
+  rpc DeleteBusinessUnitContactHeader(DeleteBusinessUnitContactHeaderRequest) returns (google.protobuf.Empty);
+
+  // 取引先管理（連絡先）マスタ
+  rpc ListBusinessUnitContacts(ListBusinessUnitContactsRequest) returns (ListBusinessUnitContactsResponse);
+  rpc CreateBusinessUnitContact(CreateBusinessUnitContactRequest) returns (BusinessUnitContact);
+  rpc GetBusinessUnitContact(GetBusinessUnitContactRequest) returns (BusinessUnitContact);
+  rpc UpdateBusinessUnitContact(UpdateBusinessUnitContactRequest) returns (BusinessUnitContact);
+  rpc DeleteBusinessUnitContact(DeleteBusinessUnitContactRequest) returns (google.protobuf.Empty);
+
+  // 取引先管理（連絡先）社内管理データ
+  rpc ListBusinessUnitContactAttributes(ListBusinessUnitContactAttributesRequest) returns (ListBusinessUnitContactAttributesResponse);
+  rpc CreateBusinessUnitContactAttribute(CreateBusinessUnitContactAttributeRequest) returns (BusinessUnitContactAttribute);
+  rpc GetBusinessUnitContactAttribute(GetBusinessUnitContactAttributeRequest) returns (BusinessUnitContactAttribute);
+  rpc UpdateBusinessUnitContactAttribute(UpdateBusinessUnitContactAttributeRequest) returns (BusinessUnitContactAttribute);
+  rpc DeleteBusinessUnitContactAttribute(DeleteBusinessUnitContactAttributeRequest) returns (google.protobuf.Empty);
+
+  // TSRデータ
+  rpc ListTokyoShokoResearchs(ListTokyoShokoResearchsRequest) returns (ListTokyoShokoResearchsResponse);
+  rpc CreateTokyoShokoResearch(CreateTokyoShokoResearchRequest) returns (TokyoShokoResearch);
+  rpc GetTokyoShokoResearch(GetTokyoShokoResearchRequest) returns (TokyoShokoResearch);
+  rpc UpdateTokyoShokoResearch(UpdateTokyoShokoResearchRequest) returns (TokyoShokoResearch);
+  rpc DeleteTokyoShokoResearch(DeleteTokyoShokoResearchRequest) returns (google.protobuf.Empty);
+
+  // TSR企業情報データ
+  rpc ListTokyoShokoResearchCompanyProfiles(ListTokyoShokoResearchCompanyProfilesRequest) returns (ListTokyoShokoResearchCompanyProfilesResponse);
+  rpc CreateTokyoShokoResearchCompanyProfile(CreateTokyoShokoResearchCompanyProfileRequest) returns (TokyoShokoResearchCompanyProfile);
+  rpc GetTokyoShokoResearchCompanyProfile(GetTokyoShokoResearchCompanyProfileRequest) returns (TokyoShokoResearchCompanyProfile);
+  rpc UpdateTokyoShokoResearchCompanyProfile(UpdateTokyoShokoResearchCompanyProfileRequest) returns (TokyoShokoResearchCompanyProfile);
+  rpc DeleteTokyoShokoResearchCompanyProfile(DeleteTokyoShokoResearchCompanyProfileRequest) returns (google.protobuf.Empty);
+
+  // TSRリスクスコアデータ
+  rpc ListTokyoShokoResearchRiskScores(ListTokyoShokoResearchRiskScoresRequest) returns (ListTokyoShokoResearchRiskScoresResponse);
+  rpc CreateTokyoShokoResearchRiskScore(CreateTokyoShokoResearchRiskScoreRequest) returns (TokyoShokoResearchRiskScore);
+  rpc GetTokyoShokoResearchRiskScore(GetTokyoShokoResearchRiskScoreRequest) returns (TokyoShokoResearchRiskScore);
+  rpc UpdateTokyoShokoResearchRiskScore(UpdateTokyoShokoResearchRiskScoreRequest) returns (TokyoShokoResearchRiskScore);
+  rpc DeleteTokyoShokoResearchRiskScore(DeleteTokyoShokoResearchRiskScoreRequest) returns (google.protobuf.Empty);
+
+  // 第三者情報ファイルデータ
+  rpc ListBusinessUnitScoreAssets(ListBusinessUnitScoreAssetsRequest) returns (ListBusinessUnitScoreAssetsResponse);
+  rpc CreateBusinessUnitScoreAsset(CreateBusinessUnitScoreAssetRequest) returns (BusinessUnitScoreAsset);
+  rpc GetBusinessUnitScoreAsset(GetBusinessUnitScoreAssetRequest) returns (BusinessUnitScoreAsset);
+  rpc UpdateBusinessUnitScoreAsset(UpdateBusinessUnitScoreAssetRequest) returns (BusinessUnitScoreAsset);
+  rpc DeleteBusinessUnitScoreAsset(DeleteBusinessUnitScoreAssetRequest) returns (google.protobuf.Empty);
+
+  // 取引先管理（文書）マスタ
+  rpc ListBusinessUnitDocuments(ListBusinessUnitDocumentsRequest) returns (ListBusinessUnitDocumentsResponse);
+  rpc CreateBusinessUnitDocument(CreateBusinessUnitDocumentRequest) returns (BusinessUnitDocument);
+  rpc GetBusinessUnitDocument(GetBusinessUnitDocumentRequest) returns (BusinessUnitDocument);
+  rpc UpdateBusinessUnitDocument(UpdateBusinessUnitDocumentRequest) returns (BusinessUnitDocument);
+  rpc DeleteBusinessUnitDocument(DeleteBusinessUnitDocumentRequest) returns (google.protobuf.Empty);
+
+  // 有効管理データ（取引先）
+  rpc ListBusinessUnitActiveControls(ListBusinessUnitActiveControlsRequest) returns (ListBusinessUnitActiveControlsResponse);
+  rpc CreateBusinessUnitActiveControl(CreateBusinessUnitActiveControlRequest) returns (BusinessUnitActiveControl);
+  rpc GetBusinessUnitActiveControl(GetBusinessUnitActiveControlRequest) returns (BusinessUnitActiveControl);
+  rpc UpdateBusinessUnitActiveControl(UpdateBusinessUnitActiveControlRequest) returns (BusinessUnitActiveControl);
+  rpc DeleteBusinessUnitActiveControl(DeleteBusinessUnitActiveControlRequest) returns (google.protobuf.Empty);
+
+  // 取引先管理スナップショットデータ
+  rpc ListBusinessUnitSnapshots(ListBusinessUnitSnapshotsRequest) returns (ListBusinessUnitSnapshotsResponse);
+  rpc CreateBusinessUnitSnapshot(CreateBusinessUnitSnapshotRequest) returns (BusinessUnitSnapshot);
+  rpc GetBusinessUnitSnapshot(GetBusinessUnitSnapshotRequest) returns (BusinessUnitSnapshot);
+  rpc UpdateBusinessUnitSnapshot(UpdateBusinessUnitSnapshotRequest) returns (BusinessUnitSnapshot);
+  rpc DeleteBusinessUnitSnapshot(DeleteBusinessUnitSnapshotRequest) returns (google.protobuf.Empty);
+
+  // 更新通知データ
+  rpc ListBusinessUnitChangeNotifications(ListBusinessUnitChangeNotificationsRequest) returns (ListBusinessUnitChangeNotificationsResponse);
+  rpc CreateBusinessUnitChangeNotification(CreateBusinessUnitChangeNotificationRequest) returns (BusinessUnitChangeNotification);
+  rpc GetBusinessUnitChangeNotification(GetBusinessUnitChangeNotificationRequest) returns (BusinessUnitChangeNotification);
+  rpc UpdateBusinessUnitChangeNotification(UpdateBusinessUnitChangeNotificationRequest) returns (BusinessUnitChangeNotification);
+  rpc DeleteBusinessUnitChangeNotification(DeleteBusinessUnitChangeNotificationRequest) returns (google.protobuf.Empty);
+
+  // 取引先管理（連絡先）コンテンツ
+  rpc ListBusinessUnitContactContents(ListBusinessUnitContactContentsRequest) returns (ListBusinessUnitContactContentsResponse);
+  rpc GetBusinessUnitContactContent(GetBusinessUnitContactContentRequest) returns (BusinessUnitContactContent);
+
+  // 取引先管理（第三者情報）コンテンツ
+  rpc ListBusinessUnitScoreContents(ListBusinessUnitScoreContentsRequest) returns (ListBusinessUnitScoreContentsResponse);
+  rpc GetBusinessUnitScoreContent(GetBusinessUnitScoreContentRequest) returns (BusinessUnitScoreContent);
+
+  // 公開された 自社企業（基本情報）マスタ
+  rpc SharedListBusinessUnitProfiles(SharedListBusinessUnitProfilesRequest) returns (SharedListBusinessUnitProfilesResponse);
+  rpc SharedGetBusinessUnitProfile(SharedGetBusinessUnitProfileRequest) returns (BusinessUnitProfile);
+
+  // 公開された 自社企業（決算）マスタ
+  rpc SharedListBusinessUnitFinancials(SharedListBusinessUnitFinancialsRequest) returns (SharedListBusinessUnitFinancialsResponse);
+  rpc SharedGetBusinessUnitFinancial(SharedGetBusinessUnitFinancialRequest) returns (BusinessUnitFinancial);
+
+  // 公開された 自社企業（拠点）マスタ
+  rpc SharedListBusinessUnitBranchs(SharedListBusinessUnitBranchsRequest) returns (SharedListBusinessUnitBranchsResponse);
+  rpc SharedGetBusinessUnitBranch(SharedGetBusinessUnitBranchRequest) returns (BusinessUnitBranch);
+
+  // 公開された 自社企業（設備）マスタ
+  rpc SharedListBusinessUnitFacilitiess(SharedListBusinessUnitFacilitiessRequest) returns (SharedListBusinessUnitFacilitiessResponse);
+  rpc SharedGetBusinessUnitFacilities(SharedGetBusinessUnitFacilitiesRequest) returns (BusinessUnitFacilities);
+
+  // 公開された 自社企業（認証）マスタ
+  rpc SharedListBusinessUnitCertificates(SharedListBusinessUnitCertificatesRequest) returns (SharedListBusinessUnitCertificatesResponse);
+  rpc SharedGetBusinessUnitCertificate(SharedGetBusinessUnitCertificateRequest) returns (BusinessUnitCertificate);
+
+  // 公開された 自社企業（得意分野）マスタ
+  rpc SharedListBusinessUnitStrengths(SharedListBusinessUnitStrengthsRequest) returns (SharedListBusinessUnitStrengthsResponse);
+  rpc SharedGetBusinessUnitStrength(SharedGetBusinessUnitStrengthRequest) returns (BusinessUnitStrength);
+
+  // 公開された 自社企業（技術情報）マスタ
+  rpc SharedListBusinessUnitSkills(SharedListBusinessUnitSkillsRequest) returns (SharedListBusinessUnitSkillsResponse);
+  rpc SharedGetBusinessUnitSkill(SharedGetBusinessUnitSkillRequest) returns (BusinessUnitSkill);
+
+  // 取引先管理（連絡先）依頼データ を 公開する
+  rpc SharetoBusinessUnitContactHeader(SharetoBusinessUnitContactHeaderRequest) returns (SharetoBusinessUnitContactHeaderResponse);
+  // 取引先管理（連絡先）マスタ を 公開する
+  rpc SharetoBusinessUnitContact(SharetoBusinessUnitContactRequest) returns (SharetoBusinessUnitContactResponse);
+  // 有効管理データ（取引先） を 公開する
+  rpc SharetoBusinessUnitActiveControl(SharetoBusinessUnitActiveControlRequest) returns (SharetoBusinessUnitActiveControlResponse);
+
+  // Inactivate / Activate
+  rpc ActivateBusinessUnit(ActivateBusinessUnitRequest) returns (ActivateBusinessUnitResponse);
+  rpc InactivateBusinessUnit(InactivateBusinessUnitRequest) returns (InactivateBusinessUnitResponse);
+  rpc StartBusiness(StartBusinessRequest) returns (StartBusinessResponse);
+  rpc StopBusiness(StopBusinessRequest) returns (StopBusinessResponse);
+
+  // 更新通知 を 確認済みにする
+  rpc ConfirmBusinessUnitChangeNotification(ConfirmBusinessUnitChangeNotificationRequest) returns (ConfirmBusinessUnitChangeNotificationResponse);
+
+  // 取引先管理情報 取込フォーマット出力（新フォーマット）
+  rpc ExportBusinessUnitManagements(ExportBusinessUnitManagementsRequest) returns (ExportBusinessUnitManagementsResponse);
+  // 取引先管理情報 取込（新フォーマット）
+  rpc ImportBusinessUnitManagements(ImportBusinessUnitManagementsRequest) returns (ImportBusinessUnitManagementsResponse);
+  // 取引先管理情報 取込フォーマット取得（新フォーマット）
+  rpc ListBusinessUnitManagementFormats(ListBusinessUnitManagementFormatsRequest) returns (ListBusinessUnitManagementFormatsResponse);
+
+  // 取引先管理（第三者情報）マスタ 取込フォーマット出力
+  rpc ExportBusinessUnitScores(ExportBusinessUnitScoresRequest) returns (ExportBusinessUnitScoresResponse);
+  // 取引先管理（第三者情報）マスタ 取込
+  rpc ImportBusinessUnitScores(ImportBusinessUnitScoresRequest) returns (ImportBusinessUnitScoresResponse);
+  // 取引先管理（第三者情報）マスタ 取込フォーマット取得
+  rpc ListBusinessUnitScoreFormats(ListBusinessUnitScoreFormatsRequest) returns (ListBusinessUnitScoreFormatsResponse);
+
+  // ItemValue 取込フォーマット出力
+  rpc ExportBusinessUnitManagementItemValues(ExportBusinessUnitManagementItemValuesRequest) returns (ExportBusinessUnitManagementItemValuesResponse);
+  // ItemValue 取込
+  rpc ImportBusinessUnitManagementItemValues(ImportBusinessUnitManagementItemValuesRequest) returns (ImportBusinessUnitManagementItemValuesResponse);
+  // ItemValue 取込フォーマット取得
+  rpc ListBusinessUnitManagementItemValueFormats(ListBusinessUnitManagementItemValueFormatsRequest) returns (ListBusinessUnitManagementItemValueFormatsResponse);
+}
+
+message GetCompanyRequest {}
+
+message UpdateCompanyRequest {
+  Company company = 1 [(validate.rules).message.required = true];
+}
+
+message CreateComponentUnitRequest {
+  ComponentUnit component_unit = 1 [(validate.rules).message.required = true];
+}
+
+message ListComponentUnitsRequest {}
+
+message ListComponentUnitsResponse {
+  int64 total = 1;
+
+  repeated ComponentUnit items = 2;
+}
+
+message PublicListComponentUnitsRequest {}
+
+message PublicListComponentUnitsResponse {
+  int64 total = 1;
+
+  repeated ComponentUnit items = 2;
+}
+
+message GetComponentUnitRequest {
+  string component_unit_id = 1;
+}
+
+message UpdateComponentUnitRequest {
+  ComponentUnit component_unit = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteComponentUnitRequest {
+  ComponentUnit component_unit = 1 [(validate.rules).message.required = true];
+}
+
+message CreateBusinessUnitRequest {
+  BusinessUnit business_unit = 1 [(validate.rules).message.required = true];
+}
+
+message ListBusinessUnitsRequest {
+  // businessUnit_ids
+  repeated string ids = 1;
+}
+
+message ListBusinessUnitsResponse {
+  int64 total = 1;
+
+  repeated BusinessUnit items = 2;
+}
+
+message GetBusinessUnitRequest {
+  string business_unit_id = 1;
+}
+
+message UpdateBusinessUnitRequest {
+  BusinessUnit business_unit = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteBusinessUnitRequest {
+  BusinessUnit business_unit = 1 [(validate.rules).message.required = true];
+}
+
+message PublicListCompanyAndBusinessUnitsRequest {}
+
+message PublicListCompanyAndBusinessUnitsResponse {
+  int64 total = 1;
+
+  repeated CompanyAndBusinessUnit items = 2;
+}
+
+message PublicListCompanyAndComponentUnitAndBusinessUnitsRequest {}
+
+message PublicListCompanyAndComponentUnitAndBusinessUnitsResponse {
+  int64 total = 1;
+
+  repeated CompanyAndComponentUnitAndBusinessUnit items = 2;
+}
+
+message PublicListPostUnitAndCompanyAndComponentUnitAndBusinessUnitRequest {}
+
+message PublicListPostUnitAndCompanyAndComponentUnitAndBusinessUnitResponse {
+  int64 total = 1;
+
+  repeated PostUnitAndCompanyAndComponentUnitAndBusinessUnit items = 2;
+}
+
+message CreateBusinessUnitRequestRequest {
+  BusinessUnitRequest business_unit_request = 1 [(validate.rules).message.required = true];
+}
+
+message ListBusinessUnitRequestsRequest {}
+
+message ListBusinessUnitRequestsResponse {
+  int64 total = 1;
+
+  repeated BusinessUnitRequest items = 2;
+}
+
+// required business_unit_request_id
+message GetBusinessUnitRequestRequest {
+  string business_unit_request_id = 1;
+}
+
+message UpdateBusinessUnitRequestRequest {
+  BusinessUnitRequest business_unit_request = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteBusinessUnitRequestRequest {
+  BusinessUnitRequest business_unit_request = 1 [(validate.rules).message.required = true];
+}
+
+message CreateBusinessUnitRequestResultRequest {
+  BusinessUnitRequestResult business_unit_request_result = 1 [(validate.rules).message.required = true];
+  // 元となる取引開始依頼
+  BusinessUnitRequest business_unit_request = 2 [(validate.rules).message.required = true];
+}
+
+message ListBusinessUnitRequestResultsRequest {}
+
+message ListBusinessUnitRequestResultsResponse {
+  int64 total = 1;
+
+  repeated BusinessUnitRequestResult items = 2;
+}
+
+message GetBusinessUnitRequestResultRequest {
+  string business_unit_request_result_id = 1;
+}
+
+message UpdateBusinessUnitRequestResultRequest {
+  BusinessUnitRequestResult business_unit_request_result = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteBusinessUnitRequestResultRequest {
+  BusinessUnitRequestResult business_unit_request_result = 1 [(validate.rules).message.required = true];
+}
+
+message SharetoBusinessUnitRequestRequest {
+  // business_unit_request_id
+  string id = 1 [(validate.rules).string.min_len = 1];
+}
+
+message SharetoBusinessUnitRequestResponse {}
+
+message SharetoBusinessUnitRequestResultRequest {
+  // business_unit_request_result_id
+  string id = 1 [(validate.rules).string.min_len = 1];
+}
+
+message SharetoBusinessUnitRequestResultResponse {}
+
+message ListStaffsRequest {
+  // 紐付アカウント
+  string email = 1;
+}
+
+message ListStaffsResponse {
+  int64 total = 1;
+
+  repeated Staff items = 2;
+}
+
+// required staff_id
+message GetStaffRequest {
+  string staff_id = 1;
+}
+
+message ListStaffAndComponentUnitsRequest {
+  // Staff.email
+  string email = 1;
+}
+
+message ListStaffAndComponentUnitsResponse {
+  int64 total = 1;
+
+  repeated StaffAndComponentUnit items = 2;
+}
+
+message ImportStaffsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportStaffsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル
+  string asset_id = 3;
+}
+
+message ExportStaffsRequest {
+  // staff_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportStaffsResponse {
+  string asset_id = 1;
+}
+
+message ImportComponentUnitsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportComponentUnitsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル
+  string asset_id = 3;
+}
+
+message ExportComponentUnitsRequest {
+  // component_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportComponentUnitsResponse {
+  string asset_id = 1;
+}
+
+message ImportBusinessUnitsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportBusinessUnitsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル
+  string asset_id = 3;
+}
+
+message ExportBusinessUnitsRequest {
+  // business_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportBusinessUnitsResponse {
+  string asset_id = 1;
+}
+
+message ListComponentUnitFormatsRequest {}
+
+message ListComponentUnitFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message ListBusinessUnitFormatsRequest {}
+
+message ListBusinessUnitFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message ListStaffFormatsRequest {}
+
+message ListStaffFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+// 公開企業
+// required company_id
+message PublicGetCompanyRequest {
+  // 企業ID
+  string company_id = 1;
+}
+
+message PublicListCompanysRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message PublicListCompanysResponse {
+  // 件数
+  int64 total = 1;
+
+  // 公開企業マスタ
+  repeated Company items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// 取引先管理
+message ListBusinessUnitManagementsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message ListBusinessUnitManagementsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理マスタ
+  repeated BusinessUnitManagement items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_management_id
+message GetBusinessUnitManagementRequest {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+}
+
+message ListOldBusinessUnitManagementFormatsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message ListOldBusinessUnitManagementFormatsResponse {
+  //　件数
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_management
+message CreateBusinessUnitManagementRequest {
+  BusinessUnitManagement business_unit_management = 1;
+}
+
+// required business_unit_management
+message UpdateBusinessUnitManagementRequest {
+  // required business_unit_management_id
+  // required updated_at
+  BusinessUnitManagement business_unit_management = 1;
+}
+
+// required business_unit_management
+message DeleteBusinessUnitManagementRequest {
+  // required business_unit_management_id
+  // required updated_at
+  BusinessUnitManagement business_unit_management = 1;
+}
+
+// required url
+// required file_format
+message ImportOldBusinessUnitManagementsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportOldBusinessUnitManagementsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル アセットID（一時領域）
+  string asset_id = 3;
+}
+
+message ListBusinessUnitManagementContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 削除済(データフィルタ)
+  reserved 2;
+}
+
+message ListBusinessUnitManagementContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理マスタ
+  repeated BusinessUnitManagementContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_management_id
+message GetBusinessUnitManagementContentRequest {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+}
+
+// required file_format
+message ExportOldBusinessUnitManagementsRequest {
+  // business_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportOldBusinessUnitManagementsResponse {
+  // アセットID（一時領域）
+  string asset_id = 1;
+}
+
+// 履歴データ
+// required type_name
+message ListHistorysRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // レコードタイプ
+  string type_name = 2;
+
+  // レコードID
+  repeated string record_ids = 3;
+}
+
+message ListHistorysResponse {
+  // 件数
+  int64 total = 1;
+
+  // 履歴
+  repeated History items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+message SendEmailTenantInvitationRequest {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+
+  // 個別メッセージ
+  string individual_message = 2;
+
+  // 問い合わせ先メッセージ
+  string contact_information_message = 3;
+}
+
+message SendEmailTenantInvitationResponse {}
+
+// --------------------
+// リクエスト/レスポンス
+// --------------------
+// 自社企業（基本情報）マスタ
+message ListBusinessUnitProfilesRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitProfilesResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（基本情報）マスタ
+  repeated BusinessUnitProfile items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_profile
+message CreateBusinessUnitProfileRequest {
+  // 自社企業（基本情報）マスタ
+  // required company_id
+  BusinessUnitProfile business_unit_profile = 1;
+}
+
+// required business_unit_profile_id
+message GetBusinessUnitProfileRequest {
+  // 自社企業（基本情報）ID
+  string business_unit_profile_id = 1;
+}
+
+// required business_unit_profile
+message UpdateBusinessUnitProfileRequest {
+  // 自社企業（基本情報）マスタ
+  // required business_unit_profile_id
+  // required updated_at
+  BusinessUnitProfile business_unit_profile = 1;
+}
+
+// required business_unit_profile
+message DeleteBusinessUnitProfileRequest {
+  // 自社企業（基本情報）マスタ
+  // required business_unit_profile_id
+  // required updated_at
+  BusinessUnitProfile business_unit_profile = 1;
+}
+
+// 自社企業（基本情報）マスタ.システム通知先
+// required business_unit_profile_id
+// required updated_at
+message UpdateSystemNotificationUsersInBusinessUnitProfileRequest {
+  // 自社企業（基本情報）ID
+  string business_unit_profile_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 2;
+
+  int64 updated_at = 3;
+}
+
+// 自社企業（決算）マスタ
+message ListBusinessUnitFinancialsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitFinancialsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（決算）マスタ
+  repeated BusinessUnitFinancial items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_financial
+message CreateBusinessUnitFinancialRequest {
+  // 自社企業（決算）マスタ
+  // required company_id
+  BusinessUnitFinancial business_unit_financial = 1;
+}
+
+// required business_unit_financial_id
+message GetBusinessUnitFinancialRequest {
+  // 自社企業（決算）ID
+  string business_unit_financial_id = 1;
+}
+
+// required business_unit_financial
+message UpdateBusinessUnitFinancialRequest {
+  // 自社企業（決算）マスタ
+  // required business_unit_financial_id
+  // required updated_at
+  BusinessUnitFinancial business_unit_financial = 1;
+}
+
+// required business_unit_financial
+message DeleteBusinessUnitFinancialRequest {
+  // 自社企業（決算）マスタ
+  // required business_unit_financial_id
+  // required updated_at
+  BusinessUnitFinancial business_unit_financial = 1;
+}
+
+// 自社企業（拠点）マスタ
+message ListBusinessUnitBranchsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitBranchsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（拠点）マスタ
+  repeated BusinessUnitBranch items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_branch
+message CreateBusinessUnitBranchRequest {
+  // 自社企業（拠点）マスタ
+  // required company_id
+  BusinessUnitBranch business_unit_branch = 1;
+}
+
+// required business_unit_branch_id
+message GetBusinessUnitBranchRequest {
+  // 自社企業（拠点）ID
+  string business_unit_branch_id = 1;
+}
+
+// required business_unit_branch
+message UpdateBusinessUnitBranchRequest {
+  // 自社企業（拠点）マスタ
+  // required business_unit_branch_id
+  // required updated_at
+  BusinessUnitBranch business_unit_branch = 1;
+}
+
+// required business_unit_branch
+message DeleteBusinessUnitBranchRequest {
+  // 自社企業（拠点）マスタ
+  // required business_unit_branch_id
+  // required updated_at
+  BusinessUnitBranch business_unit_branch = 1;
+}
+
+// 自社企業（設備）マスタ
+message ListBusinessUnitFacilitiessRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitFacilitiessResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（設備）マスタ
+  repeated BusinessUnitFacilities items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_facilities
+message CreateBusinessUnitFacilitiesRequest {
+  // 自社企業（設備）マスタ
+  // required company_id
+  BusinessUnitFacilities business_unit_facilities = 1;
+}
+
+// required business_unit_facilities_id
+message GetBusinessUnitFacilitiesRequest {
+  // 自社企業（設備）ID
+  string business_unit_facilities_id = 1;
+}
+
+// required business_unit_facilities
+message UpdateBusinessUnitFacilitiesRequest {
+  // 自社企業（設備）マスタ
+  // required business_unit_facilities_id
+  // required updated_at
+  BusinessUnitFacilities business_unit_facilities = 1;
+}
+
+// required business_unit_facilities
+message DeleteBusinessUnitFacilitiesRequest {
+  // 自社企業（設備）マスタ
+  // required business_unit_facilities_id
+  // required updated_at
+  BusinessUnitFacilities business_unit_facilities = 1;
+}
+
+// 自社企業（認証）マスタ
+message ListBusinessUnitCertificatesRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitCertificatesResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（認証）マスタ
+  repeated BusinessUnitCertificate items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_certificate
+message CreateBusinessUnitCertificateRequest {
+  // 自社企業（認証）マスタ
+  // required company_id
+  BusinessUnitCertificate business_unit_certificate = 1;
+}
+
+// required business_unit_certificate_id
+message GetBusinessUnitCertificateRequest {
+  // 自社企業（認証）ID
+  string business_unit_certificate_id = 1;
+}
+
+// required business_unit_certificate
+message UpdateBusinessUnitCertificateRequest {
+  // 自社企業（認証）マスタ
+  // required business_unit_certificate_id
+  // required updated_at
+  BusinessUnitCertificate business_unit_certificate = 1;
+}
+
+// required business_unit_certificate
+message DeleteBusinessUnitCertificateRequest {
+  // 自社企業（認証）マスタ
+  // required business_unit_certificate_id
+  // required updated_at
+  BusinessUnitCertificate business_unit_certificate = 1;
+}
+
+// 自社企業（得意分野）マスタ
+message ListBusinessUnitStrengthsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitStrengthsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（得意分野）マスタ
+  repeated BusinessUnitStrength items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_strength
+message CreateBusinessUnitStrengthRequest {
+  // 自社企業（得意分野）マスタ
+  // required company_id
+  BusinessUnitStrength business_unit_strength = 1;
+}
+
+// required business_unit_strength_id
+message GetBusinessUnitStrengthRequest {
+  // 自社企業（得意分野）ID
+  string business_unit_strength_id = 1;
+}
+
+// required business_unit_strength
+message UpdateBusinessUnitStrengthRequest {
+  // 自社企業（得意分野）マスタ
+  // required business_unit_strength_id
+  // required updated_at
+  BusinessUnitStrength business_unit_strength = 1;
+}
+
+// required business_unit_strength
+message DeleteBusinessUnitStrengthRequest {
+  // 自社企業（得意分野）マスタ
+  // required business_unit_strength_id
+  // required updated_at
+  BusinessUnitStrength business_unit_strength = 1;
+}
+
+// 自社企業（技術情報）マスタ
+message ListBusinessUnitSkillsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitSkillsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（技術情報）マスタ
+  repeated BusinessUnitSkill items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_skill
+message CreateBusinessUnitSkillRequest {
+  // 自社企業（技術情報）マスタ
+  // required company_id
+  BusinessUnitSkill business_unit_skill = 1;
+}
+
+// required business_unit_skill_id
+message GetBusinessUnitSkillRequest {
+  // 自社企業（技術情報）ID
+  string business_unit_skill_id = 1;
+}
+
+// required business_unit_skill
+message UpdateBusinessUnitSkillRequest {
+  // 自社企業（技術情報）マスタ
+  // required business_unit_skill_id
+  // required updated_at
+  BusinessUnitSkill business_unit_skill = 1;
+}
+
+// required business_unit_skill
+message DeleteBusinessUnitSkillRequest {
+  // 自社企業（技術情報）マスタ
+  // required business_unit_skill_id
+  // required updated_at
+  BusinessUnitSkill business_unit_skill = 1;
+}
+
+// 取引先管理（連絡先）依頼データ
+message ListBusinessUnitContactHeadersRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+
+  // 取引先管理ID
+  repeated string business_unit_management_ids = 3;
+}
+
+message ListBusinessUnitContactHeadersResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理（連絡先）依頼データ
+  repeated BusinessUnitContactHeader items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_contact_header
+message CreateBusinessUnitContactHeaderRequest {
+  // 取引先管理（連絡先）依頼データ
+  BusinessUnitContactHeader business_unit_contact_header = 1;
+
+  reserved 2;
+}
+
+// required business_unit_contact_header_id
+message GetBusinessUnitContactHeaderRequest {
+  // 取引先管理（連絡先）依頼ID
+  string business_unit_contact_header_id = 1;
+}
+
+// required business_unit_contact_header
+message UpdateBusinessUnitContactHeaderRequest {
+  // 取引先管理（連絡先）依頼データ
+  // required business_unit_contact_header_id
+  // required updated_at
+  BusinessUnitContactHeader business_unit_contact_header = 1;
+
+  reserved 2;
+}
+
+// required business_unit_contact_header
+message DeleteBusinessUnitContactHeaderRequest {
+  // 取引先管理（連絡先）依頼データ
+  // required business_unit_contact_header_id
+  // required updated_at
+  BusinessUnitContactHeader business_unit_contact_header = 1;
+}
+
+// 取引先管理（連絡先）マスタ
+message ListBusinessUnitContactsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+
+  // 取引先管理ID
+  repeated string business_unit_management_ids = 3;
+}
+
+message ListBusinessUnitContactsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理（連絡先）マスタ
+  repeated BusinessUnitContact items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_contact
+message CreateBusinessUnitContactRequest {
+  // 取引先管理（連絡先）マスタ
+  BusinessUnitContact business_unit_contact = 1;
+
+  reserved 2;
+}
+
+// required business_unit_contact_id
+message GetBusinessUnitContactRequest {
+  // 取引先管理（連絡先）ID
+  string business_unit_contact_id = 1;
+}
+
+// required business_unit_contact
+message UpdateBusinessUnitContactRequest {
+  // 取引先管理（連絡先）マスタ
+  // required business_unit_contact_id
+  // required updated_at
+  BusinessUnitContact business_unit_contact = 1;
+
+  reserved 2;
+}
+
+// required business_unit_contact
+message DeleteBusinessUnitContactRequest {
+  // 取引先管理（連絡先）マスタ
+  // required business_unit_contact_id
+  // required updated_at
+  BusinessUnitContact business_unit_contact = 1;
+}
+
+// 取引先管理（連絡先）社内管理データ
+message ListBusinessUnitContactAttributesRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 取引先管理ID
+  repeated string business_unit_management_ids = 2;
+}
+
+message ListBusinessUnitContactAttributesResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理（連絡先）社内管理データ
+  repeated BusinessUnitContactAttribute items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_contact_attribute
+message CreateBusinessUnitContactAttributeRequest {
+  // 取引先管理（連絡先）社内管理データ
+  // required business_unit_management_id
+  BusinessUnitContactAttribute business_unit_contact_attribute = 1;
+}
+
+// required business_unit_contact_attribute_id
+message GetBusinessUnitContactAttributeRequest {
+  // 取引先管理（連絡先）社内管理ID
+  string business_unit_contact_attribute_id = 1;
+}
+
+// required business_unit_contact_attribute
+message UpdateBusinessUnitContactAttributeRequest {
+  // 取引先管理（連絡先）社内管理データ
+  // required business_unit_contact_attribute_id
+  // required updated_at
+  BusinessUnitContactAttribute business_unit_contact_attribute = 1;
+}
+
+// required business_unit_contact_attribute
+message DeleteBusinessUnitContactAttributeRequest {
+  // 取引先管理（連絡先）社内管理データ
+  // required business_unit_contact_attribute_id
+  // required updated_at
+  BusinessUnitContactAttribute business_unit_contact_attribute = 1;
+}
+
+// TSRデータ
+message ListTokyoShokoResearchsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 識別コード
+  repeated string codes = 2;
+}
+
+message ListTokyoShokoResearchsResponse {
+  // 件数
+  int64 total = 1;
+
+  // TSRデータ
+  repeated TokyoShokoResearch items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required tokyo_shoko_research
+message CreateTokyoShokoResearchRequest {
+  // TSRデータ
+  // required code
+  TokyoShokoResearch tokyo_shoko_research = 1;
+}
+
+// required tokyo_shoko_research_id
+message GetTokyoShokoResearchRequest {
+  // TSRID
+  string tokyo_shoko_research_id = 1;
+}
+
+// required tokyo_shoko_research
+message UpdateTokyoShokoResearchRequest {
+  // TSRデータ
+  // required tokyo_shoko_research_id
+  // required updated_at
+  TokyoShokoResearch tokyo_shoko_research = 1;
+}
+
+// required tokyo_shoko_research
+message DeleteTokyoShokoResearchRequest {
+  // TSRデータ
+  // required tokyo_shoko_research_id
+  // required updated_at
+  TokyoShokoResearch tokyo_shoko_research = 1;
+}
+
+// TSR企業情報データ
+message ListTokyoShokoResearchCompanyProfilesRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 識別コード
+  repeated string codes = 2;
+}
+
+message ListTokyoShokoResearchCompanyProfilesResponse {
+  // 件数
+  int64 total = 1;
+
+  // TSR企業情報データ
+  repeated TokyoShokoResearchCompanyProfile items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required tokyo_shoko_research_company_profile
+message CreateTokyoShokoResearchCompanyProfileRequest {
+  // TSR企業情報データ
+  // required code
+  TokyoShokoResearchCompanyProfile tokyo_shoko_research_company_profile = 1;
+}
+
+// required tokyo_shoko_research_company_profile_id
+message GetTokyoShokoResearchCompanyProfileRequest {
+  // TSR_CP_ID
+  string tokyo_shoko_research_company_profile_id = 1;
+}
+
+// required tokyo_shoko_research_company_profile
+message UpdateTokyoShokoResearchCompanyProfileRequest {
+  // TSR企業情報データ
+  // required tokyo_shoko_research_company_profile_id
+  // required updated_at
+  TokyoShokoResearchCompanyProfile tokyo_shoko_research_company_profile = 1;
+}
+
+// required tokyo_shoko_research_company_profile
+message DeleteTokyoShokoResearchCompanyProfileRequest {
+  // TSR企業情報データ
+  // required tokyo_shoko_research_company_profile_id
+  // required updated_at
+  TokyoShokoResearchCompanyProfile tokyo_shoko_research_company_profile = 1;
+}
+
+// TSRリスクスコアデータ
+message ListTokyoShokoResearchRiskScoresRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 識別コード
+  repeated string codes = 2;
+}
+
+message ListTokyoShokoResearchRiskScoresResponse {
+  // 件数
+  int64 total = 1;
+
+  // TSRリスクスコアデータ
+  repeated TokyoShokoResearchRiskScore items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required tokyo_shoko_research_risk_score
+message CreateTokyoShokoResearchRiskScoreRequest {
+  // TSRリスクスコアデータ
+  // required code
+  TokyoShokoResearchRiskScore tokyo_shoko_research_risk_score = 1;
+}
+
+// required tokyo_shoko_research_risk_score_id
+message GetTokyoShokoResearchRiskScoreRequest {
+  // TSR_RS_ID
+  string tokyo_shoko_research_risk_score_id = 1;
+}
+
+// required tokyo_shoko_research_risk_score
+message UpdateTokyoShokoResearchRiskScoreRequest {
+  // TSRリスクスコアデータ
+  // required tokyo_shoko_research_risk_score_id
+  // required updated_at
+  TokyoShokoResearchRiskScore tokyo_shoko_research_risk_score = 1;
+}
+
+// required tokyo_shoko_research_risk_score
+message DeleteTokyoShokoResearchRiskScoreRequest {
+  // TSRリスクスコアデータ
+  // required tokyo_shoko_research_risk_score_id
+  // required updated_at
+  TokyoShokoResearchRiskScore tokyo_shoko_research_risk_score = 1;
+}
+
+// 第三者情報ファイルデータ
+message ListBusinessUnitScoreAssetsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 識別コード
+  repeated string codes = 2;
+}
+
+message ListBusinessUnitScoreAssetsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 第三者情報ファイルデータ
+  repeated BusinessUnitScoreAsset items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_score_asset
+message CreateBusinessUnitScoreAssetRequest {
+  // 第三者情報ファイルデータ
+  // required code
+  // required category
+  BusinessUnitScoreAsset business_unit_score_asset = 1;
+}
+
+// required business_unit_score_asset_id
+message GetBusinessUnitScoreAssetRequest {
+  // 第三者情報ファイルID
+  string business_unit_score_asset_id = 1;
+}
+
+// required business_unit_score_asset
+message UpdateBusinessUnitScoreAssetRequest {
+  // 第三者情報ファイルデータ
+  // required business_unit_score_asset_id
+  // required updated_at
+  BusinessUnitScoreAsset business_unit_score_asset = 1;
+}
+
+// required business_unit_score_asset
+message DeleteBusinessUnitScoreAssetRequest {
+  // 第三者情報ファイルデータ
+  // required business_unit_score_asset_id
+  // required updated_at
+  BusinessUnitScoreAsset business_unit_score_asset = 1;
+}
+
+// 取引先管理（文書）マスタ
+message ListBusinessUnitDocumentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 取引先管理ID
+  repeated string business_unit_management_ids = 2;
+}
+
+message ListBusinessUnitDocumentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理（文書）マスタ
+  repeated BusinessUnitDocument items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_document
+message CreateBusinessUnitDocumentRequest {
+  // 取引先管理（文書）マスタ
+  // required business_unit_management_id
+  BusinessUnitDocument business_unit_document = 1;
+}
+
+// required business_unit_document_id
+message GetBusinessUnitDocumentRequest {
+  // 取引先管理（文書）ID
+  string business_unit_document_id = 1;
+}
+
+// required business_unit_document
+message UpdateBusinessUnitDocumentRequest {
+  // 取引先管理（文書）マスタ
+  // required business_unit_document_id
+  // required updated_at
+  BusinessUnitDocument business_unit_document = 1;
+}
+
+// required business_unit_document
+message DeleteBusinessUnitDocumentRequest {
+  // 取引先管理（文書）マスタ
+  // required business_unit_document_id
+  // required updated_at
+  BusinessUnitDocument business_unit_document = 1;
+}
+
+// 有効管理データ（取引先）
+message ListBusinessUnitActiveControlsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message ListBusinessUnitActiveControlsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 有効管理データ（取引先）
+  repeated BusinessUnitActiveControl items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_active_control
+message CreateBusinessUnitActiveControlRequest {
+  // 有効管理データ（取引先）
+  // required company_id
+  BusinessUnitActiveControl business_unit_active_control = 1;
+}
+
+// required business_unit_active_control_id
+message GetBusinessUnitActiveControlRequest {
+  // 有効管理ID
+  string business_unit_active_control_id = 1;
+}
+
+// required business_unit_active_control
+message UpdateBusinessUnitActiveControlRequest {
+  // 有効管理データ（取引先）
+  // required business_unit_active_control_id
+  // required updated_at
+  BusinessUnitActiveControl business_unit_active_control = 1;
+}
+
+// required business_unit_active_control
+message DeleteBusinessUnitActiveControlRequest {
+  // 有効管理データ（取引先）
+  // required business_unit_active_control_id
+  // required updated_at
+  BusinessUnitActiveControl business_unit_active_control = 1;
+}
+
+// 取引先管理スナップショットデータ
+message ListBusinessUnitSnapshotsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // type_name
+  string type_name = 2;
+
+  // record_id
+  repeated string record_ids = 3;
+}
+
+message ListBusinessUnitSnapshotsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理スナップショットデータ
+  repeated BusinessUnitSnapshot items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_snapshot
+message CreateBusinessUnitSnapshotRequest {
+  // 取引先管理スナップショットデータ
+  // required type_name
+  // required record_id
+  BusinessUnitSnapshot business_unit_snapshot = 1;
+}
+
+// required business_unit_snapshot_id
+message GetBusinessUnitSnapshotRequest {
+  // 取引先管理スナップショットID
+  string business_unit_snapshot_id = 1;
+}
+
+// required business_unit_snapshot
+message UpdateBusinessUnitSnapshotRequest {
+  // 取引先管理スナップショットデータ
+  // required business_unit_snapshot_id
+  // required updated_at
+  BusinessUnitSnapshot business_unit_snapshot = 1;
+}
+
+// required business_unit_snapshot
+message DeleteBusinessUnitSnapshotRequest {
+  // 取引先管理スナップショットデータ
+  // required business_unit_snapshot_id
+  // required updated_at
+  BusinessUnitSnapshot business_unit_snapshot = 1;
+}
+
+// 更新通知データ
+message ListBusinessUnitChangeNotificationsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // base_type_name
+  string base_type_name = 2;
+
+  // base_record_id
+  repeated string base_record_ids = 3;
+
+  // type_name
+  string type_name = 4;
+
+  // record_id
+  repeated string record_ids = 5;
+}
+
+message ListBusinessUnitChangeNotificationsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 更新通知データ
+  repeated BusinessUnitChangeNotification items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_change_notification
+message CreateBusinessUnitChangeNotificationRequest {
+  // 更新通知データ
+  // required type_name
+  // required record_id
+  BusinessUnitChangeNotification business_unit_change_notification = 1;
+}
+
+// required business_unit_change_notification_id
+message GetBusinessUnitChangeNotificationRequest {
+  // 更新通知ID
+  string business_unit_change_notification_id = 1;
+}
+
+// required business_unit_change_notification
+message UpdateBusinessUnitChangeNotificationRequest {
+  // 更新通知データ
+  // required business_unit_change_notification_id
+  // required updated_at
+  BusinessUnitChangeNotification business_unit_change_notification = 1;
+}
+
+// required business_unit_change_notification
+message DeleteBusinessUnitChangeNotificationRequest {
+  // 更新通知データ
+  // required business_unit_change_notification_id
+  // required updated_at
+  BusinessUnitChangeNotification business_unit_change_notification = 1;
+}
+
+// 取引先管理（連絡先）コンテンツ
+message ListBusinessUnitContactContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 取引先管理ID
+  repeated string business_unit_management_ids = 2;
+}
+
+message ListBusinessUnitContactContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理（連絡先）コンテンツ
+  repeated BusinessUnitContactContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_contact_id
+message GetBusinessUnitContactContentRequest {
+  // 取引先管理（連絡先）ID
+  string business_unit_contact_id = 1;
+}
+
+// 取引先管理（第三者情報）コンテンツ
+// required codes
+message ListBusinessUnitScoreContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 識別コード
+  repeated string codes = 2;
+
+  // データ種類
+  repeated string categorys = 3;
+}
+
+message ListBusinessUnitScoreContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 取引先管理（第三者情報）コンテンツ
+  repeated BusinessUnitScoreContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required code
+// required category
+message GetBusinessUnitScoreContentRequest {
+  // 識別コード
+  string code = 1;
+
+  // データ種類
+  string category = 2;
+}
+
+// 公開された 自社企業（基本情報）マスタ
+message SharedListBusinessUnitProfilesRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitProfilesResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（基本情報）マスタ
+  repeated BusinessUnitProfile items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_contact_id
+message SharedGetBusinessUnitProfileRequest {
+  // 自社企業（基本情報）ID
+  string business_unit_profile_id = 1;
+}
+
+// 公開された 自社企業（決算）マスタ
+message SharedListBusinessUnitFinancialsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitFinancialsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（決算）マスタ
+  repeated BusinessUnitFinancial items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_contact_id
+message SharedGetBusinessUnitFinancialRequest {
+  // 自社企業（決算）ID
+  string business_unit_financial_id = 1;
+}
+
+// 公開された 自社企業（拠点）マスタ
+message SharedListBusinessUnitBranchsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitBranchsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（拠点）マスタ
+  repeated BusinessUnitBranch items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_branch_id
+message SharedGetBusinessUnitBranchRequest {
+  // 自社企業（拠点）ID
+  string business_unit_branch_id = 1;
+}
+
+// 公開された 自社企業（設備）マスタ
+message SharedListBusinessUnitFacilitiessRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitFacilitiessResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（設備）マスタ
+  repeated BusinessUnitFacilities items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_facilities_id
+message SharedGetBusinessUnitFacilitiesRequest {
+  // 自社企業（設備）ID
+  string business_unit_facilities_id = 1;
+}
+
+// 公開された 自社企業（認証）マスタ
+message SharedListBusinessUnitCertificatesRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitCertificatesResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（認証）マスタ
+  repeated BusinessUnitCertificate items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_certificate_id
+message SharedGetBusinessUnitCertificateRequest {
+  // 自社企業（認証）ID
+  string business_unit_certificate_id = 1;
+}
+
+// 公開された 自社企業（得意分野）マスタ
+message SharedListBusinessUnitStrengthsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitStrengthsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（得意分野）マスタ
+  repeated BusinessUnitStrength items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_strength_id
+message SharedGetBusinessUnitStrengthRequest {
+  // 自社企業（得意分野）ID
+  string business_unit_strength_id = 1;
+}
+
+// 公開された 自社企業（技術情報）マスタ
+message SharedListBusinessUnitSkillsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 自社企業ID
+  repeated string company_ids = 2;
+}
+
+message SharedListBusinessUnitSkillsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 自社企業（技術情報）マスタ
+  repeated BusinessUnitSkill items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required business_unit_skill_id
+message SharedGetBusinessUnitSkillRequest {
+  // 自社企業（技術情報）ID
+  string business_unit_skill_id = 1;
+}
+
+// 取引先管理（連絡先）依頼データ を 公開する
+// required business_unit_contact_header
+message SharetoBusinessUnitContactHeaderRequest {
+  // 取引先管理（連絡先）依頼データ
+  // required business_unit_contact_header_id
+  // required updated_at
+  BusinessUnitContactHeader business_unit_contact_header = 1;
+}
+
+message SharetoBusinessUnitContactHeaderResponse {}
+
+// 取引先管理（連絡先）マスタ を 公開する
+// required business_unit_contact
+message SharetoBusinessUnitContactRequest {
+  // 取引先管理（連絡先）マスタ
+  // required business_unit_contact_id
+  // required updated_at
+  BusinessUnitContact business_unit_contact = 1;
+}
+
+message SharetoBusinessUnitContactResponse {}
+
+// 有効管理データ（取引先） を 公開する
+// required business_unit_active_control
+message SharetoBusinessUnitActiveControlRequest {
+  // 有効管理データ（取引先）
+  // required business_unit_active_control_id
+  // required updated_at
+  BusinessUnitActiveControl business_unit_active_control = 1;
+}
+
+message SharetoBusinessUnitActiveControlResponse {}
+
+// Inactivate / Activate
+// required company_id
+message ActivateBusinessUnitRequest {
+  string company_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message ActivateBusinessUnitResponse {
+  // 有効管理データ（取引先）
+  BusinessUnitActiveControl business_unit_active_control = 1;
+}
+
+// required company_id
+message InactivateBusinessUnitRequest {
+  string company_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message InactivateBusinessUnitResponse {
+  // 有効管理データ（取引先）
+  BusinessUnitActiveControl business_unit_active_control = 1;
+}
+
+// required business_unit_management_id
+message StartBusinessRequest {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+}
+
+message StartBusinessResponse {}
+
+// required business_unit_management_id
+message StopBusinessRequest {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+}
+
+message StopBusinessResponse {}
+
+// 更新通知 を 確認済みにする
+// required type_name
+// required record_ids
+message ConfirmBusinessUnitChangeNotificationRequest {
+  // type_name
+  string type_name = 1;
+
+  // record_id
+  repeated string record_ids = 2;
+}
+
+message ConfirmBusinessUnitChangeNotificationResponse {}
+
+// 取引先管理情報 取込フォーマット出力（新フォーマット）
+message ExportBusinessUnitManagementsRequest {
+  // 取引先管理ID
+  repeated string ids = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportBusinessUnitManagementsResponse {
+  string asset_id = 1;
+}
+
+// 取引先管理情報 取込（新フォーマット）
+message ImportBusinessUnitManagementsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+
+  // 処理（検査/取込）
+  bool dry_run = 3;
+
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportBusinessUnitManagementsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル
+  string asset_id = 3;
+}
+
+// 取引先管理情報 取込フォーマット取得（新フォーマット）
+message ListBusinessUnitManagementFormatsRequest {}
+
+message ListBusinessUnitManagementFormatsResponse {
+  // 件数
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+// 取引先管理（第三者情報）マスタ 取込フォーマット出力
+message ExportBusinessUnitScoresRequest {
+  // 取引先管理（第三者情報）ID
+  repeated string ids = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportBusinessUnitScoresResponse {
+  string asset_id = 1;
+}
+
+// 取引先管理（第三者情報）マスタ 取込
+message ImportBusinessUnitScoresRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+
+  // 処理（検査/取込）
+  bool dry_run = 3;
+
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportBusinessUnitScoresResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル
+  string asset_id = 3;
+}
+
+// 取引先管理（第三者情報）マスタ 取込フォーマット取得
+message ListBusinessUnitScoreFormatsRequest {}
+
+message ListBusinessUnitScoreFormatsResponse {
+  // 件数
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+// ItemValue 取込フォーマット出力
+message ExportBusinessUnitManagementItemValuesRequest {
+  //
+  repeated string ids = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportBusinessUnitManagementItemValuesResponse {
+  string asset_id = 1;
+}
+
+// ItemValue 取込
+message ImportBusinessUnitManagementItemValuesRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+
+  // 処理（検査/取込）
+  bool dry_run = 3;
+
+  // エラーファイル出力
+  bool export_error = 4;
+}
+
+message ImportBusinessUnitManagementItemValuesResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+
+  // エラー・警告ファイル
+  string asset_id = 3;
+}
+
+// ItemValue 取込フォーマット取得
+message ListBusinessUnitManagementItemValueFormatsRequest {}
+
+message ListBusinessUnitManagementItemValueFormatsResponse {
+  // 件数
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message GetBusinessUnitSkillTreeRequest {}

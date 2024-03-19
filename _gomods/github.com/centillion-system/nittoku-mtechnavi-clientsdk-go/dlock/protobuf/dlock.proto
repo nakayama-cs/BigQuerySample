@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package mtechnavi.api.dlock;
+
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option go_package = 'mtechnavi/dlock/protobuf';
+
+message Lock {
+    string key = 1;
+
+    // ロックを取得（Acquire）した場合のみ、取得可能
+    string lock_id = 2;
+
+    string locked_by = 3;
+
+    int64 expired_at = 4;
+}
+
+enum LockStatus {
+    AVAILABLE = 0;
+    LOCKED_BY_ME = 1;
+    LOCKED_BY_OTHER = 2;
+}
+
+message AcquireLockRequest {
+    string key = 1 [(validate.rules).string.min_len = 1];
+
+    // ロック期間（秒）
+    // 1s ~ 24h（86400s）の範囲で指定する
+    int64 expire = 2 [(validate.rules).int64 = { gte: 1, lte: 86400 }];
+}
+
+message GetLockStatusRequest {
+    string key = 1 [(validate.rules).string.min_len = 1];
+}
+
+message GetLockStatusResponse {
+    LockStatus status = 1; // enumで定義
+}
+
+message ExtendLockRequest {
+    string key = 1 [(validate.rules).string.min_len = 1];
+
+    string lock_id = 2 [(validate.rules).string.min_len = 1];
+
+    // ロック期間（秒）
+    // 1s ~ 24h（86400s）の範囲で指定する
+    int64 expire = 3; // １秒以上でバリデート（1s ~ 24h）
+}
+
+message ExtendLockResponse {
+    Lock lock = 1 [(validate.rules).message.required = true];
+}
+
+message ReleaseLockRequest {
+    string key = 1 [(validate.rules).string.min_len = 1];
+    string lock_id = 2 [(validate.rules).string.min_len = 1];
+}
+
+service Locker {
+    // ロックを新規作成
+    rpc AcquireLock(AcquireLockRequest) returns (Lock);
+    // ロックを試す
+    rpc GetLockStatus(GetLockStatusRequest) returns (GetLockStatusResponse);
+    // ロックを延長
+    rpc ExtendLock(ExtendLockRequest) returns (Lock);
+    // ロックを開放
+    // 所有している人は削除可能
+    // エラー　→ internal error
+    // 所有してない人はerror (Invalid Argument)
+    rpc ReleaseLock(ReleaseLockRequest) returns (google.protobuf.Empty);
+}

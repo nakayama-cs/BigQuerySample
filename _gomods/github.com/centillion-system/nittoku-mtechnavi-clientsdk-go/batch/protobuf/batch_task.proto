@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package mtechnavi.api.batch;
+
+option go_package = "mtechnavi/batch/protobuf";
+
+message BatchTask {
+  // サービス名
+  // protoファイルで「service」で定義されているものを指定
+  string service = 1;
+
+  // メソッド名
+  // protoファイルで「service」で定義されているものを指定
+  string method = 2;
+
+  // メソッドのリクエストのjson
+  // protojsonパッケージで対象Requestのデータを
+  // Marshalしたjsonデータ
+  string reqeust_json = 3;
+}

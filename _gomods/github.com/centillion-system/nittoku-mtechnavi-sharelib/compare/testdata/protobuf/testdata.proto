@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package mtechnavi.compare.testdata;
+
+option go_package = 'mtechnavi/compare/testdata';
+
+import "mtn/visibility.proto";
+import "embedded.proto";
+
+enum RootEnum {
+  A = 0;
+  B = 1;
+  C = 2;
+}
+
+message ScalarTypes {
+  double   private_double_   = 1 [(mtn.visibility) = { scope: PRIVATE }];
+  float    granted_float_    = 3 [(mtn.visibility) = { scope: GRANTED }];
+  int32    public_int32_     = 5 [(mtn.visibility) = { scope: PUBLIC }];
+  int64    private_int64_    = 7 [(mtn.visibility) = { scope: PRIVATE }];
+  uint32   granted_uint32_   = 9 [(mtn.visibility) = { scope: GRANTED }];
+  uint64   public_uint64_    = 11 [(mtn.visibility) = { scope: PUBLIC }];
+  sint32   private_sint32_   = 13 [(mtn.visibility) = { scope: PRIVATE }];
+  sint64   granted_sint64_   = 15 [(mtn.visibility) = { scope: GRANTED }];
+  fixed32  public_fixed32_   = 17 [(mtn.visibility) = { scope: PUBLIC }];
+  fixed64  private_fixed64_  = 19 [(mtn.visibility) = { scope: PRIVATE }];
+  sfixed32 granted_sfixed32_ = 21 [(mtn.visibility) = { scope: GRANTED }];
+  sfixed64 public_sfixed64_  = 23 [(mtn.visibility) = { scope: PUBLIC }];
+  bool     private_bool_     = 25 [(mtn.visibility) = { scope: PRIVATE }];
+  string   granted_string_   = 27 [(mtn.visibility) = { scope: GRANTED }];
+  bytes    public_bytes_     = 29 [(mtn.visibility) = { scope: PUBLIC }];
+  RootEnum private_enum_     = 31 [(mtn.visibility) = { scope: PRIVATE }];
+
+  string                            scalar_types_id   = 100;
+  int64                             deleted_at        = 101;
+  int64                             created_at        = 102;
+  int64                             updated_at        = 103;
+  sharelib.EmbeddedSharedProperties shared_properties = 104;
+}
+
+message RepeatedTypes {
+  repeated double      private_repeated_double_   = 101 [(mtn.visibility) = { scope: PRIVATE }];
+  repeated float       granted_repeated_float_    = 103 [(mtn.visibility) = { scope: GRANTED }];
+  repeated int32       public_repeated_int32_     = 105 [(mtn.visibility) = { scope: PUBLIC }];
+  repeated int64       private_repeated_int64_    = 107 [(mtn.visibility) = { scope: PRIVATE }];
+  repeated uint32      granted_repeated_uint32_   = 109 [(mtn.visibility) = { scope: GRANTED }];
+  repeated uint64      public_repeated_uint64_    = 111 [(mtn.visibility) = { scope: PUBLIC }];
+  repeated sint32      private_repeated_sint32_   = 113 [(mtn.visibility) = { scope: PRIVATE }];
+  repeated sint64      granted_repeated_sint64_   = 115 [(mtn.visibility) = { scope: GRANTED }];
+  repeated fixed32     public_repeated_fixed32_   = 117 [(mtn.visibility) = { scope: PUBLIC }];
+  repeated fixed64     private_repeated_fixed64_  = 119 [(mtn.visibility) = { scope: PRIVATE }];
+  repeated sfixed32    granted_repeated_sfixed32_ = 121 [(mtn.visibility) = { scope: GRANTED }];
+  repeated sfixed64    public_repeated_sfixed64_  = 123 [(mtn.visibility) = { scope: PUBLIC }];
+  repeated bool        private_repeated_bool_     = 125 [(mtn.visibility) = { scope: PRIVATE }];
+  repeated string      granted_repeated_string_   = 127 [(mtn.visibility) = { scope: GRANTED }];
+  repeated bytes       public_repeated_bytes_     = 129 [(mtn.visibility) = { scope: PUBLIC }];
+  repeated ScalarTypes private_repeated_message_  = 131 [(mtn.visibility) = { scope: PRIVATE }];
+}
+
+message MapTypes {
+  map<string, double>      private_map_string_double_   = 201 [(mtn.visibility) = { scope: PRIVATE }];
+  map<string, float>       granted_map_string_float_    = 203 [(mtn.visibility) = { scope: GRANTED }];
+  map<string, int32>       public_map_string_int32_     = 205 [(mtn.visibility) = { scope: PUBLIC }];
+  map<string, int64>       private_map_string_int64_    = 207 [(mtn.visibility) = { scope: PRIVATE }];
+  map<string, uint32>      granted_map_string_uint32_   = 209 [(mtn.visibility) = { scope: GRANTED }];
+  map<string, uint64>      public_map_string_uint64_    = 211 [(mtn.visibility) = { scope: PUBLIC }];
+  map<string, sint32>      private_map_string_sint32_   = 213 [(mtn.visibility) = { scope: PRIVATE }];
+  map<string, sint64>      granted_map_string_sint64_   = 215 [(mtn.visibility) = { scope: GRANTED }];
+  map<string, fixed32>     public_map_string_fixed32_   = 217 [(mtn.visibility) = { scope: PUBLIC }];
+  map<string, fixed64>     private_map_string_fixed64_  = 219 [(mtn.visibility) = { scope: PRIVATE }];
+  map<string, sfixed32>    granted_map_string_sfixed32_ = 221 [(mtn.visibility) = { scope: GRANTED }];
+  map<string, sfixed64>    public_map_string_sfixed64_  = 223 [(mtn.visibility) = { scope: PUBLIC }];
+  map<string, bool>        private_map_string_bool_     = 225 [(mtn.visibility) = { scope: PRIVATE }];
+  map<string, string>      granted_map_string_string_   = 227 [(mtn.visibility) = { scope: GRANTED }];
+  map<string, bytes>       public_map_string_bytes_     = 229 [(mtn.visibility) = { scope: PUBLIC }];
+  map<string, ScalarTypes> private_map_string_message_  = 231 [(mtn.visibility) = { scope: PRIVATE }];
+}
+
+message OneOfTypes {
+  oneof test_oneof {
+    ScalarTypes private_message = 1 [(mtn.visibility) = { scope: PRIVATE }];
+    ScalarTypes granted_message = 3 [(mtn.visibility) = { scope: GRANTED }];
+    ScalarTypes public_message  = 5 [(mtn.visibility) = { scope: PUBLIC }];
+  }
+}
+
+message NestedTypes {
+  string private = 1 [(mtn.visibility) = { scope: PRIVATE }];
+  string granted = 3 [(mtn.visibility) = { scope: GRANTED }];
+  string public  = 5 [(mtn.visibility) = { scope: PUBLIC }];
+
+  ScalarTypes private_scalar_types = 11 [(mtn.visibility) = { scope: PRIVATE }];
+  ScalarTypes granted_scalar_types = 13 [(mtn.visibility) = { scope: GRANTED }];
+  ScalarTypes public_scalar_types  = 15 [(mtn.visibility) = { scope: PUBLIC }];
+
+  RepeatedTypes private_repeated_types = 21 [(mtn.visibility) = { scope: PRIVATE }];
+  RepeatedTypes granted_repeated_types = 23 [(mtn.visibility) = { scope: GRANTED }];
+  RepeatedTypes public_repeated_types  = 25 [(mtn.visibility) = { scope: PUBLIC }];
+
+  MapTypes private_map_types = 31 [(mtn.visibility) = { scope: PRIVATE }];
+  MapTypes granted_map_types = 33 [(mtn.visibility) = { scope: GRANTED }];
+  MapTypes public_map_types  = 35 [(mtn.visibility) = { scope: PUBLIC }];
+
+  OneOfTypes private_one_of_types = 41 [(mtn.visibility) = { scope: PRIVATE }];
+  OneOfTypes granted_one_of_types = 43 [(mtn.visibility) = { scope: GRANTED }];
+  OneOfTypes public_one_of_types  = 45 [(mtn.visibility) = { scope: PUBLIC }];
+
+  string                            nested_visibility_types_id = 100;
+  int64                             deleted_at                 = 101;
+  int64                             created_at                 = 102;
+  int64                             updated_at                 = 103;
+  sharelib.EmbeddedSharedProperties shared_properties          = 104;
+}
+
+message InheritMessage {
+  string inherit_string = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  message NestedMessage {
+    string inherit_string = 1 [(mtn.visibility) = { scope: INHERIT }];
+  }
+
+  NestedMessage private_nested_message = 3 [(mtn.visibility) = { scope: PRIVATE }];
+  NestedMessage granted_nested_message = 5 [(mtn.visibility) = { scope: GRANTED }];
+  NestedMessage public_nested_message  = 7 [(mtn.visibility) = { scope: PUBLIC }];
+  NestedMessage inherit_nested_message = 9 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message NestedInheritTypes {
+  InheritMessage private_inherit_message = 1 [(mtn.visibility) = { scope: PRIVATE }];
+  InheritMessage granted_inherit_message = 3 [(mtn.visibility) = { scope: GRANTED }];
+  InheritMessage public_inherit_message  = 5 [(mtn.visibility) = { scope: PUBLIC }];
+}

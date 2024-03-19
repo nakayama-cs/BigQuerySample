@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package mtechnavi.visibility.testdata;
+
+option go_package = 'mtechnavi/visibility/testdata';
+
+import "mtn/visibility.proto";
+import "embedded.proto";
+
+message SimpleVisibilityTypes {
+  string private1 = 1;
+  string private2 = 2 [(mtn.visibility) = { scope: PRIVATE }];
+  string granted  = 3 [(mtn.visibility) = { scope: GRANTED }];
+  string public   = 4 [(mtn.visibility) = { scope: PUBLIC }];
+
+  string simple_visibility_types_id = 100;
+  int64  deleted_at                 = 101;
+  int64  created_at                 = 102;
+  int64  updated_at                 = 103;
+}
+
+message NestedMessage {
+  SimpleVisibilityTypes private_message1 = 1;
+  SimpleVisibilityTypes private_message2 = 3 [(mtn.visibility) = { scope: PRIVATE }];
+  SimpleVisibilityTypes granted_message  = 5 [(mtn.visibility) = { scope: GRANTED }];
+  SimpleVisibilityTypes public_message   = 7 [(mtn.visibility) = { scope: PUBLIC }];
+
+  string                            nested_message_id = 100;
+  int64                             deleted_at        = 101;
+  int64                             created_at        = 102;
+  int64                             updated_at        = 103;
+  sharelib.EmbeddedSharedProperties shared_properties = 104;
+}
+
+message EmptyMessage {}
+
+message NestedVisibilityTypes {
+  string private1 = 1;
+  string private2 = 3 [(mtn.visibility) = { scope: PRIVATE }];
+  string granted  = 5 [(mtn.visibility) = { scope: GRANTED }];
+  string public   = 7 [(mtn.visibility) = { scope: PUBLIC }];
+
+  SimpleVisibilityTypes private_message1 = 9;
+  SimpleVisibilityTypes private_message2 = 11 [(mtn.visibility) = { scope: PRIVATE }];
+  SimpleVisibilityTypes granted_message  = 13 [(mtn.visibility) = { scope: GRANTED }];
+  SimpleVisibilityTypes public_message   = 15 [(mtn.visibility) = { scope: PUBLIC }];
+
+  oneof test_oneof {
+    SimpleVisibilityTypes message1 = 17 [(mtn.visibility) = { scope: PRIVATE }];
+    SimpleVisibilityTypes message2 = 19 [(mtn.visibility) = { scope: GRANTED }];
+    SimpleVisibilityTypes message3 = 21 [(mtn.visibility) = { scope: PUBLIC }];
+  }
+
+  NestedMessage private_nested_message1 = 23;
+  NestedMessage private_nested_message2 = 25 [(mtn.visibility) = { scope: PRIVATE }];
+  NestedMessage granted_nested_message  = 27 [(mtn.visibility) = { scope: GRANTED }];
+  NestedMessage public_nested_message   = 29 [(mtn.visibility) = { scope: PUBLIC }];
+
+  EmptyMessage private_empty_message1 = 31;
+  EmptyMessage private_empty_message2 = 33 [(mtn.visibility) = { scope: PRIVATE }];
+  EmptyMessage granted_empty_message  = 35 [(mtn.visibility) = { scope: GRANTED }];
+  EmptyMessage public_empty_message   = 37 [(mtn.visibility) = { scope: PUBLIC }];
+
+  string                            nested_visibility_types_id = 100;
+  int64                             deleted_at                 = 101;
+  int64                             created_at                 = 102;
+  int64                             updated_at                 = 103;
+  sharelib.EmbeddedSharedProperties shared_properties          = 104;
+}

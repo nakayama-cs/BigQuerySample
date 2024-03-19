@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+package mtechnavi.api.uicontroller;
+
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option go_package = "mtechnavi/uicontroller/protobuf";
+
+service UiController {
+  rpc CreatePresetMenu(CreatePresetMenuRequest) returns (PresetMenu);
+  rpc ListPresetMenus(ListPresetMenusRequest) returns (ListPresetMenusResponse);
+  rpc GetPresetMenu(GetPresetMenuRequest) returns (PresetMenu);
+  rpc UpdatePresetMenu(UpdatePresetMenuRequest) returns (PresetMenu);
+  rpc DeletePresetMenu(DeletePresetMenuRequest) returns (google.protobuf.Empty);
+
+  rpc CreatePreset(CreatePresetRequest) returns (Preset);
+  rpc ListPresets(ListPresetsRequest) returns (ListPresetsResponse);
+  rpc GetPreset(GetPresetRequest) returns (Preset);
+  rpc UpdatePreset(UpdatePresetRequest) returns (Preset);
+  rpc DeletePreset(DeletePresetRequest) returns (google.protobuf.Empty);
+}
+
+// // Internal use only
+// message Feature {
+//   string feature_name = 1;
+
+//   string display_name = 2;
+
+//   // Implementation Note: permissionは別途定数管理表などで定義する前提
+//   repeated string available_permissions = 3;
+
+//   // Implementation Note: view_idは別途定数管理表などで定義する前提
+//   repeated string available_view_ids = 4;
+// }
+
+// // TODO: サブスクリプションのほうが適切?
+// // Internal use only
+// message License {
+//   string license_id = 1;
+
+//   string display_name = 2;
+
+//   repeated Feature features = 3;
+
+//   int64 created_at = 2;
+
+//   int64 updated_at = 1;
+// }
+
+message PresetMenu {
+  // プリセットメニューID
+  string preset_menu_id = 1;
+
+  // 親プリセットメニューID
+  string parent_preset_menu_id = 2;
+
+  oneof value {
+    option (validate.required) = true;
+    // プリセットメニューフォルダ
+    PresetMenuContainer container = 3;
+    // プリセットメニュー
+    PresetMenuItem item = 4;
+  }
+
+  // 削除日
+  int64 deleted_at = 5;
+
+  // 作成日
+  int64 created_at = 6;
+
+  // 更新日
+  int64 updated_at = 7;
+}
+
+message PresetMenuContainer {
+  // プリセットメニューフォルダ表示名
+  string display_name = 1 [(validate.rules).string.min_len = 1];
+
+  // 子プリセットメニューID
+  // （フォルダ配下に存在するプリセットメニューのID）
+  repeated string children_preset_menu_ids = 2;
+}
+
+message PresetMenuItem {
+  // プリセットID
+  string preset_id = 1;
+}
+
+message Preset {
+  // プリセットID
+  string preset_id = 1;
+
+  // プリセット表示名
+  string display_name = 2 [(validate.rules).string.min_len = 1];
+
+  // ベース画面ID
+  string view_id = 3;
+
+  // プリセット使用可能ユーザグループコード
+  repeated string user_group_codes = 4;
+
+  // プリセットデータ
+  bytes internal_data = 5;
+
+  // 削除日
+  int64 deleted_at = 6;
+
+  // 作成日
+  int64 created_at = 7;
+
+  // 更新日
+  int64 updated_at = 8;
+}
+
+message CreatePresetMenuRequest {
+  // 作成するプリセットメニュー
+  PresetMenu preset_menu = 1 [(validate.rules).message.required = true];
+}
+
+message ListPresetMenusRequest {}
+
+message ListPresetMenusResponse {
+  // 取得したプリセットメニュー数
+  int64 total = 1;
+
+  // 取得したプリセットメニューデータ
+  repeated PresetMenu items = 2;
+}
+
+message GetPresetMenuRequest {
+  // 取得するプリセットメニューID
+  string preset_menu_id = 1;
+}
+
+message UpdatePresetMenuRequest {
+  // 更新するプリセットメニューデータ
+  PresetMenu preset_menu = 1 [(validate.rules).message.required = true];
+}
+
+message DeletePresetMenuRequest {
+  // 削除するプリセットメニューデータ
+  PresetMenu preset_menu = 1 [(validate.rules).message.required = true];
+}
+
+message CreatePresetRequest {
+  // 作成するプリセットデータ
+  Preset preset = 1 [(validate.rules).message.required = true];
+}
+
+message ListPresetsRequest {}
+
+message ListPresetsResponse {
+  // 取得したプリセットデータ数
+  int64 total = 1;
+
+  // 取得したプリセットデータ
+  repeated Preset items = 2;
+}
+
+message GetPresetRequest {
+  // 取得するプリセットID
+  string preset_id = 1;
+}
+
+message UpdatePresetRequest {
+  // 更新するプリセットデータ
+  Preset preset = 1 [(validate.rules).message.required = true];
+}
+
+message DeletePresetRequest {
+  // 削除するプリセットデータ
+  Preset preset = 1 [(validate.rules).message.required = true];
+}

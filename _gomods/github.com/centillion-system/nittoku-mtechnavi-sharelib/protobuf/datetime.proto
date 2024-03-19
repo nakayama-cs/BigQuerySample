@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+// 日付型
+message Datetime {
+  // タイムゾーン
+  // TZ database name の形式で指定する
+  // 空の場合 "Asia/Tokyo" とする
+  string timezone_name = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // UNIXエポック マイクロ秒
+  int64 timestamp = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 精度
+  // どの精度で取り扱っているかを指定する
+  // e.g.
+  // DAYの場合 timestampにはマイクロ秒精度のUnix時刻が格納されるが、時間以下の部分については0クリアした上で扱う
+  //
+  enum Accuracy {
+    MICROSECOND = 0;
+    MILLISECOND = 1;
+    SECOND      = 2;
+    MINUTE      = 3;
+    HOUR        = 4;
+    DAY         = 5;
+    MONTH       = 6;
+    YEAR        = 7;
+  }
+  Accuracy accuracy = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message Date {
+  // 年
+  int32 year = 1 [(mtn.visibility) = { scope: INHERIT }];
+  // 月
+  int32 month = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // 日
+  int32 day = 3 [(mtn.visibility) = { scope: INHERIT }];
+}

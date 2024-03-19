@@ -1,0 +1,488 @@
+syntax = "proto3";
+
+package mtechnavi.api.forum;
+
+import "validate/validate.proto";
+import "google/protobuf/empty.proto";
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "nameoption.proto";
+import "reference.proto";
+import "embedded.proto";
+
+option go_package = "mtechnavi/forum/protobuf";
+
+service ForumService {
+  // 親スレッド
+  //
+  // Implementation Note::
+  //
+  //   Create/Updateされたタイミングでレコードをsharetoする
+  //   shareto先はBaseThread.company_idsを参照
+  //
+  rpc CreateBaseThread(CreateBaseThreadRequest) returns (BaseThread);
+  rpc ListBaseThreads(ListBaseThreadsRequest) returns (ListBaseThreadsResponse);
+  rpc GetBaseThread(GetBaseThreadRequest) returns (BaseThread);
+  rpc UpdateBaseThread(UpdateBaseThreadRequest) returns (BaseThread);
+  rpc DeleteBaseThread(DeleteBaseThreadRequest) returns (google.protobuf.Empty);
+
+  // 問合せ
+  //
+  // Implementation Note::
+  //   Create/Updateされたタイミングで公開設定が公開/企業指定の場合はレコードをsharetoする
+  //   shareto先は親スレッド（BaseThread.company_ids）を参照
+  //
+  rpc CreateThread(CreateThreadRequest) returns (Thread);
+  rpc ListThreads(ListThreadsRequest) returns (ListThreadsResponse);
+  rpc GetThread(GetThreadRequest) returns (Thread);
+  rpc UpdateThread(UpdateThreadRequest) returns (Thread);
+  rpc DeleteThread(DeleteThreadRequest) returns (google.protobuf.Empty);
+
+  // 投稿
+  //
+  // Implementation Note::
+  //   Create/Update のタイミングでThreadSummaryをUpdateする
+  //
+  //   Create/Updateされたタイミングで公開設定が公開/企業指定の場合はレコードをsharetoする
+  //   shareto先は親スレッド（BaseThread.company_ids）を参照
+  //
+  rpc CreateComment(CreateCommentRequest) returns (Comment);
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
+  rpc GetComment(GetCommentRequest) returns (Comment);
+  rpc UpdateComment(UpdateCommentRequest) returns (Comment);
+  rpc DeleteComment(DeleteCommentRequest) returns (google.protobuf.Empty);
+
+  // マーカーをつける
+  //
+  // Implementation Note::
+  //   1. 指定されたmodeでMarkerを更新する
+  //    mode = Complete の場合、指定されたマーカーに置き換える（元のマーカーを削除）
+  //    mode = Incremental の場合、指定されたマーカーを追加
+  //
+  //   2. ThreadUserSummaryをUpdateする
+  //
+  rpc SetMarker(SetMarkerRequest) returns (SetMarkerResponse);
+
+  // マーカーをはずす
+  //
+  // Implementation Note::
+  //   1. 指定されたmodeでMarkerを更新する
+  //    mode = Complete の場合、全てのマーカーを削除
+  //    mode = Incremental の場合、指定されたマーカーのみを削除
+  //
+  //   2. ThreadUserSummaryをUpdateする
+  //
+  rpc UnsetMarker(UnsetMarkerRequest) returns (UnsetMarkerResponse);
+}
+
+// タスクリスト
+service ForumTaskListService {
+  // 伝票未読
+  rpc UnreadListResources(UnreadListResourcesRequest) returns (UnreadListResourcesResponse);
+}
+
+message BaseThread {
+  // BaseThread ID
+  //
+  // Implementation Note::
+  //   公開 の場合は、BaseThread.owner + resource_id
+  //   非公開 の場合は、resource_id + BaseThread.owner
+  //
+  string base_thread_id = 1;
+
+  // 所有テナントID
+  string owner = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 紐付き情報
+  ResourceReference resource_reference = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  reserved 4;
+
+  // 企業ID
+  //
+  // Implementation Note::
+  //   以下ケースによって対象企業IDを格納する
+  //   公開 の場合は、対象企業ID（所有テナントも含む）
+  //   非公開 の場合は、所有テナントのみ
+  //
+  repeated string company_ids = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 非公開かどうか
+  //
+  // trueの場合、システム内部で作成された非公開BaseThreadとして扱う
+  bool internal = 10;
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 9;
+
+  int64 deleted_at = 6;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+}
+
+message Thread {
+  string thread_id = 1;
+
+  string base_thread_id = 2 [
+    (mtn.dataproxy)  = { index: { name: "base_thread_id" } },  //
+    (mtn.visibility) = { scope: GRANTED }
+  ];
+
+  // タイトル
+  string display_name = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // outputonly 最終投稿
+  //
+  // Implementation Note::
+  //   ThreadSummaryのlatest_commentを格納する
+  //
+  Comment latest_comment = 4;
+
+  // readonly 企業ID
+  //
+  // Implementation Note::
+  //   前提の仕様として空配列を指定した場合は、BaseThread.company_ids が優先される
+  //
+  //   以下ケースによって対象企業IDを格納する
+  //   公開設定が 公開 の場合は、空配列
+  //   公開設定が 非公開 の場合は、空配列
+  //   公開設定が 企業名指定 の場合は、対象企業ID（not omit）
+  //
+  repeated string company_ids = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 公開設定
+  sharelib.NameOption share_scope = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // outputonly マーカー
+  // 名称マスタにおける種別 A0000039 (コミュニケーションマーカー) を参照
+  //
+  // Implementation Note::
+  //   ThreadUserSummaryのmarkersを格納する
+  //
+  repeated sharelib.NameOption aggregated_markers = 5;
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 9;
+
+  message AttachedPoint {
+    int32 x1 = 1 [(mtn.visibility) = { scope: INHERIT }];
+    int32 y1 = 2 [(mtn.visibility) = { scope: INHERIT }];
+    int32 x2 = 3 [(mtn.visibility) = { scope: INHERIT }];
+    int32 y2 = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 付加情報
+    map<string, string> attributes = 5 [(mtn.visibility) = { scope: INHERIT }];
+  };
+
+  AttachedPoint attached_point = 12 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 関連情報
+  repeated string associations = 13 [(mtn.visibility) = { scope: GRANTED }];
+
+  int64 deleted_at = 6;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+}
+
+message ResourceReference {
+  string type_name = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  string resource_id = 2 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message Comment {
+  string comment_id = 1;
+
+  string thread_id = 2 [
+    (mtn.dataproxy)  = { index: { name: "thread_id" } },  //
+    (mtn.visibility) = { scope: GRANTED }
+  ];
+
+  string text = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 投稿日時
+  //
+  // Implementation Note::
+  //   CreateCommentをしたときのタイムスタンプ（マイクロ秒）を格納する
+  //
+  int64 contributed_at = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 引用返信元コメント
+  string reply_comment_id = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // outputonly マーカー
+  // 名称マスタにおける種別 A0000039 (コミュニケーションマーカー) を参照
+  repeated sharelib.NameOption markers = 6;
+
+  // 投稿者情報
+  // 以下のいずれかの条件に合致する場合のみ出力される
+  // 1. 自テナントのユーザが投稿したコメントのとき
+  // 2. （BaseThreadのオーナー）オーナー以外のテナントが投稿したコメントのとき
+  // 3. （BaseThreadのオーナー以外）オーナー側テナントが投稿したコメントのとき
+  Contributor contributor = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 8;
+
+  int64 deleted_at = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+}
+
+// コメント投稿者情報
+message Contributor {
+  // readonly 登録企業ID
+  string company_id = 1 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 登録部門
+  sharelib.ComponentUnitReference organization_unit = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 登録担当者
+  sharelib.StaffReference staff = 3 [(mtn.visibility) = { scope: GRANTED }];
+}
+
+// Implementation Note::
+//   このmessageはsharetoしない、自テナント管理
+//   Comment 書き込み をトリガーにして更新する
+//   thread　/ comment の sharedトリガーで更新する
+//
+message ThreadSummary {
+  //   thread_id + tenant_id と同一
+  string thread_summary_id = 1;
+
+  // readonly 最終投稿
+  // Implementation Note::
+  //   contributed_at が最新のレコードを更新する
+  Comment latest_comment = 2;
+
+  int64 deleted_at = 3;
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+}
+
+// Implementation Note::
+//   このmessageはsharetoしない、自テナント管理
+//   マーカーの 書き込み をトリガーにして更新する
+//   thread / comment の sharedトリガーで更新する
+//
+message ThreadUserSummary {
+  //   thread_id + user_id と同一
+  string thread_user_summary_id = 1;
+
+  string thread_id = 2;
+
+  string user_id = 3 [(mtn.dataproxy) = { index: { name: "user_id" } }];
+
+  // readonly マーカー
+  // 名称マスタにおける種別 A0000039 (コミュニケーションマーカー) を参照
+  //
+  // Implementation Note::
+  //   Commentの各要素が持つmarkersを、重複を排除し、総和したもの
+  //
+  repeated sharelib.NameOption markers = 4;
+
+  int64 deleted_at = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+}
+
+message Marker {
+  // comment_id + user_id
+  string marker_id = 1;
+
+  repeated sharelib.NameOption markers = 2;
+
+  // "urn:mtechnavi.api.forum.Comment:{{comment_id}}"
+  string urn = 3 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  string base_thread_id = 4 [(mtn.dataproxy) = { index: { name: "base_thread_id" } }];
+
+  string thread_id = 5 [(mtn.dataproxy) = { index: { name: "thread_id" } }];
+
+  string user_id = 6 [(mtn.dataproxy) = { index: { name: "user_id" } }];
+
+  int64 deleted_at = 7;
+
+  int64 created_at = 8;
+
+  int64 updated_at = 9;
+}
+
+message AttachmentFile {
+  string attachment_file_id = 1;
+
+  string thread_id = 2;
+
+  string asset_id = 3;
+
+  string created_by = 4;
+
+  int64 deleted_at = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+}
+
+message CreateBaseThreadRequest {
+  BaseThread base_thread = 1 [(validate.rules).message.required = true];
+}
+
+message ListBaseThreadsRequest {
+  ResourceReference resource_reference = 1 [deprecated = true];
+
+  string type_name = 2;
+
+  string resource_id = 3;
+}
+
+message ListBaseThreadsResponse {
+  int64 total = 1;
+
+  repeated BaseThread items = 2;
+}
+
+message GetBaseThreadRequest {
+  string base_thread_id = 1;
+}
+
+message UpdateBaseThreadRequest {
+  BaseThread base_thread = 1;
+}
+
+message DeleteBaseThreadRequest {
+  BaseThread base_thread = 1;
+}
+
+message CreateThreadRequest {
+  Thread thread = 1 [(validate.rules).message.required = true];
+
+  ResourceReference resource_reference = 2 [(validate.rules).message.required = true];
+}
+
+message ListThreadsRequest {
+  ResourceReference resource_reference = 1 [deprecated = true];
+
+  string type_name = 2;
+
+  string resource_id = 3;
+
+  repeated string associations = 4;
+}
+
+message ListThreadsResponse {
+  int64 total = 1;
+
+  repeated Thread items = 2;
+}
+
+message GetThreadRequest {
+  string thread_id = 1;
+}
+
+message UpdateThreadRequest {
+  Thread thread = 1;
+}
+
+message DeleteThreadRequest {
+  Thread thread = 1;
+}
+
+message CreateCommentRequest {
+  Comment comment = 1 [(validate.rules).message.required = true];
+}
+
+message ListCommentsRequest {
+  string thread_id = 1;
+}
+
+message ListCommentsResponse {
+  int64 total = 1;
+
+  repeated Comment items = 2;
+}
+
+message GetCommentRequest {
+  string comment_id = 1;
+}
+
+message UpdateCommentRequest {
+  Comment comment = 1;
+}
+
+message DeleteCommentRequest {
+  Comment comment = 1;
+}
+
+enum MarkerRequestMode {
+  COMPLETE    = 0;
+  INCREMENTAL = 1;
+}
+
+message SetMarkerRequest {
+  MarkerRequestMode mode = 1;
+  // mtechnavi.api.forum.Comment
+  string type_name = 2 [(validate.rules).string = { min_len: 1 }];
+  // comment_id
+  string record_id = 3 [(validate.rules).string = { min_len: 1 }];
+
+  repeated sharelib.NameOption markers = 4;
+  // user_id
+  string user_id = 5;
+}
+
+message SetMarkerResponse {}
+
+message UnsetMarkerRequest {
+  MarkerRequestMode mode = 1;
+  // mtechnavi.api.forum.Comment
+  string type_name = 2 [(validate.rules).string = { min_len: 1 }];
+  // comment_id
+  string record_id = 3 [(validate.rules).string = { min_len: 1 }];
+
+  repeated sharelib.NameOption markers = 4;
+}
+
+message UnsetMarkerResponse {}
+
+message UnreadListResourcesRequest {
+  // 伝票種類
+  repeated string type_name = 1;
+  // 参照モード
+  //   "all":全て[規定値]
+  //   "owner":BaseThread の owner のみ
+  //   "unowner":BaseThread の 非owner のみ
+  string reference_mode = 3;
+  // ページトークン
+  string page_token = 2;
+}
+
+message UnreadListResourcesResponse {
+  // 件数
+  int64 total = 1;
+
+  // 伝票情報
+  repeated Resource items = 2;
+
+  message Resource {
+    // 伝票種類
+    string type_name = 1;
+    // 伝票ID
+    string record_id = 2;
+    // ベーススレッド
+    BaseThread base_thread = 3;
+  }
+
+  // ページトークン
+  string page_token = 3;
+}

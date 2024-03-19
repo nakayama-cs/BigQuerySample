@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package mtechnavi.api.systemreport;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "mtechnavi/systemreport/protobuf";
+
+service SystemReportBatchService {
+  // 定期実行 日次振分処理
+  rpc ScheduleTaskDaily(ScheduleTaskDailyRequest) returns (google.protobuf.Empty);
+
+  // 非同期 日次メール作成振分処理
+  rpc TaskCreateDailyMail(TaskCreateDailyMailRequest) returns (google.protobuf.Empty);
+
+  // 非同期 日次メール作成処理（共通）
+  rpc TaskCreateDailyCommonMail(TaskCreateDailyCommonMailRequest) returns (google.protobuf.Empty);
+
+  // 非同期 日次メール送信処理
+  rpc TaskSendDailyMail(TaskSendDailyMailRequest) returns (google.protobuf.Empty);
+}
+
+// 定期実行 日次振分処理
+message ScheduleTaskDailyRequest {}
+
+// 非同期 日次メール作成振分処理
+// required tenant_id
+// required operated_at
+// required daily_mail_categorys
+message TaskCreateDailyMailRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 処理日
+  int64 operated_at = 2;
+  // 分類リスト
+  repeated string daily_mail_categorys = 3;
+}
+
+// 非同期 日次メール作成処理（共通）
+// required tenant_id
+// required user_id
+// required operated_at
+// required daily_mail_category
+message TaskCreateDailyCommonMailRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // アカウントID
+  string user_id = 2;
+  // 処理日
+  int64 operated_at = 3;
+  // 分類
+  string daily_mail_category = 4;
+  // 分類リスト
+  repeated string daily_mail_categorys = 5;
+}
+
+// 非同期 日次メール送信処理
+// required tenant_id
+// required user_id
+// required daily_mail_categorys
+message TaskSendDailyMailRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // アカウントID
+  string user_id = 2;
+  // 処理日
+  int64 operated_at = 3;
+  // 分類リスト
+  repeated string daily_mail_categorys = 4;
+}

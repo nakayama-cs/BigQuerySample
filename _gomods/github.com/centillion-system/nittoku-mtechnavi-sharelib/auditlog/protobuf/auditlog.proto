@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package mtechnavi.api.sharelib.auditlog;
+
+option go_package = 'mtechnavi/sharelib/auditlog/protobuf';
+
+enum AuditCategory {
+  // 認証・認可
+  AUTH = 0;
+  // データログ
+  DATA_ACCESS = 1;
+  // 操作ログ
+  OPERATION = 2;
+  // 内部ログ
+  INTERNAL = 3;
+  // イベントログ
+  EVENT = 4;
+}
+
+enum MessageCode {
+  UNKNOWN = 0;
+  // ログイン成功
+  AUTH_LOGIN_OK = 1;
+  // ログイン失敗
+  AUTH_LOGIN_NG = 2;
+  // ログアウト
+  AUTH_LOGOUT = 3;
+  // 認可エラー発生
+  AUTH_PERMISSION_NG = 4;
+  // データアクセス
+  DATA_ACCESSED = 5;
+  // 操作
+  OPERATED = 6;
+  // メールリクエスト成功
+  SENDGRID_REQUEST_OK = 7;
+  // メールリクエスト失敗
+  SENDGRID_REQUEST_NG = 8;
+  // テナント作成イベント
+  EVENT_TENANT_CREATED = 9;
+  // レコードShareイベント
+  EVENT_RECORD_SHARED = 10;
+  // レコード作成イベント
+  EVENT_RECORD_CREATED = 11;
+  // レコード更新イベント
+  EVENT_RECORD_UPDATED = 12;
+  // レコード削除イベント
+  EVENT_RECORD_DELETED = 13;
+  // レコードUnshareイベント
+  EVENT_RECORD_UNSHARED = 14;
+}
+
+message GenericEventParameter {
+  // イベントパラメータ
+  map<string, string> Data = 1;
+}

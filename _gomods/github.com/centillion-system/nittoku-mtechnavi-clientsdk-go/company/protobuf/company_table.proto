@@ -1,0 +1,1028 @@
+syntax = "proto3";
+
+package mtechnavi.api.company;
+
+import "validate/validate.proto";
+import "mtn/visibility.proto";
+import "reference.proto";
+import "embedded.proto";
+import "nameoption.proto";
+import "address.proto";
+import "mtn/index.proto";
+import "datetime.proto";
+import "amount.proto";
+import "attachment.proto";
+
+import "company_datatype.proto";
+
+option go_package = 'mtechnavi/company/protobuf';
+
+// 企業
+message Company {
+  // Implementation Note: テナントIDと同一の値を用いる
+  string company_id = 1;
+
+  // 企業名
+  // ja:日本語名
+  // ja-kana:かな名
+  // en:英語名（今回は対応不要）
+  map<string, string> display_name_lang = 2 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 法令情報
+  CompanyLegalProperties company_legal_properties = 3 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 基本情報
+  Profile profile = 4 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // outputonly 企業ステータス
+  CompanyStatus company_status = 8;
+
+  // タイムゾーン
+  // TZ database name の形式で指定する
+  // 登録・更新時に未指定のとき、デフォルト値として "Asia/Tokyo" が設定される。
+  string timezone_name = 9 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 公開済み
+  bool published = 10 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+}
+
+// 管理場所
+// 事業所/窓口の場合はグローバル領域に公開情報をコピーする
+message ComponentUnit {
+  string component_unit_id = 1;
+  // 所属する会社ID
+  string company_id = 2 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 管理場所コード
+  string component_unit_code = 3 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 管理場所名
+  map<string, string> display_name_lang = 4 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 連絡先電話番号（ハイフン付き）
+  string phone_number = 5 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 住所
+  sharelib.Address address = 6 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 場所
+  // NameOption place = 7 [(mtn.visibility) = { scope: PUBLIC }] ;
+  reserved 7;
+
+  // 場所（地図）
+  // ImageFile place_image = 8 [(mtn.visibility) = { scope: PUBLIC }];
+  reserved 8;
+
+  message PlaceProperties {
+    // 場所
+    map<string, string> display_name_lang = 1 [(mtn.visibility) = { scope: PUBLIC }];
+    // 場所（地図）
+    ImageFile image = 2 [(mtn.visibility) = { scope: PUBLIC }];
+  }
+  // 場所情報
+  PlaceProperties place_properties = 23 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 管理場所種別（取引窓口/組織/納入先/事業所）
+  // 取引窓口
+  // 名称マスタにおける種別 A0000002 (管理場所種別) を参照
+  // 取引窓口の場合、コード 1 (取引窓口)となる
+  sharelib.NameOption post_unit = 9 [(mtn.visibility) = { scope: PUBLIC }];
+
+  PostUnitProperties post_unit_properties = 10 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 組織
+  // 名称マスタにおける種別 A0000002 (管理場所種別) を参照
+  // 組織の場合、コード 2 (組織)となる
+  sharelib.NameOption organization_unit = 11;
+
+  OrganizationUnitProperties organization_unit_properties = 12;
+
+  // 納入先
+  // 名称マスタにおける種別 A0000002 (管理場所種別) を参照
+  // 納入先の場合、コード 3 (納入先)となる
+  sharelib.NameOption delivery_point = 13;
+
+  DeliveryPointProperties delivery_point_properties = 14;
+
+  // 事業所
+  // 名称マスタにおける種別 A0000002 (管理場所種別) を参照
+  // 事業所の場合、コード 4 (事業所)となる
+  sharelib.NameOption office = 15 [(mtn.visibility) = { scope: PUBLIC }];
+
+  OfficeProperties office_properties = 16 [(mtn.visibility) = { scope: PUBLIC }];
+
+  // 連携項目
+  repeated string linkage_item = 17;
+
+  // 使用
+  //  名称マスタにおける種別 A0000001 (使用) を参照
+  sharelib.NameOption usable = 18;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 19;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 20;
+
+  int64 created_at = 21;
+
+  int64 updated_at = 22;
+}
+
+// 担当者
+message Staff {
+  string staff_id = 1;
+
+  // 担当者コード
+  string staff_code = 2;
+
+  // 担当者名
+  string display_name = 3;
+
+  // 代表所属先
+  string component_unit_id = 4;
+
+  // 連絡先電話番号（ハイフン付き）
+  string phone_number = 12;
+
+  // メールアドレス
+  string contact_email = 5;
+
+  // 紐付アカウント
+  // 空だったらcontact_emailで補完する
+  string email = 6 [(mtn.dataproxy) = { index: { name: "email" } }];
+
+  // 使用
+  //  名称マスタにおける種別 A0000001 (使用) を参照
+  sharelib.NameOption usable = 7;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 8;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+}
+
+// 取引先
+// 別テナントで、取引先（企業/窓口）にマークをつける用
+// 申請テナントは申請時、承認テナントは承認時にCreate
+message BusinessUnit {
+  string business_unit_id = 1;
+
+  // マークつける対象の会社ID
+  string company_id = 2;
+
+  // 社内管理用コード
+  string business_unit_code = 3;
+
+  // 社内管理用名称
+  string display_name = 4;
+
+  // 取引先分類
+  string business_unit_category = 5;
+
+  // 社内管理用備考
+  string remarks = 6;
+
+  // 取引窓口
+  repeated PostUnit post_units = 7;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 8;
+
+  // outputonly 取引先種別
+  // 名称マスタにおける種別 A0000004 (取引先種別) を参照
+  // post_unitsの各要素が持つpost_unit_typesを、重複を排除し、総和したもの
+  // NameOption.codeの辞書順にソートされている
+  repeated sharelib.NameOption aggregated_post_unit_types = 12;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+}
+
+// 取引先登録申請用のデータ
+// certification
+message BusinessUnitRequest {
+  // Implementation Note:
+  //   company_id（自社） + company_id(取引先企業ID) と同じ粒度
+  string business_unit_request_id = 1;
+
+  // 申請対象となる会社ID
+  string company_id = 2 [
+    (validate.rules).string = { min_len: 1 },  //
+    (mtn.visibility)        = { scope: GRANTED }
+  ];
+
+  // 申請を行った会社ID
+  // readonly 申請元企業IDの埋め込み
+  string source_company_id = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 4;
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+}
+
+// 取引先登録申請結果用のデータ
+message BusinessUnitRequestResult {
+  // Implementation Note:
+  //   company_id（自社） + company_id(取引先企業ID) と同じ粒度
+  //   business_unit_request_id と同じ粒度
+  string business_unit_request_result_id = 1;
+
+  // readonly 申請情報の埋め込み
+  // BusinessUnitRequestResultをCreateした時の申請情報
+  BusinessUnitRequest business_unit_request = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 3;
+
+  int64 created_at = 4;
+
+  int64 updated_at = 5;
+}
+
+// 取引先管理
+//
+// Implementation Note::
+//   公開不可の自テナント管理用マスタ
+//　　取引先管理内のデータをShareする場合は切り出して管理することとする
+//　　他テナントからShareされてきた情報は承認をもって書き戻しする想定
+//
+message BusinessUnitManagement {
+  // 取引先管理ID
+  string business_unit_management_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 12;
+
+  // readonly 取引先会社ID
+  //
+  // Implementation Note::
+  //   紐付け処理で更新される取引先のテナントID
+  //
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }];
+
+  // readonly テナント紐付け情報
+  //
+  // Implementation Note::
+  //   テナント紐付け時に更新（手動 / 自動）
+  Process tenant_link_process = 13;
+
+  // readonly テナント招待情報
+  //
+  // Implementation Note::
+  //   テナント招待メール送信時に更新
+  //
+  Process tenant_invite_process = 14;
+
+  // readonly 取引先コード
+  //
+  // Implementation Note::
+  //   未入力可能、入力後の編集不可
+  //
+  string code = 3;
+
+  // 取引先名
+  string display_name = 4;
+
+  // 取引先担当者
+  repeated sharelib.UserReference main_contact = 5;
+
+  // 取引先アシスタント
+  repeated sharelib.UserReference main_contact_assistant = 6;
+
+  // 自社担当者
+  repeated sharelib.UserReference staff = 7;
+
+  // 自社アシスタント
+  repeated sharelib.UserReference staff_assistant = 8;
+
+  // 基本情報
+  CompanyProfile profile = 15;
+
+  // 自社管理情報
+  repeated ItemValue item_values = 16;
+
+  // readonly 取引区分
+  // 名称マスタ A4010003 (取引区分ステータス)
+  sharelib.NameOption status = 17;
+
+  // テナント招待通知先
+  repeated sharelib.UserReference invitees = 18;
+
+  int64 deleted_at = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+}
+
+// 自社企業（基本情報）マスタ
+message BusinessUnitProfile {
+  // 自社企業（基本情報）ID
+  string business_unit_profile_id = 1;
+
+  // 自社企業ID
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 9;
+
+  // 基本情報
+  CompanyProfile profile = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 4;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 自社企業（決算）マスタ
+message BusinessUnitFinancial {
+  // 自社企業（決算）ID
+  string business_unit_financial_id = 1;
+
+  // 自社企業ID
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 開始年月
+  sharelib.Datetime period_start_dt = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 終了年月
+  sharelib.Datetime period_end_dt = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 売上
+  sharelib.MonetaryAmount net_sales = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 営業利益
+  sharelib.MonetaryAmount operating_profit = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 経常利益
+  sharelib.MonetaryAmount ordinary_income = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 8;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+
+  int64 deleted_at = 12;
+}
+
+// 自社企業（拠点）マスタ
+message BusinessUnitBranch {
+  // 自社企業（拠点）ID
+  string business_unit_branch_id = 1;
+
+  // 自社企業ID	company_id
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 拠点名
+  string display_name = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 住所情報
+  Address address = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 電話番号
+  string phone_number = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // FAX
+  string fax_number = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 事業内容 / 製造内容
+  string overview = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 8;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 9;
+
+  int64 created_at = 10;
+
+  int64 updated_at = 11;
+
+  int64 deleted_at = 12;
+}
+
+// 自社企業（設備）マスタ
+message BusinessUnitFacilities {
+  // 自社企業（設備）ID
+  string business_unit_facilities_id = 1;
+
+  // 自社企業ID	company_id
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 設置拠点
+  string business_unit_branch_id = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 設備分類
+  // 名称マスタ A4000003 (設備)
+  repeated sharelib.NameOption categorys = 22 [(mtn.visibility) = { scope: GRANTED }];
+
+  // メーカー
+  string manufacture = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 型式
+  string model_number = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 台数
+  int64 assets_amount = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 精度
+  // 名称マスタ A4000004 (精度)
+  sharelib.NameOption accuracy = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 加工トン数
+  int64 processable_ton = 9 [(mtn.visibility) = { scope: GRANTED }];
+
+  // サイズX
+  int64 size_x = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // サイズY
+  int64 size_y = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // サイズZ
+  int64 size_z = 12 [(mtn.visibility) = { scope: GRANTED }];
+
+  // サイズT
+  int64 size_t = 13 [(mtn.visibility) = { scope: GRANTED }];
+
+  // サイズφ
+  int64 diameter = 14 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 加工可能な材料
+  // 名称マスタ A4000005 (加工可能な材料)
+  sharelib.NameOption processable_material = 15 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 備考
+  string remarks = 16 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 17;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 18;
+
+  int64 created_at = 19;
+
+  int64 updated_at = 20;
+
+  int64 deleted_at = 21;
+
+  reserved 4;
+}
+
+// 自社企業（認証）マスタ
+message BusinessUnitCertificate {
+  // 自社企業（認証）ID
+  string business_unit_certificate_id = 1;
+
+  // 自社企業ID
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 認証
+  // 名称マスタ A4000002 (認証)
+  sharelib.NameOption certificate = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 取得済み
+  bool obtained = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 認証名（選択肢に存在しない場合のみ）
+  string display_name = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 認証番号
+  string certificate_number = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 証明書ファイル添付
+  sharelib.Attachment attachment = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 取得年月日
+  sharelib.Datetime obtained_dt = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 有効期限
+  sharelib.Datetime expiration_dt = 9 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 取得予定有無
+  bool obtain_plan = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 取得予定日
+  sharelib.Datetime obtain_plan_dt = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 理由
+  string comment = 12 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 適用範囲（対象製品）
+  string scope_product = 13 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 適用範囲（対象拠点 / 対象設備）
+  string scope_branch = 14 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 15;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 16;
+
+  int64 created_at = 17;
+
+  int64 updated_at = 18;
+
+  int64 deleted_at = 19;
+}
+
+// 自社企業（得意分野）マスタ
+message BusinessUnitStrength {
+  // 自社企業（得意分野）ID
+  string business_unit_strength_id = 1;
+
+  // 自社企業ID
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 強み分類
+  // 名称マスタ A4000001 (自社強み)
+  sharelib.NameOption category = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 内容
+  string content = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  message LinkProperties {
+    // 関連拠点
+    string business_unit_branch_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // 関連設備
+    string business_unit_facilities_id = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+  // 関連情報
+  LinkProperties link_properties = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 6;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 7;
+
+  int64 created_at = 8;
+
+  int64 updated_at = 9;
+
+  int64 deleted_at = 10;
+}
+
+// 自社企業（技術情報）マスタ
+message BusinessUnitSkill {
+  // 自社企業（技術情報）ID
+  string business_unit_skill_id = 1;
+
+  // 自社企業ID
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 技術情報
+  repeated string business_unit_skill_item_ids = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // その他技術情報
+  string other_skill = 9 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 4;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 取引先管理（連絡先）依頼データ
+message BusinessUnitContactHeader {
+  // 取引先管理（連絡先）依頼ID
+  string business_unit_contact_header_id = 1;
+
+  // 取引先管理ID
+  string business_unit_management_id = 2 [(mtn.dataproxy) = { index: { name: "business_unit_management_id" } }];
+
+  // readonly 企業ID
+  string company_id = 3 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 連絡先名
+  string display_name = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 依頼対象（書類送付先）
+  bool document_recipient_address = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 依頼対象（通知先アカウント）
+  bool notification_user = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 依頼情報
+  Process request_process = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 8;
+
+  int64 created_at = 9;
+
+  int64 updated_at = 10;
+
+  int64 deleted_at = 11;
+}
+
+// 取引先管理（連絡先）マスタ
+message BusinessUnitContact {
+  // 取引先管理（連絡先）ID
+  string business_unit_contact_id = 1;
+
+  // 取引先管理ID
+  string business_unit_management_id = 2 [(mtn.dataproxy) = { index: { name: "business_unit_management_id" } }];
+
+  // readonly 企業ID
+  string company_id = 3 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // 取引先管理（連絡先）依頼ID
+  string business_unit_contact_header_id = 4 [(mtn.dataproxy) = { index: { name: "business_unit_contact_header_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 連絡先名
+  string display_name = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 拠点情報
+  BusinessUnitBranchProperties business_unit_branch_properties = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 宛名
+  string alias = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  message NotificationUser {
+    // 分類
+    // 名称マスタ A4000006 (通知先分類)
+    sharelib.NameOption category = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // アカウント情報
+    sharelib.UserReference user = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+  // 通知先アカウント
+  repeated NotificationUser notification_users = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly  代表連絡先
+  bool main_contact = 9 [(mtn.dataproxy) = { index: { name: "main_contact" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 送信情報
+  Process send_process = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 11;
+
+  int64 created_at = 12;
+
+  int64 updated_at = 13;
+
+  int64 deleted_at = 14;
+}
+
+// 取引先管理（連絡先）社内管理マスタ
+message BusinessUnitContactAttribute {
+  // 取引先管理（連絡先）社内管理ID
+  string business_unit_contact_attribute_id = 1;
+
+  // 取引先管理ID
+  string business_unit_management_id = 2 [(mtn.dataproxy) = { index: { name: "business_unit_management_id" } }];
+
+  // readonly urn
+  // mtechnavi.api.company.BusinessUnitContactHeader:{{business_unit_contact_header_id}}
+  // mtechnavi.api.company.BusinessUnitContact:{{{business_unit_contact_id}}
+  string urn = 3 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // readonly type_name
+  // mtechnavi.api.company.BusinessUnitContactHeader
+  // mtechnavi.api.company.BusinessUnitContact
+  string type_name = 4 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // readonly record_id
+  // {{business_unit_contact_header_id}}
+  // {{business_unit_contact_id}}
+  string record_id = 5;
+
+  // 社内管理コード
+  string code = 6;
+
+  // 社内管理名
+  string display_name = 7;
+
+  // メモ
+  string remarks = 8;
+
+  int64 created_at = 9;
+
+  int64 updated_at = 10;
+
+  int64 deleted_at = 11;
+}
+
+// 取引先管理（文書）マスタ
+message BusinessUnitDocument {
+  // 取引先管理（文書）ID
+  string business_unit_document_id = 1;
+
+  // 取引先管理ID
+  string business_unit_management_id = 2 [(mtn.dataproxy) = { index: { name: "business_unit_management_id" } }];
+
+  // 文書分類
+  // 名称マスタ A4000010 (文書分類)
+  sharelib.NameOption category = 9;
+
+  // readonly 添付ファイル
+  sharelib.Attachment attachment = 12;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+
+  reserved 3, 4, 10, 11;
+}
+
+// 有効管理データ（取引先）
+message BusinessUnitActiveControl {
+  // 有効管理ID
+  string business_unit_active_control_id = 1;
+
+  // 会社ID
+  string company_id = 2 [(mtn.dataproxy) = { index: { name: "company_id" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // readonly　有効
+  bool active = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 更新情報
+  Process process = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 取引先管理スナップショットデータ
+message BusinessUnitSnapshot {
+  // 取引先管理スナップショットID
+  string business_unit_snapshot_id = 1;
+
+  // readonly urn
+  // mtechnavi.api.company.BusinessUnitXXXX:{{自社企業XXXXID}}
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // readonly type_name
+  // mtechnavi.api.company.BusinessUnitXXXX
+  string type_name = 3 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // readonly record_id
+  string record_id = 4;
+
+  // readonly data
+  // JSON文字列
+  string data = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 更新通知データ
+message BusinessUnitChangeNotification {
+  // 更新通知ID
+  string business_unit_change_notification_id = 1;
+
+  // readonly base_urn
+  // mtechnavi.api.company.BusinessUnitManagement:{{取引先管理ID}}
+  string base_urn = 2 [(mtn.dataproxy) = { index: { name: "base_urn" } }];
+
+  // readonly urn
+  // mtechnavi.api.company.BusinessUnitXXXX:{{自社企業XXXXID}}
+  string urn = 3 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // readonly type_name
+  // mtechnavi.api.company.BusinessUnitXXXX
+  string type_name = 4 [(mtn.dataproxy) = { index: { name: "type_name" } }];
+
+  // readonly record_id
+  // 自社企業XXXXID
+  string record_id = 5;
+
+  // 対象項目1
+  string target_key = 6;
+
+  // 対象項目2
+  string target_field_path = 7;
+
+  // 変更前
+  // e.g. 日付項目 int64
+  // YYYY/MM/DD
+  // timezoneは入力時のものを採用
+  // e.g. 配列項目 []string
+  // item1
+  // item2
+  // item3
+  string old_value = 8;
+
+  // 変更後
+  // e.g. 日付項目 int64
+  // YYYY/MM/DD
+  // timezoneは入力時のものを採用
+  // e.g. 配列項目 []string
+  // item1
+  // item2
+  // item3
+  string new_value = 9;
+
+  // 備考（メッセージコード）
+  repeated string remarks_names = 10;
+
+  // readonly 通知日時
+  int64 notified_at = 11;
+
+  int64 created_at = 12;
+
+  int64 updated_at = 13;
+
+  int64 deleted_at = 14;
+}
+
+// TSRデータ
+message TokyoShokoResearch {
+  // TSRID
+  string tokyo_shoko_research_id = 1;
+
+  // 識別コード
+  string code = 2 [(mtn.dataproxy) = { index: { name: "code" } }];
+
+  // 項目
+  repeated ItemValue item_values = 3;
+
+  // readonly 基準日時
+  int64 occurred_at = 4;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// TSR企業情報データ
+message TokyoShokoResearchCompanyProfile {
+  // TSR_CP_ID
+  string tokyo_shoko_research_company_profile_id = 1;
+
+  // 識別コード
+  string code = 2 [(mtn.dataproxy) = { index: { name: "code" } }];
+
+  // 項目
+  // item_key:TSR企業情報取込時のヘッダ名（日本語でOK、他言語対応不要）
+  // item_value:TSR企業情報取込時の値
+  // code:TSR企業情報取込時のフィールド名を入れる
+  repeated ItemValue item_values = 3;
+
+  // readonly 基準日時
+  int64 occurred_at = 4;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// TSRリスクスコアデータ
+message TokyoShokoResearchRiskScore {
+  // TSR_RS_ID
+  string tokyo_shoko_research_risk_score_id = 1;
+
+  // 識別コード
+  string code = 2 [(mtn.dataproxy) = { index: { name: "code" } }];
+
+  // 項目
+  // item_key:TSRリスクスコア取込時のヘッダ名（日本語でOK、他言語対応不要）
+  // item_value:TSRリスクスコア取込時の値
+  // code:TSRリスクスコア取込時のフィールド名を入れる
+  repeated ItemValue item_values = 3;
+
+  // readonly 基準日時
+  int64 occurred_at = 4;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 第三者情報ファイルデータ
+message BusinessUnitScoreAsset {
+  // 第三者情報ファイルID
+  string business_unit_score_asset_id = 1;
+
+  // 識別コード
+  // 名称マスタ A4000007 (データ種類)
+  string code = 2 [(mtn.dataproxy) = { index: { name: "code" } }];
+
+  // データ種類
+  sharelib.NameOption category = 3;
+
+  // ファイル
+  repeated sharelib.Attachment attachments = 4;
+
+  // readonly 最終更新情報
+  sharelib.EmbeddedUpdatedProperties updated_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 履歴データ
+message History {
+  // 履歴ID
+  string history_id = 1;
+
+  // urn
+  // "urn:mtechnavi.api.company.BusinessUnitManagement:{{business_unit_management_id}}"
+  string urn = 2 [(mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.company.BusinessUnitManagement"
+  string type_name = 10 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{business_unit_management_id}}"
+  string record_id = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 履歴分類
+  // メッセージにおける種別 HISTORY / コード H[XXXXXXX]a を参照
+  // e.g. H0000001a
+  string history_category_name = 3;
+
+  // 内容
+  // メッセージにおける種別 HISTORY / コード H[XXXXXXX]b を参照
+  // e.g. H0000001b
+  string content_name = 4;
+
+  // 内容パラメータ
+  repeated string content_paramaters = 5;
+
+  // readonly 発生日時
+  int64 occurred_at = 6;
+
+  // 通知レベル
+  int64 level = 12;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+
+  int64 deleted_at = 9;
+}

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package mtechnavi.api.systemreport;
+
+import "mtn/index.proto";
+import "notificationsetting.proto";
+
+option go_package = "mtechnavi/systemreport/protobuf";
+
+// 日次メール管理データ
+message DailyMailManagement {
+  // 日次メール管理ID
+  string daily_mail_management_id = 1;
+
+  // 処理グループID
+  string group_id = 2 [(mtn.dataproxy) = { index: { name: "group_id" } }];
+
+  // アカウントID
+  string user_id = 3 [(mtn.dataproxy) = { index: { name: "user_id" } }];
+
+  // 通知内容
+  repeated sharelib.NotificationSetting notification_settings = 4;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+
+  int64 deleted_at = 9;
+}
+
+// 単発メール管理データ
+message OneOffMailManagement {
+  // 単発メール管理ID
+  string one_off_mail_management_id = 1;
+
+  // アカウントID
+  string user_id = 2 [(mtn.dataproxy) = { index: { name: "user_id" } }];
+
+  int64 created_at = 3;
+
+  int64 updated_at = 4;
+
+  int64 deleted_at = 5;
+}

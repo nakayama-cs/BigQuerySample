@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package sharelib;
+
+import "mtn/visibility.proto";
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+message ComponentUnitReference {
+  string component_unit_id = 1;
+  // 管理場所コード
+  string component_unit_code = 2;
+  // 名称
+  // ja:日本語名
+  map<string, string> display_name_lang = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message StaffReference {
+  string staff_id = 1;
+  // 担当者コード
+  string staff_code = 2;
+  // 名称
+  // ja:日本語名
+  map<string, string> display_name_lang = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message UserReference {
+  string user_id = 1;
+  // ユーザのメールアドレス
+  string email = 2 [(mtn.visibility) = { scope: INHERIT }];
+  // ユーザ名
+  string display_name = 3 [(mtn.visibility) = { scope: INHERIT }];
+}

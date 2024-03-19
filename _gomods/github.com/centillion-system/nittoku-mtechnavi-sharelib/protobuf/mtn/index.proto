@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package mtn;
+
+option go_package = 'mtechnavi/sharelib/protobuf/mtn';
+
+import "google/protobuf/descriptor.proto";
+
+message DataproxyIndex {
+  // インデックス名
+  string name = 1;
+}
+
+// Dataproxy利用に対するオプション設定
+message DataproxyOptions {
+  DataproxyIndex index = 1;
+}
+
+extend google.protobuf.FieldOptions {
+  DataproxyOptions dataproxy = 5002;
+}

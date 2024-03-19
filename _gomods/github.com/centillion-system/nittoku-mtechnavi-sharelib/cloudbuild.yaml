@@ -1,0 +1,13 @@
+---
+steps:
+  # TODO: lintエラーの修正は他のPRにて対応する
+  # - name: 'golangci/golangci-lint:v1.50-alpine'
+  #   id: Lint
+  #   args: ['golangci-lint', 'run', '--config', './_golangci.yml' ]
+  - name: golang:1.19.5-bullseye
+    id: Test
+    args:
+      - '/bin/sh'
+      - '-c'
+      - |
+        go test ./...

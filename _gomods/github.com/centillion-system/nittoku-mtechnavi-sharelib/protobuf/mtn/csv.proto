@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package mtn;
+
+option go_package = 'mtechnavi/sharelib/protobuf/mtn';
+
+import "google/protobuf/descriptor.proto";
+
+enum FileEncoding {
+  UTF_8     = 0;
+  SHIFT_JIS = 1;
+}
+
+message CsvFileOptions {
+  bool header = 1;
+
+  enum CommaChar {
+    COMMA = 0;
+    TAB   = 1;
+  }
+  CommaChar comma = 2;
+
+  FileEncoding encoding = 3;
+
+  bool quote_minimally = 4;
+}
+
+message CsvColumnOptions {
+  int32 column = 1;
+  // required ヘッダ名称
+  string header = 2;
+  // デフォルト値
+  string default = 3;
+}
+
+extend google.protobuf.MessageOptions {
+  CsvFileOptions csv_default_format = 5001;
+}
+
+extend google.protobuf.FieldOptions {
+  CsvColumnOptions csv = 5001;
+}

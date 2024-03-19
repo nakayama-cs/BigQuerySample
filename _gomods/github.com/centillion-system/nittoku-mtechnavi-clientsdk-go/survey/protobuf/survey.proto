@@ -1,0 +1,1014 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "google/protobuf/empty.proto";
+import "import.proto";
+import "surveyrequestcatalog.proto";
+import "surveyrequest.proto";
+import "surveyresult.proto";
+import "surveystatus.proto";
+import "surveynotification.proto";
+import "reference.proto";
+import "surveycontents.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 共通で扱うサービス
+service SurveyService {
+  // 履歴データ
+  rpc ListHistorys(ListHistorysRequest) returns (ListHistorysResponse);
+
+  // 破棄データ を 公開 する
+  rpc SharetoDiscard(SharetoDiscardRequest) returns (SharetoDiscardResponse);
+
+  // 終了データ を 公開 する
+  rpc SharetoComplete(SharetoCompleteRequest) returns (SharetoCompleteResponse);
+
+  // 開府済みデータ を 公開 する
+  rpc SharetoOpened(SharetoOpenedRequest) returns (SharetoOpenedResponse);
+}
+
+// 送信側が扱うサービス
+service SurveySenderService {
+  // 依頼カタログマスタ
+  rpc CreateSurveyRequestCatalog(CreateSurveyRequestCatalogRequest) returns (SurveyRequestCatalog);
+  rpc ListSurveyRequestCatalogs(ListSurveyRequestCatalogsRequest) returns (ListSurveyRequestCatalogsResponse);
+  rpc GetSurveyRequestCatalog(GetSurveyRequestCatalogRequest) returns (SurveyRequestCatalog);
+  rpc UpdateSurveyRequestCatalog(UpdateSurveyRequestCatalogRequest) returns (SurveyRequestCatalog);
+  rpc DeleteSurveyRequestCatalog(DeleteSurveyRequestCatalogRequest) returns (google.protobuf.Empty);
+
+  // 依頼伝票データ
+  rpc CreateSurveyBaseRequest(CreateSurveyBaseRequestRequest) returns (SurveyBaseRequest);
+  rpc UpdateSurveyBaseRequest(UpdateSurveyBaseRequestRequest) returns (SurveyBaseRequest);
+  rpc DeleteSurveyBaseRequest(DeleteSurveyBaseRequestRequest) returns (google.protobuf.Empty);
+
+  // 依頼伝票データ を 承認依頼 する
+  rpc ApprovalRequestSurveyBaseRequest(ApprovalRequestSurveyBaseRequestRequest) returns (ApprovalRequestSurveyBaseRequestResponse);
+
+  // 依頼伝票データ を 却下 する
+  rpc RejectSurveyBaseRequest(RejectSurveyBaseRequestRequest) returns (RejectSurveyBaseRequestResponse);
+
+  // 依頼伝票データ を 承認 する
+  rpc ApproveSurveyBaseRequest(ApproveSurveyBaseRequestRequest) returns (ApproveSurveyBaseRequestResponse);
+
+  // 依頼明細データ
+  rpc GetSurveyRequest(GetSurveyRequestRequest) returns (SurveyRequest);
+  rpc UpdateSurveyRequest(UpdateSurveyRequestRequest) returns (SurveyRequest);
+  
+  // 依頼明細データ.システム通知先
+  rpc UpdateSystemNotificationUsersInSurveyRequest(UpdateSystemNotificationUsersInSurveyRequestRequest) returns (SurveyRequest);
+
+  // 依頼明細データ を 公開 する
+  //
+  // Implementation Note:
+  //   画面で送信/承認したときに実行する 「非同期 展開処理」 の実行トリガー
+  //   依頼伝票データから依頼明細データを作成し、取引先へShareする
+  //
+  rpc SharetoSurveyRequest(SharetoSurveyRequestRequest) returns (SharetoSurveyRequestResponse);
+
+  // 依頼明細データ を 破棄 する
+  rpc DiscardSurveyRequest(DiscardSurveyRequestRequest) returns (DiscardSurveyRequestResponse);
+
+  // 依頼明細データ を 完了 する
+  rpc CompleteSurveyRequest(CompleteSurveyRequestRequest) returns (CompleteSurveyRequestResponse);
+
+  // 回答期日変更データ
+  rpc CreateSurveyReplyDueDateChangeResult(CreateSurveyReplyDueDateChangeResultRequest) returns (SurveyReplyDueDateChangeResult);
+  rpc ListSurveyReplyDueDateChangeResults(ListSurveyReplyDueDateChangeResultsRequest) returns (ListSurveyReplyDueDateChangeResultsResponse);
+  rpc GetSurveyReplyDueDateChangeResult(GetSurveyReplyDueDateChangeResultRequest) returns (SurveyReplyDueDateChangeResult);
+
+  // 回答期日変更データ を 公開 する
+  rpc SharetoSurveyReplyDueDateChangeResult(SharetoSurveyReplyDueDateChangeResultRequest) returns (SharetoSurveyReplyDueDateChangeResultResponse);
+
+  // 修正依頼データ
+  rpc CreateSurveyResultChangeRequest(CreateSurveyResultChangeRequestRequest) returns (SurveyResultChangeRequest);
+  rpc ListSurveyResultChangeRequests(ListSurveyResultChangeRequestsRequest) returns (ListSurveyResultChangeRequestsResponse);
+  rpc GetSurveyResultChangeRequest(GetSurveyResultChangeRequestRequest) returns (SurveyResultChangeRequest);
+
+  // 修正依頼データ を 公開 する
+  rpc SharetoSurveyResultChangeRequest(SharetoSurveyResultChangeRequestRequest) returns (SharetoSurveyResultChangeRequestResponse);
+
+  // 催促データ
+  rpc CreateSurveyReminder(CreateSurveyReminderRequest) returns (SurveyReminder);
+  rpc ListSurveyReminders(ListSurveyRemindersRequest) returns (ListSurveyRemindersResponse);
+  rpc GetSurveyReminder(GetSurveyReminderRequest) returns (SurveyReminder);
+
+  // 催促データ を 公開 する
+  rpc SharetoSurveyReminder(SharetoSurveyReminderRequest) returns (SharetoSurveyReminderResponse);
+
+  // 依頼管理情報出力
+  rpc ExportSurveyRequests(ExportSurveyRequestsRequest) returns (ExportSurveyRequestsResponse);
+
+  // 依頼管理情報出力フォーマット取得
+  rpc ListSurveyRequestFormats(ListSurveyRequestFormatsRequest) returns (ListSurveyRequestFormatsResponse);
+
+  // 公開された 回答期日変更依頼データ
+  rpc SharedListSurveyReplyDueDateChangeRequests(SharedListSurveyReplyDueDateChangeRequestsRequest) returns (SharedListSurveyReplyDueDateChangeRequestsResponse);
+  rpc SharedGetSurveyReplyDueDateChangeRequest(SharedGetSurveyReplyDueDateChangeRequestRequest) returns (SurveyReplyDueDateChangeRequest);
+
+  // 公開された 依頼回答データ
+  rpc SharedGetSurveyResult(SharedGetSurveyResultRequest) returns (SurveyResult);
+
+  // 公開された 修正依頼データ
+  rpc SharedListSurveyResultChangeRequests(SharedListSurveyResultChangeRequestsRequest) returns (SurveyResultChangeRequestsResponse);
+  rpc SharedGetSurveyResultChangeRequest(SharedGetSurveyResultChangeRequestRequest) returns (SurveyResultChangeRequest);
+
+  // 展開された 依頼明細コンテンツ
+  rpc ExpandedListSurveyRequestContents(ExpandedListSurveyRequestContentsRequest) returns (ExpandedListSurveyRequestContentsResponse);
+  rpc ExpandedGetSurveyRequestContent(ExpandedGetSurveyRequestContentRequest) returns (SurveyRequestContent);
+
+  // 依頼伝票コンテンツ
+  rpc ListSurveyBaseRequestContents(ListSurveyBaseRequestContentsRequest) returns (ListSurveyBaseRequestContentsResponse);
+  rpc GetSurveyBaseRequestContent(GetSurveyBaseRequestContentRequest) returns (SurveyBaseRequestContent);
+
+  // 依頼明細コンテンツ
+  rpc ListSurveyRequestContents(ListSurveyRequestContentsRequest) returns (ListSurveyRequestContentsResponse);
+  rpc GetSurveyRequestContent(GetSurveyRequestContentRequest) returns (SurveyRequestContent);
+
+  // 回答ファイル出力済み
+  rpc ExportedSurveyResultFile(ExportedSurveyResultFileRequest) returns (ExportedSurveyResultFileResponse);
+}
+
+// 受信側が扱うサービス
+service SurveyReceiverService {
+  // 回答期日変更依頼データ
+  rpc CreateSurveyReplyDueDateChangeRequest(CreateSurveyReplyDueDateChangeRequestRequest) returns (SurveyReplyDueDateChangeRequest);
+  rpc ListSurveyReplyDueDateChangeRequests(ListSurveyReplyDueDateChangeRequestsRequest) returns (ListSurveyReplyDueDateChangeRequestsResponse);
+  rpc GetSurveyReplyDueDateChangeRequest(GetSurveyReplyDueDateChangeRequestRequest) returns (SurveyReplyDueDateChangeRequest);
+
+  // 回答期日変更依頼データ を 公開 する
+  rpc SharetoSurveyReplyDueDateChangeRequest(SharetoSurveyReplyDueDateChangeRequestRequest) returns (SharetoSurveyReplyDueDateChangeRequestResponse);
+
+  // 依頼受信データ
+  rpc GetSurveyReception(GetSurveyReceptionRequest) returns (SurveyReception);
+  rpc UpdateSurveyReception(UpdateSurveyReceptionRequest) returns (SurveyReception);
+
+  // 依頼受信データ.システム通知先
+  rpc UpdateSystemNotificationUsersInSurveyReception(UpdateSystemNotificationUsersInSurveyReceptionRequest) returns (SurveyReception);
+
+  // 依頼回答データ
+  rpc CreateSurveyResult(CreateSurveyResultRequest) returns (SurveyResult);
+
+  // 依頼回答データ を 公開 する
+  rpc SharetoSurveyResult(SharetoSurveyResultRequest) returns (SharetoSurveyResultResponse);
+
+  // 公開された 依頼明細データ
+  rpc SharedGetSurveyRequest(SharedGetSurveyRequestRequest) returns (SurveyRequest);
+
+  // 公開された 回答期日変更データ
+  rpc SharedListSurveyReplyDueDateChangeResults(SharedListSurveyReplyDueDateChangeResultsRequest) returns (SharedListSurveyReplyDueDateChangeResultsResponse);
+  rpc SharedGetSurveyReplyDueDateChangeResult(SharedGetSurveyReplyDueDateChangeResultRequest) returns (SurveyReplyDueDateChangeResult);
+
+  // 公開された 催促データ
+  rpc SharedListSurveyReminders(SharedListSurveyRemindersRequest) returns (SharedListSurveyRemindersResponse);
+  rpc SharedGetSurveyReminder(SharedGetSurveyReminderRequest) returns (SurveyReminder);
+
+  // 依頼受信コンテンツ
+  rpc ListSurveyReceptionContents(ListSurveyReceptionContentsRequest) returns (ListSurveyReceptionContentsResponse);
+  rpc GetSurveyReceptionContent(GetSurveyReceptionContentRequest) returns (SurveyReceptionContent);
+
+  // 依頼明細データ を 開封済みにする
+  rpc OpenSurveyRequest(OpenSurveyRequestRequest) returns (OpenSurveyRequestResponse);
+}
+
+// タスクリスト
+service SurveyTaskListService {
+  // 調査依頼完了
+  rpc UncompletedListSurveyRequest(UncompletedListSurveyRequestRequest) returns (UncompletedListSurveyRequestResponse);
+  // 回答期日変更
+  rpc UnchangedListSurveyReplyDueDateChangeRequest(UnchangedListSurveyReplyDueDateChangeRequestRequest) returns (UnchangedListSurveyReplyDueDateChangeRequestResponse);
+}
+
+// 依頼カタログマスタ
+// required survey_request_catalog
+message CreateSurveyRequestCatalogRequest {
+  // 依頼カタログマスタ
+  // required code
+  SurveyRequestCatalog survey_request_catalog = 1;
+}
+
+message ListSurveyRequestCatalogsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message ListSurveyRequestCatalogsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼カタログマスタ
+  repeated SurveyRequestCatalog items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_request_catalog_id
+message GetSurveyRequestCatalogRequest {
+  // 依頼カタログID
+  string survey_request_catalog_id = 1;
+}
+
+// required survey_request_catalog
+message UpdateSurveyRequestCatalogRequest {
+  // 依頼カタログマスタ
+  // required survey_request_catalog_id
+  // required updated_at
+  SurveyRequestCatalog survey_request_catalog = 1;
+}
+
+// required survey_request_catalog
+message DeleteSurveyRequestCatalogRequest {
+  // 依頼カタログマスタ
+  // required survey_request_catalog_id
+  // required updated_at
+  SurveyRequestCatalog survey_request_catalog = 1;
+}
+
+// 依頼伝票データ
+// required survey_base_request
+message CreateSurveyBaseRequestRequest {
+  // 依頼伝票データ
+  // required survey_request_catalog
+  SurveyBaseRequest survey_base_request = 1;
+}
+
+// required survey_base_request
+message UpdateSurveyBaseRequestRequest {
+  // 依頼伝票データ
+  // required survey_base_request_id
+  // required updated_at
+  SurveyBaseRequest survey_base_request = 1;
+}
+
+// required survey_base_request
+message DeleteSurveyBaseRequestRequest {
+  // 依頼伝票データ
+  // required survey_base_request_id
+  // required updated_at
+  SurveyBaseRequest survey_base_request = 1;
+}
+
+// 依頼伝票データ を 承認依頼 する
+// required survey_base_request_id
+message ApprovalRequestSurveyBaseRequestRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+
+  // 承認予定担当
+  sharelib.StaffReference approval_plan_staff = 2;
+
+  // 承認予定部門
+  sharelib.ComponentUnitReference approval_plan_organization = 3;
+
+  // コメント
+  string comment = 4;
+}
+
+message ApprovalRequestSurveyBaseRequestResponse {}
+
+// 依頼伝票データ を 却下 する
+// required survey_base_request_id
+message RejectSurveyBaseRequestRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+
+  // コメント
+  string comment = 2;
+
+  reserved 3;
+}
+
+message RejectSurveyBaseRequestResponse {}
+
+// 依頼伝票データ を 承認 する
+// required survey_base_request_id
+message ApproveSurveyBaseRequestRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+
+  // コメント
+  string comment = 2;
+
+  reserved 3;
+}
+
+message ApproveSurveyBaseRequestResponse {}
+
+// required survey_request_id
+message GetSurveyRequestRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+}
+
+// required survey_request
+message UpdateSurveyRequestRequest {
+  // 依頼明細データ
+  // required survey_request_id
+  // required updated_at
+  SurveyRequest survey_request = 1;
+}
+
+// 依頼明細データ.システム通知先
+// required survey_request_id
+// required updated_at
+message UpdateSystemNotificationUsersInSurveyRequestRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 2;
+
+  int64 updated_at = 3;
+}
+
+// 依頼明細データ を 公開 する
+// required survey_base_request_id
+message SharetoSurveyRequestRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+}
+
+message SharetoSurveyRequestResponse {}
+
+// 依頼明細データ を 破棄 する
+// required survey_request_id
+message DiscardSurveyRequestRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+
+  // コメント
+  string comment = 2;
+}
+
+message DiscardSurveyRequestResponse {
+  // 破棄データ
+  Discard discard = 1;
+}
+
+// 依頼明細データ を 完了 する
+// required survey_request_id
+message CompleteSurveyRequestRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+}
+
+message CompleteSurveyRequestResponse {
+  // 終了データ
+  Complete complete = 1;
+}
+
+// 回答期日変更データ
+// required survey_reply_due_date_change_result
+message CreateSurveyReplyDueDateChangeResultRequest {
+  // 回答期日変更データ
+  // required reply_due_date_dt
+  SurveyReplyDueDateChangeResult survey_reply_due_date_change_result = 1;
+}
+
+message ListSurveyReplyDueDateChangeResultsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+}
+
+message ListSurveyReplyDueDateChangeResultsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 回答期日変更データ
+  repeated SurveyReplyDueDateChangeResult items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reply_due_date_change_result_id
+message GetSurveyReplyDueDateChangeResultRequest {
+  // 回答期日変更ID
+  string survey_reply_due_date_change_result_id = 1;
+}
+
+// 回答期日変更データ を 公開 する
+// required survey_reply_due_date_change_result
+message SharetoSurveyReplyDueDateChangeResultRequest {
+  // 回答期日変更データ
+  // required survey_reply_due_date_change_result_id
+  SurveyReplyDueDateChangeResult survey_reply_due_date_change_result = 1;
+}
+
+message SharetoSurveyReplyDueDateChangeResultResponse {}
+
+// 回答期日変更依頼データ
+// required survey_reply_due_date_change_request
+message CreateSurveyReplyDueDateChangeRequestRequest {
+  // 回答期日変更依頼データ
+  // required survey_request_id
+  // required reply_due_date_dt
+  SurveyReplyDueDateChangeRequest survey_reply_due_date_change_request = 1;
+}
+
+message ListSurveyReplyDueDateChangeRequestsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+}
+
+message ListSurveyReplyDueDateChangeRequestsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 回答期日変更依頼データ
+  repeated SurveyReplyDueDateChangeRequest items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reply_due_date_change_request_id
+message GetSurveyReplyDueDateChangeRequestRequest {
+  string survey_reply_due_date_change_request_id = 1;
+}
+
+// 回答期日変更依頼データ を 公開 する
+// required survey_reply_due_date_change_request
+message SharetoSurveyReplyDueDateChangeRequestRequest {
+  // 回答期日変更依頼データ
+  // required survey_reply_due_date_change_request_id
+  SurveyReplyDueDateChangeRequest survey_reply_due_date_change_request = 1;
+}
+
+message SharetoSurveyReplyDueDateChangeRequestResponse {}
+
+// required survey_reception_id
+message GetSurveyReceptionRequest {
+  // 依頼受信ID
+  string survey_reception_id = 1;
+}
+
+// required survey_reception
+message UpdateSurveyReceptionRequest {
+  // 依頼受信データ
+  // required survey_reception_id
+  // required updated_at
+  SurveyReception survey_reception = 1;
+}
+
+// 依頼受信データ.システム通知先
+// required survey_reception_id
+// required updated_at
+message UpdateSystemNotificationUsersInSurveyReceptionRequest {
+  // 依頼受信ID
+  string survey_reception_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 2;
+
+  int64 updated_at = 3;
+}
+
+// 依頼回答データ
+// required survey_result
+message CreateSurveyResultRequest {
+  // 依頼回答データ
+  // required survey_request_id
+  SurveyResult survey_result = 1;
+}
+
+// 依頼回答データ を 公開 する
+// required survey_result
+message SharetoSurveyResultRequest {
+  // 依頼回答データ
+  // required survey_result_id
+  SurveyResult survey_result = 1;
+}
+
+message SharetoSurveyResultResponse {}
+
+// 修正依頼データ
+// required survey_result_change_request
+message CreateSurveyResultChangeRequestRequest {
+  // 修正依頼データ
+  // required survey_request_id
+  // required survey_result_id
+  SurveyResultChangeRequest survey_result_change_request = 1;
+}
+
+message ListSurveyResultChangeRequestsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+
+  // 依頼回答ID
+  repeated string survey_result_ids = 3;
+}
+
+message ListSurveyResultChangeRequestsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼修正データ
+  repeated SurveyResultChangeRequest items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_result_change_request_id
+message GetSurveyResultChangeRequestRequest {
+  // 依頼修正ID
+  string survey_result_change_request_id = 1;
+}
+
+// 修正依頼データ を 公開 する
+// required survey_result_change_request
+message SharetoSurveyResultChangeRequestRequest {
+  // 修正依頼データ
+  // required survey_result_change_request_id
+  SurveyResultChangeRequest survey_result_change_request = 1;
+}
+
+message SharetoSurveyResultChangeRequestResponse {}
+
+// 催促データ
+// required survey_reminder
+message CreateSurveyReminderRequest {
+  // 催促データ
+  // required survey_request_id
+  SurveyReminder survey_reminder = 1;
+}
+
+message ListSurveyRemindersRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+}
+
+message ListSurveyRemindersResponse {
+  // 件数
+  int64 total = 1;
+
+  // 催促データ
+  repeated SurveyReminder items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reminder_id
+message GetSurveyReminderRequest {
+  // 催促ID
+  string survey_reminder_id = 1;
+}
+
+// 催促データ を 公開 する
+// required survey_reminder
+message SharetoSurveyReminderRequest {
+  // 催促データ
+  // required survey_reminder_id
+  SurveyReminder survey_reminder = 1;
+}
+
+message SharetoSurveyReminderResponse {}
+
+// 履歴データ
+// required type_name
+message ListHistorysRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // レコードタイプ
+  string type_name = 2;
+
+  // レコードID
+  repeated string record_ids = 3;
+}
+
+message ListHistorysResponse {
+  // 件数
+  int64 total = 1;
+
+  // 履歴
+  repeated History items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// 破棄データ を 公開 する
+// required discard
+message SharetoDiscardRequest {
+  // 破棄データ
+  // required discard_id
+  Discard discard = 1;
+}
+
+message SharetoDiscardResponse {}
+
+// 終了データ を 公開 する
+// required complete
+message SharetoCompleteRequest {
+  // 終了データ
+  // required complete_id
+  Complete complete = 1;
+}
+
+message SharetoCompleteResponse {}
+
+// 開府済みデータ を 公開 する
+// required opened
+message SharetoOpenedRequest {
+  // 開府済みデータ
+  // required opened_id
+  Opened opened = 1;
+}
+
+message SharetoOpenedResponse {}
+
+// 依頼管理情報出力
+// required file_format
+message ExportSurveyRequestsRequest {
+  reserved 1;
+
+  // 依頼伝票ID
+  // Implementation Note:
+  //   依頼伝票IDが渡ってきている場合は、依頼伝票IDを条件に依頼明細および架空展開した明細を取得する
+  repeated string survey_base_request_ids = 3;
+
+  // 依頼明細ID
+  // Implementation Note:
+  //   依頼明細IDが渡ってきている場合は、依頼明細IDを条件に依頼明細から取得する
+  repeated string survey_request_ids = 4;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportSurveyRequestsResponse {
+  // アセットID（一時領域）
+  string asset_id = 1;
+}
+
+// 依頼管理情報出力フォーマット取得
+message ListSurveyRequestFormatsRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message ListSurveyRequestFormatsResponse {
+  // 件数
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_request_id
+message SharedGetSurveyRequestRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+}
+
+// 公開された 回答期日変更データ
+message SharedListSurveyReplyDueDateChangeResultsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼伝票
+  repeated string survey_request_ids = 2;
+}
+
+message SharedListSurveyReplyDueDateChangeResultsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 回答期日変更データ
+  repeated SurveyReplyDueDateChangeResult items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reply_due_date_change_result_id
+message SharedGetSurveyReplyDueDateChangeResultRequest {
+  // 回答期日変更ID
+  string survey_reply_due_date_change_result_id = 1;
+}
+
+// 公開された 催促データ
+message SharedListSurveyRemindersRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+}
+
+message SharedListSurveyRemindersResponse {
+  // 件数
+  int64 total = 1;
+
+  // 催促データ
+  repeated SurveyReminder items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reminder_id
+message SharedGetSurveyReminderRequest {
+  // 催促ID
+  string survey_reminder_id = 1;
+}
+
+// 公開された 回答期日変更依頼データ
+message SharedListSurveyReplyDueDateChangeRequestsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+}
+
+message SharedListSurveyReplyDueDateChangeRequestsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 回答期日変更依頼データ
+  repeated SurveyReplyDueDateChangeRequest items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reply_due_date_change_request_id
+message SharedGetSurveyReplyDueDateChangeRequestRequest {
+  // 回答期日変更依頼ID
+  string survey_reply_due_date_change_request_id = 1;
+}
+
+// required survey_result_id
+message SharedGetSurveyResultRequest {
+  // 依頼回答ID
+  string survey_result_id = 1;
+}
+
+// 公開された 修正依頼データ
+message SharedListSurveyResultChangeRequestsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼明細ID
+  repeated string survey_request_ids = 2;
+
+  // 依頼回答ID
+  repeated string survey_result_ids = 3;
+}
+
+message SurveyResultChangeRequestsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 修正依頼データ
+  repeated SurveyResultChangeRequest items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_result_change_request_id
+message SharedGetSurveyResultChangeRequestRequest {
+  // 修正依頼ID
+  string survey_result_change_request_id = 1;
+}
+
+// 展開された 依頼明細コンテンツ
+message ExpandedListSurveyRequestContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // 依頼伝票ID
+  string survey_base_request_id = 2;
+
+  // データフィルタ
+  DataFilter data_filter = 3;
+
+  message DataFilter {
+    reserved 1;
+    // ステータス
+    //
+    // Implementation Note:
+    //  status.code が渡され、BEで名称マスタを取得する (種別 A1010001)
+    //  status.system_name が "B08" 完了 を含まない場合、completed = false で indexFilter をかける
+    //
+    repeated string status_codes = 5;
+    // 依頼カタログID
+    repeated string survey_request_catalog_ids = 2;
+    //依頼送信日時 開始
+    int64 sended_at_from = 3;
+    //依頼送信日時 終了
+    int64 sended_at_to = 4;
+  }
+}
+
+message ExpandedListSurveyRequestContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼明細コンテンツ
+  repeated SurveyRequestContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_base_request_id
+// required business_unit_management_id
+message ExpandedGetSurveyRequestContentRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+
+  // 取引先管理ID
+  string business_unit_management_id = 2;
+}
+
+// 依頼伝票コンテンツ
+// required data_filter
+message ListSurveyBaseRequestContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // データフィルタ
+  DataFilter data_filter = 2;
+
+  message DataFilter {
+    reserved 1;
+    // ステータス
+    //
+    // Implementation Note:
+    //  status.code が渡され、BEで名称マスタを取得する (種別 A1010001)
+    //  status.system_name が "B08" 完了 を含まない場合、completed = false で indexFilter をかける
+    //
+    repeated string status_codes = 5;
+    // 依頼カタログID
+    repeated string survey_request_catalog_ids = 2;
+    //依頼送信日時 開始
+    int64 sended_at_from = 3;
+    //依頼送信日時 終了
+    int64 sended_at_to = 4;
+  }
+}
+
+message ListSurveyBaseRequestContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼伝票コンテンツ
+  repeated SurveyBaseRequestContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_base_request_id
+message GetSurveyBaseRequestContentRequest {
+  // 依頼伝票ID
+  string survey_base_request_id = 1;
+}
+
+// 依頼明細コンテンツ
+message ListSurveyRequestContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // データフィルタ
+  DataFilter data_filter = 2;
+
+  message DataFilter {
+    reserved 1;
+    // ステータス
+    //
+    // Implementation Note:
+    //  status.code が渡され、BEで名称マスタを取得する (種別 A1010001)
+    //  status.system_name が "B08" 完了 を含まない場合、completed = false で indexFilter をかける
+    //
+    repeated string status_codes = 5;
+    // 依頼カタログID
+    repeated string survey_request_catalog_ids = 2;
+    //依頼送信日時 開始
+    int64 sended_at_from = 3;
+    //依頼送信日時 終了
+    int64 sended_at_to = 4;
+  }
+}
+
+message ListSurveyRequestContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼明細コンテンツ
+  repeated SurveyRequestContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_request_id
+message GetSurveyRequestContentRequest {
+  // 依頼伝票ID
+  string survey_request_id = 1;
+}
+
+// 依頼受信コンテンツ
+message ListSurveyReceptionContentsRequest {
+  // ページトークン
+  string page_token = 1;
+
+  // データフィルタ
+  DataFilter data_filter = 2;
+
+  message DataFilter {
+    int64 receipted_at_from = 1;
+    int64 receipted_at_to   = 2;
+  }
+}
+
+message ListSurveyReceptionContentsResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼受信コンテンツ
+  repeated SurveyReceptionContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_reception_id
+message GetSurveyReceptionContentRequest {
+  // 依頼受信ID
+  string survey_reception_id = 1;
+}
+
+message UncompletedListSurveyRequestRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message UncompletedListSurveyRequestResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼受信コンテンツ
+  repeated SurveyReceptionContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+message UnchangedListSurveyReplyDueDateChangeRequestRequest {
+  // ページトークン
+  string page_token = 1;
+}
+
+message UnchangedListSurveyReplyDueDateChangeRequestResponse {
+  // 件数
+  int64 total = 1;
+
+  // 依頼明細コンテンツ
+  repeated SurveyRequestContent items = 2;
+
+  // ページトークン
+  string page_token = 3;
+}
+
+// required survey_result_id
+message ExportedSurveyResultFileRequest {
+  string survey_result_id = 1;
+}
+
+message ExportedSurveyResultFileResponse {}
+
+// 依頼明細データ を 開封済みにする
+// required survey_request_id
+message OpenSurveyRequestRequest {
+  // 依頼明細ID
+  string survey_request_id = 1;
+}
+
+message OpenSurveyRequestResponse {
+  // 開封済みデータ
+  Opened opened = 1;
+}

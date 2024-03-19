@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package sharelib;
+
+option go_package = 'mtechnavi/sharelib/protobuf';
+
+// 通知内容
+message NotificationSetting {
+  // システム名
+  string system_category = 1;
+  // タイトル名
+  string title = 2;
+  // 内容
+  string content = 3;
+  // URL遷移先
+  string link = 4;
+  // TOs
+  repeated string tos = 5;
+  // CCs
+  repeated string ccs = 6;
+  // 通知元
+  // 企業名を格納する
+  string sender_tenant = 7;
+}

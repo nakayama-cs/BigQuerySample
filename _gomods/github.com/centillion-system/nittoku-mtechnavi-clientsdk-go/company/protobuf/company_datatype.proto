@@ -1,0 +1,353 @@
+syntax = "proto3";
+
+package mtechnavi.api.company;
+
+import "mtn/visibility.proto";
+import "embedded.proto";
+import "nameoption.proto";
+import "address.proto";
+import "datetime.proto";
+import "amount.proto";
+
+option go_package = 'mtechnavi/company/protobuf';
+
+// 企業ステータス
+message CompanyStatus {
+  // ステータス
+  // 状態（category）と状態の詳細（detail）の組み合わせを専用に表現したもの
+  //
+  // 名称マスタにおける種別 A0010001 (企業ステータス) を参照
+  sharelib.NameOption status = 1;
+
+  // 状態
+  // 名称マスタにおける種別 A0010002 (企業ステータス（状態）) を参照
+  sharelib.NameOption category = 2;
+
+  // 状態の詳細
+  // 名称マスタにおける種別 A0010003 (企業ステータス（状態の詳細）) を参照
+  sharelib.NameOption detail = 3;
+}
+
+message Profile {
+  // 会社URL
+  string website_url = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 代表電話番号（ハイフン付き）
+  string phone_number = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 住所
+  sharelib.Address address = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  message Representative {
+    // 代表者名
+    map<string, string> display_name_lang = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // 代表者役職
+    string position = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+  // 代表者
+  Representative representative = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 資本金
+  sharelib.MonetaryAmount capital_stock = 5 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 業種名称
+  string industry = 6 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 主な事業内容
+  string main_business = 7 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 公開コメント
+  string public_comment = 8 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 法令情報
+message CompanyLegalProperties {
+  // 法律によって決められる項目
+  // 法人コード
+  string company_number = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 適格請求書認定番号
+  string eligible_invoice_authorization_number = 2 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message PostUnitProperties {
+  // 取引窓口に関する項目
+}
+
+message OrganizationUnitProperties {
+  // 組織に関する項目
+}
+
+message DeliveryPointProperties {
+  // 納入先に関する項目
+}
+
+message OfficeProperties {
+  // 事業所に関する項目
+  // 名称マスタにおける種別 A0000003 (事業所ランク) を参照
+  sharelib.NameOption office_rank = 1 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+message ImageFile {
+  // アセットID
+  string asset_id = 1;
+
+  // メタデータ
+  map<string, string> metadata = 2;
+}
+
+message PostUnit {
+  // マークつける対象の管理場所ID
+  string component_unit_id = 1;
+
+  // 社内管理用コード
+  string post_unit_code = 2;
+
+  // 社内管理用名称
+  string display_name = 3;
+
+  // 取引先種別
+  // 複数選択可能（見積先...）
+  // 名称マスタにおける種別 A0000004 (取引先種別) を参照
+  repeated sharelib.NameOption post_unit_type = 4;
+
+  // 社内管理用備考
+  string remarks = 5;
+
+  // 管理場所分類
+  string component_unit_category = 6;
+
+  // 連携項目
+  repeated string linkage_item = 7;
+
+  // 使用
+  //  名称マスタにおける種別 A0000001 (使用) を参照
+  sharelib.NameOption usable = 8;
+}
+
+// 実行情報
+message Process {
+  // 実行日時
+  int64 processed_at = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 実行ユーザー
+  sharelib.EmbeddedUser processed_by = 2;
+
+  // 実行コメント
+  string processed_comment = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 住所
+message Address {
+  // 所在国
+  // 名称マスタ A0000041 (国)
+  sharelib.NameOption country = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 郵便番号
+  string postal_code = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 地域
+  // 名称マスタ A0000042 (地域)
+  sharelib.NameOption region = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 住所
+  repeated string address_lines = 4 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 基本情報
+message CompanyProfile {
+  // 企業名
+  map<string, string> display_name_lang = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 法令情報
+  CompanyLegalProperties company_legal_properties = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // ホームページURL
+  string website_url = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  message Representative {
+    // 代表者名
+    map<string, string> display_name_lang = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // 代表者(役職)
+    string position = 2 [(mtn.visibility) = { scope: INHERIT }];
+    // 代表者(生年月日)
+    sharelib.Date birth_date = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+    reserved 3;
+  }
+  // 代表者
+  Representative representative = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 本社住所情報
+  Address address = 5 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 本社(電話番号)
+  string phone_number = 6 [(mtn.visibility) = { scope: INHERIT }];
+
+  message Employees {
+    // 従業員(人数)
+    int64 size = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // 従業員(平均年齢)
+    sharelib.Amount average_age = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+  // 従業員
+  Employees employees = 7 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 資本金(百万円)
+  sharelib.MonetaryAmount capital_stock = 8 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 主要株主
+  string main_shareholder = 9 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 主要取引銀行
+  string main_bank = 10 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 主要仕入先
+  string main_supplier = 11 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 主要納入先
+  string main_customer = 12 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 事業内容
+  string main_business = 13 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// ItemValue
+message ItemValue {
+  // 項目名
+  string item_key = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 項目値
+  string item_value = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 識別コード
+  string code = 3 [(mtn.visibility) = { scope: INHERIT }];
+}
+
+// 比較項目
+message ComparisonItem {
+  // 比較項目
+  string value = 1;
+
+  // 表示項目
+  string display_name = 2;
+}
+
+// 比較用データ型（基本情報）
+message DiffItemBusinessUnitProfile {
+  // キー項目[-]
+  string key_value = 1;
+
+  // 企業名
+  ComparisonItem display_name_lang_ja = 2;
+
+  // 法人コード
+  ComparisonItem company_number = 3;
+
+  // 代表者名
+  ComparisonItem representative_display_name_lang_ja = 4;
+
+  // 本社（郵便番号）
+  ComparisonItem postal_code = 5;
+
+  // 本社（住所）
+  ComparisonItem address = 6;
+
+  // 資本金（百万円）
+  ComparisonItem capital_stock = 7;
+}
+
+// 比較用データ型（拠点）
+message DiffItemBusinessUnitBranch {
+  // キー項目[-]
+  string key_value = 1;
+
+  // 住所
+  ComparisonItem address = 2;
+
+  // 電話番号
+  ComparisonItem phone_number = 3;
+
+  // FAX
+  ComparisonItem fax_number = 4;
+}
+
+// 比較用データ型（認証）
+message DiffItemBusinessUnitCertificate {
+  // キー項目[認証名]
+  string key_value = 1;
+
+  // 取得済み
+  ComparisonItem obtained = 2;
+
+  // 認証番号
+  ComparisonItem certificate_number = 3;
+
+  // 証明書
+  ComparisonItem attachment = 4;
+
+  // 取得年月日
+  ComparisonItem obtained_dt = 5;
+
+  // 有効期限
+  ComparisonItem expiration_dt = 6;
+
+  // 取得予定日
+  ComparisonItem obtain_plan_dt = 7;
+
+  // 次回取得予定
+  ComparisonItem obtain_plan = 8;
+
+  // 取得予定なしの理由
+  ComparisonItem comment = 9;
+
+  // 適用範囲(対象製品)
+  ComparisonItem scope_product = 10;
+
+  // 適用範囲(対象拠点/対象設備)
+  ComparisonItem scope_branch = 11;
+}
+
+// 比較用データ型（連絡先）
+message DiffItemBusinessUnitContact {
+  // キー項目[連絡先名]
+  string key_value = 1;
+
+  // 拠点名
+  ComparisonItem business_unit_branch_display_name = 2;
+
+  // 住所
+  ComparisonItem address = 3;
+
+  // 電話番号
+  ComparisonItem phone_number = 4;
+
+  // FAX
+  ComparisonItem fax_number = 5;
+
+  // 宛名
+  ComparisonItem alias = 6;
+
+  // 相手先担当
+  ComparisonItem notification_users = 7;
+}
+
+// 取引先管理（拠点）情報
+message BusinessUnitBranchProperties {
+  // 取引先管理（拠点）ID
+  string business_unit_branch_id = 6 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 拠点名
+  string display_name = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 住所情報
+  Address address = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+  // 電話番号
+  string phone_number = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+  // FAX
+  string fax_number = 5 [(mtn.visibility) = { scope: INHERIT }];
+
+  reserved 1;
+}

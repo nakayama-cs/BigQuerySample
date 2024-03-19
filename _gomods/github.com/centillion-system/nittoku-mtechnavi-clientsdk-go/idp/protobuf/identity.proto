@@ -1,0 +1,324 @@
+syntax = "proto3";
+
+package mtechnavi.api.idp;
+
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option go_package = 'mtechnavi/idp/protobuf';
+
+message CreateBrowserSessionRequest {
+  string id_token = 1 [(validate.rules).string = { min_len: 1, max_len: 2048 }];
+}
+
+message GetTenantConfigRequest {
+  string domain             = 1;
+  string internal_tenant_id = 2;
+}
+
+message SingleSignOnConfig {
+  // シングルサインオン機能の有効/無効を示す。
+  bool enabled = 1;
+
+  // 外部IDプロバイダの管理するアカウントのドメイン。
+  //
+  // 本システムへフェデレーションログインを許可されるのは、設定されたドメイン管理下のアカウントに限定される。
+  // e.g. user1@example.com というGoogleアカウントでSSOさせるとき、 example.com
+  // が設定すべきドメインとなる。
+  string allowed_domain = 2;
+}
+
+// テナントにおけるユーザ認証に必要な設定項目群
+message TenantConfig {
+  // 本テナントがサービスを提供するホスト名
+  string domain = 1;
+
+  // フェデレーションログイン設定
+  //
+  // 本システムでは通常、メールアドレスとパスワードによる認証を提供する。
+  // 企業が管理・保有する外部IDプロバイダと連携し、本システムを利用するときに設定する。
+  SingleSignOnConfig single_sign_on = 5;
+
+  string internal_api_key = 2;
+
+  string internal_auth_domain = 3;
+
+  string internal_tenant_id = 4;
+}
+
+message VerifyUserResponse {
+  Tenant tenant = 1;
+
+  User user = 2;
+
+  // user が所属するグループ一覧
+  repeated UserGroup groups = 3;
+
+  // user が保有するロール一覧
+  repeated Role roles = 4;
+}
+
+message User {
+  // Implementation Note::
+  // identity platformのuidと同一の値を用いる。
+  string user_id = 1;
+
+  // ユーザのメールアドレス。
+  //
+  // Implementation Note:: Identity Platformがマスタ
+  string email = 2 [(validate.rules).string.email = true];
+
+  // メールアドレスが送信確認済みかどうかを示す。
+  //
+  // Implementation Note:: Identity Platformがマスタ
+  bool email_verified = 7;
+
+  // ユーザの作成または更新時に、パスワードを設定するとき値を格納する。
+  // サーバからのレスポンスでは、常に空となる。
+  string password = 6;
+
+  string display_name = 3 [(validate.rules).string = { min_len: 1, max_len: 128 }];
+
+  // outputonly 最終ログイン
+  //
+  // Implementation Note::
+  //   ログインの認証されたタイミングの日時を取得する
+  //   CreateBrowserSessionRequest の最終実行時間
+  //
+  int64 last_login_at = 13;
+
+  repeated string user_group_ids = 4;
+
+  bool disabled = 10;
+
+  int64 deleted_at = 5;
+
+  int64 created_at = 8;
+
+  int64 updated_at = 9;
+}
+
+message UserGroup {
+  string user_group_id = 1;
+
+  string user_group_code = 2 [(validate.rules).string = { min_len: 1, max_len: 256 }];
+
+  string display_name = 3 [(validate.rules).string = { min_len: 1, max_len: 128 }];
+
+  repeated string role_names = 4;
+
+  string schema_access_control_name = 9;
+
+  int64 deleted_at = 6;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+}
+
+message Role {
+  // テナント内で一意となるロールの内部名称
+  string role_name = 1;
+
+  // 表示名称
+  string display_name = 2;
+
+  // ロールに含まれるパーミッション一覧
+  // パーミッションは、gRPCのfullMethod名から相互変換可能な文字列となる。
+  // またワイルドカードでの一括指定も可能。
+  repeated string permissions = 3;
+}
+
+// データスキーマに対するアクセス権設定
+message SchemaAccessControl {
+  // SchemaAccessControlの識別名
+  string schema_access_control_name = 3;
+
+  // 全データ型のプロパティ群に対するアクセス権限一覧
+  //
+  // キーにはワイルドカード "*" が利用可能である。
+  //
+  // e.g. "mtechnavi.api.idp.User" => { "allow": ["user_id"] }
+  map<string, PropertyAccessControl> access_controls = 4;
+}
+
+// プロパティレベルのアクセス権限
+//
+// アクセス権限の評価は、以下のように行われる:
+//   1. 全プロパティを拒否
+//   2. allowで指定されたプロパティを許可
+//   3. denyで指定されたプロパティを拒否
+//
+// allowおよびdenyの指定には、ワイルドカード "*" が利用可能である。
+// また、プロパティ名は、messageのfield名を指定すること。
+//
+// なお、PrimaryKeyに相当するプロパティは拒否することができない。
+message PropertyAccessControl {
+  // アクセス許可するプロパティ一覧
+  repeated string allow = 1;
+
+  // アクセス拒否するプロパティ一覧
+  repeated string deny = 2;
+}
+
+// テナント
+message Tenant {
+  // グローバルで一意なテナントを識別するID
+  string tenant_id = 1;
+
+  // グローバルで一意なテナントを識別するコード
+  string tenant_code = 2 [(validate.rules).string = { min_len: 2, max_len: 63 }];
+
+  // 本テナントがサービスを提供するホスト名
+  string domain = 3 [(validate.rules).string.hostname = true];
+
+  // 表示名称
+  string display_name = 4 [(validate.rules).string = { min_len: 1, max_len: 128 }];
+
+  // フェデレーションログイン設定
+  //
+  // 本システムでは通常、メールアドレスとパスワードによる認証を提供する。
+  // 企業が管理・保有する外部IDプロバイダと連携し、本システムを利用するときに設定する。
+  SingleSignOnConfig single_sign_on = 9;
+
+  string internal_tenant_id = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+message CreateTenantRequest {
+  Tenant tenant = 1 [(validate.rules).message.required = true];
+
+  User user = 2 [(validate.rules).message.required = true];
+}
+
+message GetTenantRequest {
+  string tenant_id = 1 [(validate.rules).string = { min_len: 1, max_len: 36 }];
+}
+
+message ListTenantsRequest {}
+
+message ListTenantsResponse {
+  int64 total = 1;
+
+  repeated Tenant items = 2;
+}
+
+message UpdateTenantRequest {
+  Tenant tenant = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteTenantRequest {
+  Tenant tenant = 1 [(validate.rules).message.required = true];
+}
+
+message CreateUserGroupRequest {
+  UserGroup user_group = 1 [(validate.rules).message.required = true];
+}
+
+message ListUserGroupsRequest {}
+
+message ListUserGroupsResponse {
+  int64 total = 1;
+
+  repeated UserGroup items = 2;
+}
+
+message GetUserGroupRequest {
+  string user_group_id = 1 [(validate.rules).string = { min_len: 2, max_len: 36 }];
+}
+
+message UpdateUserGroupRequest {
+  UserGroup user_group = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteUserGroupRequest {
+  UserGroup user_group = 1 [(validate.rules).message.required = true];
+}
+
+message CreateUserRequest {
+  User user = 1 [(validate.rules).message.required = true];
+}
+
+message ListUsersRequest {}
+
+message ListUsersResponse {
+  int64 total = 1;
+
+  repeated User items = 2;
+}
+
+message GetUserRequest {
+  string user_id = 1 [(validate.rules).string = { min_len: 2, max_len: 36 }];
+}
+
+message UpdateUserRequest {
+  User user = 1 [(validate.rules).message.required = true];
+}
+
+message DeleteUserRequest {
+  User user = 1 [(validate.rules).message.required = true];
+}
+
+message ListRolesRequest {}
+
+message ListRolesResponse {
+  int64 total = 1;
+
+  repeated Role items = 2;
+}
+
+message GetRoleRequest {
+  string role_name = 1 [(validate.rules).string = { min_len: 2, max_len: 36 }];
+}
+
+message ListSchemaAccessControlsRequest {}
+
+message ListSchemaAccessControlsResponse {
+  int64 total = 1;
+
+  repeated SchemaAccessControl items = 2;
+}
+
+message GetSchemaAccessControlRequest {
+  string schema_access_control_name = 1 [(validate.rules).string = { min_len: 2, max_len: 36 }];
+}
+
+service Identity {
+  // 認証前に実行
+  rpc CreateBrowserSession(CreateBrowserSessionRequest) returns (google.protobuf.Empty);
+  // 認証前に実行
+  rpc DeleteBrowserSession(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // 認証前に実行
+  rpc GetTenantConfig(GetTenantConfigRequest) returns (TenantConfig);
+  // 認証前に実行
+  rpc VerifyUser(google.protobuf.Empty) returns (VerifyUserResponse);
+
+  rpc CreateTenant(CreateTenantRequest) returns (Tenant);
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+  rpc GetTenant(GetTenantRequest) returns (Tenant);
+  rpc UpdateTenant(UpdateTenantRequest) returns (Tenant);
+  rpc DeleteTenant(DeleteTenantRequest) returns (google.protobuf.Empty);
+
+  rpc CreateUserGroup(CreateUserGroupRequest) returns (UserGroup);
+  rpc ListUserGroups(ListUserGroupsRequest) returns (ListUserGroupsResponse);
+  rpc GetUserGroup(GetUserGroupRequest) returns (UserGroup);
+  rpc UpdateUserGroup(UpdateUserGroupRequest) returns (UserGroup);
+  rpc DeleteUserGroup(DeleteUserGroupRequest) returns (google.protobuf.Empty);
+
+  rpc CreateUser(CreateUserRequest) returns (User);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc UpdateUser(UpdateUserRequest) returns (User);
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc GetRole(GetRoleRequest) returns (Role);
+
+  rpc ListSchemaAccessControls(ListSchemaAccessControlsRequest) returns (ListSchemaAccessControlsResponse);
+  rpc GetSchemaAccessControl(GetSchemaAccessControlRequest) returns (SchemaAccessControl);
+}

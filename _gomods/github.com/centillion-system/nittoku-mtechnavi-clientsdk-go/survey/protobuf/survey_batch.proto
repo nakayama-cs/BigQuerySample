@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "google/protobuf/empty.proto";
+import "notificationsetting.proto";
+import "systemreport_mailmanagement.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+service surveyBatchService {
+  // 非同期 展開処理
+  rpc TaskExpandCreateSurveyRequest(TaskExpandCreateSurveyRequestRequest) returns (google.protobuf.Empty);
+
+  // 非同期 依頼伝票削除
+  rpc TaskDeleteSurveyBaseRequest(TaskDeleteSurveyBaseRequestRequest) returns (google.protobuf.Empty);
+
+  // 非同期 履歴作成
+  rpc TaskCreateHistory(TaskCreateHistoryRequest) returns (google.protobuf.Empty);
+
+  // 日次メール作成処理
+  // （分類 依頼伝票 コード：SurveyBaseRequest)
+  rpc TaskCreateDailyMailSurveyBaseRequest(TaskCreateDailyMailSurveyBaseRequestRequest) returns (TaskCreateDailyMailSurveyBaseRequestResponse);
+
+  // 日次メール作成処理
+  // （分類 依頼明細 コード：SurveyRequest)
+  rpc TaskCreateDailyMailSurveyRequest(TaskCreateDailyMailSurveyRequestRequest) returns (TaskCreateDailyMailSurveyRequestResponse);
+
+  // 非同期 日次自動催促処理
+  rpc TaskShareReminder(TaskShareReminderRequest) returns (google.protobuf.Empty);
+}
+
+// 非同期 展開処理
+// required tenant_id
+// required survey_base_request_id
+// required business_unit_management_id
+// required survey_request_detail_auto_name
+message TaskExpandCreateSurveyRequestRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 依頼伝票ID
+  string survey_base_request_id = 2;
+  // 取引先管理ID
+  string business_unit_management_id = 3;
+  // 依頼明細番号
+  int64 survey_request_detail_auto_name = 4;
+}
+
+// 非同期 依頼伝票削除
+// required tenant_id
+// required survey_base_request_id
+message TaskDeleteSurveyBaseRequestRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 依頼伝票ID
+  string survey_base_request_id = 2;
+}
+
+// 非同期 履歴作成
+// required tenant_id
+// required history_category_name
+// required content_name
+// required occurred_at
+// required type_name
+// required record_id
+message TaskCreateHistoryRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 分類
+  string history_category_name = 2;
+  // 内容
+  string content_name = 3;
+  // 内容パラメータ
+  repeated string content_paramaters = 4;
+  // 発生日
+  int64 occurred_at = 5;
+  // 通知レベル
+  int64 level = 6;
+  // 伝票種類
+  string type_name = 7;
+  // 伝票ID
+  string record_id = 8;
+}
+
+// 日次メール作成処理
+// （分類 依頼伝票 コード：SurveyBaseRequest)
+// required tenant_id
+// required user_id
+// required operated_at
+message TaskCreateDailyMailSurveyBaseRequestRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // アカウントID
+  string user_id = 2;
+  // 処理日
+  int64 operated_at = 3;
+}
+
+message TaskCreateDailyMailSurveyBaseRequestResponse {
+  // 通知内容
+  repeated sharelib.NotificationSetting notification_settings = 1;
+  // 単発メール管理
+  repeated mtechnavi.api.systemreport.OneOffMailManagement one_off_mail_managements = 2;
+}
+
+// 日次メール作成処理
+// （分類 依頼明細 コード：SurveyRequest)
+// required tenant_id
+// required user_id
+// required operated_at
+message TaskCreateDailyMailSurveyRequestRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // アカウントID
+  string user_id = 2;
+  // 処理日
+  int64 operated_at = 3;
+}
+
+message TaskCreateDailyMailSurveyRequestResponse {
+  // 通知内容
+  repeated sharelib.NotificationSetting notification_settings = 1;
+  // 単発メール管理
+  repeated mtechnavi.api.systemreport.OneOffMailManagement one_off_mail_managements = 2;
+}
+
+// 非同期 日次自動催促処理
+// required operated_at
+message TaskShareReminderRequest {
+  // 自テナントID
+  string tenant_id = 1;
+  // 処理日
+  int64 operated_at = 2;
+}

@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+import "attachment.proto";
+import "reference.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 依頼受信データ
+//
+// Implementation Note:
+//   依頼明細データのshared時に生成されるデータ
+//
+message SurveyReception {
+  // 依頼受信ID
+  // 依頼明細ID survey_request_id と同様
+  string survey_reception_id = 1;
+
+  // システム通知先
+  repeated sharelib.UserReference system_notification_users = 9;
+
+  // readonly 依頼受信日
+  //
+  // Implementation Note:
+  //   依頼明細データの公開情報.shared_at
+  //
+  int64 receipted_at = 4 [(mtn.dataproxy) = { index: { name: "receipted_at" } }];
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+
+  int64 deleted_at = 8;
+
+  reserved 2, 3;
+}
+
+// 依頼回答データ
+message SurveyResult {
+  // 依頼回答ID
+  string survey_result_id = 1;
+
+  // 依頼明細ID
+  string survey_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_request_id" } }];
+
+  // readonly 回答送信日時
+  int64 sended_at = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 部分回答
+  bool partial_replyed = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 辞退
+  bool declined = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // コメント
+  string comment = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 回答ファイルリスト
+  repeated sharelib.Attachment reply_attachments = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 8;
+
+  int64 created_at = 9;
+
+  int64 updated_at = 10;
+
+  int64 deleted_at = 11;
+}
+
+// 修正依頼データ
+message SurveyResultChangeRequest {
+  // 修正依頼ID
+  string survey_result_change_request_id = 1;
+
+  // 依頼明細ID
+  string survey_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_request_id" } }];
+
+  // 依頼回答ID
+  string survey_result_id = 3 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_result_id" } }];
+
+  // 修正依頼日時
+  int64 requested_at = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // コメント
+  string comment = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 6;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+
+  int64 deleted_at = 9;
+}
+
+// 回答ファイル出力済みデータ
+message ExportedSurveyResultReplyAttachment {
+  string exported_survey_result_reply_attachment_id = 1;
+
+  // 依頼回答ID
+  string survey_result_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_result_id" } }];
+
+  // 依頼明細ID
+  string survey_request_id = 3 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "survey_request_id" } }];
+
+  // created_by
+  sharelib.EmbeddedUser created_by = 4;
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+
+  int64 deleted_at = 7;
+}

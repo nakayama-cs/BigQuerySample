@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package mtechnavi.testdata.fileformat;
+
+option go_package = 'mtechnavi/testdata/fileformat';
+
+import "mtn/csv.proto";
+import "datetime.proto";
+
+enum RootEnum {
+  A = 0;
+  B = 1;
+  C = 2;
+}
+
+message TestRecordFormatDefault {
+  option (mtn.csv_default_format) = {
+    header: true,
+    comma: COMMA,
+    encoding: SHIFT_JIS,
+  };
+  string   test_record_id = 100 [(mtn.csv) = { column: 1, header: "TEST_RECORD_ID" }];
+  double   double_        = 1 [(mtn.csv) = { column: 2, header: "DOUBLE" }];
+  float    float_         = 3 [(mtn.csv) = { column: 3, header: "FLOAT" }];
+  int32    int32_         = 5 [(mtn.csv) = { column: 4, header: "INT32" }];
+  int64    int64_         = 7 [(mtn.csv) = { column: 5, header: "INT64" }];
+  uint32   uint32_        = 9 [(mtn.csv) = { column: 6, header: "UINT32" }];
+  uint64   uint64_        = 11 [(mtn.csv) = { column: 7, header: "UINT64" }];
+  sint32   sint32_        = 13 [(mtn.csv) = { column: 8, header: "SINT32" }];
+  sint64   sint64_        = 15 [(mtn.csv) = { column: 9, header: "SINT64" }];
+  fixed32  fixed32_       = 17 [(mtn.csv) = { column: 10, header: "FIXED32" }];
+  fixed64  fixed64_       = 19 [(mtn.csv) = { column: 11, header: "FIXED64" }];
+  sfixed32 sfixed32_      = 21 [(mtn.csv) = { column: 12, header: "SFIXED32" }];
+  sfixed64 sfixed64_      = 23 [(mtn.csv) = { column: 13, header: "SFIXED64" }];
+  bool     bool_          = 25 [(mtn.csv) = { column: 14, header: "BOOL" }];
+  string   string_        = 27 [(mtn.csv) = { column: 15, header: "STRING" }];
+  //   RootEnum        enum_            = 29 [(mtn.csv) = { column: 15, header: "ENUM" }];
+  repeated string repeated_string_ = 31 [(mtn.csv) = { column: 17, header: "REPEATED_STRING" }];
+  repeated int64  repeated_int64_  = 33 [(mtn.csv) = { column: 18, header: "REPEATED_INT64" }];
+
+  int64 updated_at = 34 [(mtn.csv) = { column: 19, header: "UPDATED_AT" }];
+}
+
+message TestRecordWithError {
+  option (mtn.csv_default_format) = {
+    header: true,
+    comma: COMMA,
+    encoding: SHIFT_JIS,
+  };
+
+  TestRecordFormatDefault base = 1;
+
+  string error_content = 100 [(mtn.csv) = { column: 20, header: "ERROR_CONTENT" }];
+}
+
+message DatetimeRecordFormatDefault {
+  option (mtn.csv_default_format) = {
+    header: true,
+    comma: COMMA,
+    encoding: SHIFT_JIS,
+  };
+  sharelib.Datetime datetime1_ = 1 [(mtn.csv) = { column: 1, header: "DATETIME1_" }];
+  sharelib.Datetime datetime3_ = 3 [(mtn.csv) = { column: 2, header: "DATETIME3_" }];
+  sharelib.Datetime datetime5_ = 5 [(mtn.csv) = { column: 3, header: "DATETIME5_" }];
+  sharelib.Datetime datetime7_ = 7 [(mtn.csv) = { column: 4, header: "DATETIME7_" }];
+  sharelib.Datetime datetime9_ = 9 [(mtn.csv) = { column: 5, header: "DATETIME9_" }];
+}
+
+message DatetimeRecordWithError {
+  option (mtn.csv_default_format) = {
+    header: true,
+    comma: COMMA,
+    encoding: SHIFT_JIS,
+  };
+
+  DatetimeRecordFormatDefault base = 1;
+
+  string error_content = 100 [(mtn.csv) = { column: 20, header: "ERROR_CONTENT" }];
+}

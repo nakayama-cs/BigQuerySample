@@ -1,0 +1,6 @@
+/.local/
+/.vscode/
+.envrc
+
+/_creds/*
+!/_creds/.gitkeep

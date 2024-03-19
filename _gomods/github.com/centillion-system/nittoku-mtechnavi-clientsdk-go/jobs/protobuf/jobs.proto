@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package mtechnavi.api.jobs;
+
+option go_package = "mtechnavi/jobs/protobuf";
+
+// 日次メール
+message DailyMailJobRequest {
+  // 処理日
+  int64 operated_at = 1;
+
+  // 処理対象開始日時
+  int64 since_at = 2;
+
+  // 処理対象終了日時
+  int64 until_at = 3;
+
+  message TaskTenant {
+    // タスクインデックス
+    int64 task_index = 1;
+    // テナントID
+    repeated string tenant_ids = 2;
+  }
+  // タスクのテナントID
+  repeated TaskTenant task_tenants = 4;
+}
+
+// 自社企業情報公開
+message SharetoBusinessUnitManagementJobRequest {
+  // 処理日
+  int64 operated_at = 1;
+
+  message TaskTenant {
+    // タスクインデックス
+    int64 task_index = 1;
+    // テナントID
+    repeated string tenant_ids = 2;
+  }
+  // タスクのテナントID
+  repeated TaskTenant task_tenants = 2;
+}
+
+// 自動催促処理
+message SharetoSurveyReminderJobRequest {
+  // 処理日
+  int64 operated_at = 1;
+
+  message TaskTenant {
+    // タスクインデックス
+    int64 task_index = 1;
+    // テナントID
+    repeated string tenant_ids = 2;
+  }
+  // タスクのテナントID
+  repeated TaskTenant task_tenants = 2;
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+option go_package = "mtechnavi/survey/protobuf";
+
+service SurveyIOService {
+  rpc ExportSurveyResultFiles(ExportSurveyResultFilesRequest) returns (ExportSurveyResultFilesResponse);
+}
+
+// required targets
+message ExportSurveyResultFilesRequest {
+  // required survey_base_request_id
+  // required status_code
+  repeated Target targets = 1;
+
+  message Target {
+    string survey_base_request_id = 1;
+    string status_code            = 2;
+  }
+
+  // 出力済みを対象に含める
+  bool include_exported = 2;
+}
+
+message ExportSurveyResultFilesResponse {
+  string asset_id = 1;
+}

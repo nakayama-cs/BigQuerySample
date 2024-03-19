@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package mtechnavi.api.sharelib.validator;
+
+option go_package = 'mtechnavi/sharelib/validator/protobuf';
+
+// ValidationError はリクエストに対するバリデーション結果を格納する。
+// JSON化された状態でレスポンスメタデータにより返却される想定である。
+message ValidationError {
+  repeated Descriptor descriptors = 1;
+}
+
+message Descriptor {
+  // バリデーションエラーを発生させたフィールド名。
+  // フィールド名が特定できなかった場合、空文字となる。
+  string field = 1;
+
+  // エラーコード値
+  string message_name = 2;
+
+  // エラー引数
+  repeated string message_args = 4;
+}

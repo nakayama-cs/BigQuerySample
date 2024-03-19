@@ -1,0 +1,372 @@
+syntax = "proto3";
+
+package mtechnavi.api.estimation;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+
+import "nameoption.proto";
+import "reference.proto";
+import "address.proto";
+import "embedded.proto";
+import "amount.proto";
+import "datetime.proto";
+
+import "estimatebasictypes.proto";
+import "estimatestatus.proto";
+
+import "blueprint.proto";
+import "company_table.proto";
+
+option go_package = "mtechnavi/estimation/protobuf";
+
+// 見積依頼
+message EstimateRequest {
+  string estimate_request_id = 1;
+
+  // 見積依頼番号
+  string estimate_request_code = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // outputonly 見積依頼ステータス
+  EstimateRequestStatus status = 3;
+
+  // outputonly 回答件数
+  EstimateResultSummary estimate_result_summary = 4;
+
+  // 見積依頼件名
+  string display_name = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 内部指図書番号
+  string tracking_code = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 数量 / 単位
+  sharelib.QuantityAmount quantity = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 希望納期
+  // Accuracy.DAY
+  sharelib.Datetime desired_recive_dt = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 優先事項
+  // 名称マスタにおける種別 A0000012 (優先事項) を参照
+  sharelib.NameOption top_priority_content = 9 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 発注目的
+  // 名称マスタにおける種別 A0000013 (発注目的) を参照
+  sharelib.NameOption purpose = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 見積期日
+  // Accuracy.DAY
+  sharelib.Datetime estimate_deadline_dt = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 発注予定日
+  // Accuracy.DAY
+  sharelib.Datetime order_plan_dt = 12 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 発注予定日（何日後）
+  int32 order_site = 13 [(mtn.visibility) = { scope: GRANTED }];
+
+  // お知らせ事項
+  string notice = 14 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 納入先情報
+  DeliveryProperties delivery_properties = 15 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 問い合わせ先情報
+  ContactProperties contact_properties = 16 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 要求元情報
+  RequesterProperties requester_properties = 17 [(mtn.visibility) = { scope: GRANTED }];
+
+  // outputonly 見積先情報（ShareTo先）
+  repeated EstimateUnit estimate_units = 18;
+
+  // 明細情報
+  repeated EstimateRequestDetail estimate_request_details = 19 [(mtn.visibility) = { scope: GRANTED }];
+
+  // SAP連携項目
+  EstimateRequestSAPProperties sap_properties = 20;
+
+  // 社内備考
+  string remarks = 21;
+
+  // 見積依頼登録者情報
+  Issuer issuer = 22;
+
+  // 添付情報
+  repeated Attachment attachments = 23 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 見積依頼予定
+  repeated SourceEstimateRequestPlan source_estimate_request_plans = 24;
+
+  // outputonly 締切
+  bool closed = 25;
+
+  // readonly 公開依頼
+  ApprovalRequestProperties approval_request_properties = 26;
+
+  // readonly 公開承認
+  ApprovalProperties approval_properties = 27;
+
+  // readonly 改訂日
+  // 公開承認がされた日付(最新)
+  int64 revised_at = 42;
+
+  // outputonly 完了
+  bool completed = 28;
+
+  // outputonly 破棄
+  bool discarded = 29;
+
+  // outputonly 品目
+  // estimate_request_detailsの各要素が持つtransaction_unitを、重複を排除し、総和したもの
+  // transaction_unit_codeの辞書順にソートされている
+  repeated mtechnavi.api.blueprint.TransactionUnit aggregated_transaction_units = 41;
+
+  // outputonly 工程
+  // 名称マスタにおける種別 A0000006 (工程) を参照
+  // estimate_request_detailsの各要素が持つprocesssを、重複を排除し、総和したもの
+  // NameOption.codeの辞書順にソートされている
+  repeated sharelib.NameOption aggregated_processs = 30;
+
+  // outputonly 型式
+  // estimate_request_details.catalog_referenceの各要素が持つmodel_numberを、重複を排除し、総和したもの
+  // model_numberの値でソートされている
+  repeated string aggregated_model_numbers = 31;
+
+  // outputonly 図番
+  // estimate_request_details.blueprint_share_propertiesの各要素が持つ
+  // "{blueprint_number}-{branch_number}"を、重複を排除し、総和したもの
+  // "{blueprint_number}-{branch_number}"の値でソートされている
+  repeated string aggregated_blueprint_number_and_branch_numbers = 32;
+
+  // outputonly メーカー
+  // estimate_request_details.catalog_referenceの各要素が持つmanufactureを、重複を排除し、総和したもの
+  // manufactureの値でソートされている
+  repeated string aggregated_manufactures = 33;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 34;
+
+  // outputonly 見積依頼元
+  // shared_properties.shared_byに紐づく企業情報
+  mtechnavi.api.company.Company issuer_company = 35;
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 36;
+
+  // outputonly 確定
+  bool locked = 37;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 38;
+
+  int64 created_at = 39;
+
+  int64 updated_at = 40;
+
+  message EstimateResultSummary {
+    // 見積依頼先の件数
+    int32 total = 1;
+    // 見積結果の件数（辞退を含む）
+    int32 done = 2;
+
+    // 見積結果の件数（辞退を含む） / 見積依頼先の件数
+    // e.g.
+    // ３件に相見積もりを出して、1件辞退、1件結果が返ってきている場合
+    //   "2/3"
+    string ratio = 3;
+
+    // 回答完了
+    // 見積結果の件数（辞退を含む）と 見積依頼先の件数 が一致する場合 true
+    bool completed = 4;
+  }
+
+  message SourceEstimateRequestPlan {
+    string estimate_request_plan_id = 1;
+    // 展開
+    bool used = 2;
+  }
+
+  message DeliveryProperties {
+    // 納入先/直送先
+    sharelib.ComponentUnitReference delivery_point = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 納入先住所
+    sharelib.Address address = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+    // readonly 連携項目
+    repeated string linkage_items = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 場所情報
+    PlaceProperties place_properties = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+    message PlaceProperties {
+      // 納入場所
+      map<string, string> display_name_lang = 1 [(mtn.visibility) = { scope: INHERIT }];
+      // 納入場所（地図）
+      ImageFile image = 2 [(mtn.visibility) = { scope: INHERIT }];
+    }
+  }
+
+  message ContactProperties {
+    // 問い合わせ部門
+    sharelib.ComponentUnitReference organization_unit = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // 問い合わせ担当者
+    sharelib.StaffReference staff = 2 [(mtn.visibility) = { scope: INHERIT }];
+    // 問い合わせ連絡先（部門）
+    string phone_number1 = 3 [(mtn.visibility) = { scope: INHERIT }];
+    // 問い合わせ連絡先（担当者）
+    string phone_number2 = 4 [(mtn.visibility) = { scope: INHERIT }];
+  }
+}
+
+// 見積依頼明細情報
+message EstimateRequestDetail {
+  // 明細番号
+  string detail_name = 1 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 品目名（件名）
+  string display_name = 2 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 品目(埋め込み)
+  mtechnavi.api.blueprint.TransactionUnit transaction_unit = 3;
+
+  // readonly 品目(共有用)
+  // transaction_unit から共有用の情報を集めたもの
+  //
+  // Implementation Note::
+  //   埋め込まれたtransaction_unitから取得して保存する
+  //
+  TransactionUnitShareProperties transaction_unit_share_properties = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 図面
+  string blueprint_id = 5;
+
+  // readonly 図面(共有用)
+  // blueprint_id から共有用の情報を集めたもの
+  //
+  // Implementation Note::
+  //   EstimateRequestDetail.blueprint_id から図面マスタ情報を取得して保存する
+  //
+  BlueprintShareProperties blueprint_share_properties = 6 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 見積依頼数量 / 見積依頼数量単位
+  sharelib.QuantityAmount quantity = 7 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 工程
+  // 名称マスタにおける種別 A0000006 (工程) を参照
+  // 複数の工程を設定可能とする
+  repeated sharelib.NameOption processs = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // カタログ品情報
+  CatalogReference catalog_reference = 9 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 型式/図番
+  // outputonly 型式/図番
+  // 図番-枝番か型式のどちらかが出る（図番優先）
+  // "{blueprint_share_properties.blueprint_number}-{blueprint_share_properties.branch_number}"
+  // "{catalog_reference.model_number}"
+  string transaction_unit_number = 10;
+
+  // 連絡事項
+  string contact_matter = 11 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 支給品有り
+  bool supplied_parts = 12 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 支給日
+  // Accuracy.DAY
+  sharelib.Datetime supplies_dt = 13 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 支給方法/場所
+  string supplies_remarks = 14 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 検査証必要
+  bool inspection = 15 [(mtn.visibility) = { scope: GRANTED }];
+
+  message TransactionUnitShareProperties {
+    string transaction_unit_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 項目名
+    // ja:日本語名
+    map<string, string> display_name_lang = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+
+  message BlueprintShareProperties {
+    string blueprint_id = 1 [(mtn.visibility) = { scope: INHERIT }];
+    // 図番
+    string blueprint_number = 2 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 枝番
+    string branch_number = 3 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 改訂番号
+    int32 revision = 4 [(mtn.visibility) = { scope: INHERIT }];
+
+    // 図面ファイル
+    string asset_id = 5 [(mtn.visibility) = { scope: INHERIT }];
+  }
+
+  message CatalogReference {
+    // 型式
+    string model_number = 1 [(mtn.visibility) = { scope: INHERIT }];
+
+    // メーカー
+    string manufacture = 2 [(mtn.visibility) = { scope: INHERIT }];
+  }
+}
+
+message EstimateUnit {
+  // Implementation Note:
+  //   estimate_request_id + company_id(見積先企業ID) と同じ粒度
+  //   EstimateRequestの更新と同一トランザクションで更新される
+  string estimate_unit_id = 1;
+
+  // 見積依頼
+  string estimate_request_id = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "estimate_request_id" } }];
+
+  // 見積先
+  // shareto先
+  string company_id = 3;
+
+  // 見積先（取引窓口）
+  // component_unit_id
+  string post_unit_id = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 依頼日
+  // 公開承認がされた日付(初回)
+  int64 requested_at = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 改訂日
+  // 公開承認がされた日付(最新)
+  int64 revised_at = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 6;
+
+  // 共有項目xxx_atのscopeはidと同様
+  int64 deleted_at = 7;
+
+  int64 created_at = 8;
+
+  int64 updated_at = 9;
+}
+
+message EstimateRequestSAPProperties {
+  // 受付部門情報
+  SAPReceiverProperties receiver_properties = 1;
+
+  // 会社
+  SAPCodeItem company = 2;
+
+  // 要求元原価センタ
+  CostCenter cost_center = 3;
+
+  // 作業分類
+  // 名称マスタにおける種別 A0000014 (作業分類) を参照
+  sharelib.NameOption work_category = 4;
+
+  // 作業用途
+  // 名称マスタにおける種別 A0000015 (作業用途) を参照
+  sharelib.NameOption work_usage = 5;
+}

@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "mtn/visibility.proto";
+import "mtn/index.proto";
+import "embedded.proto";
+import "surveybasictypes.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 終了データ
+message Complete {
+  // 終了ID
+  string complete_id = 1;
+
+  // urn
+  // "urn:mtechnavi.api.survey.SurveyRequest:{{survey_request_id}}"
+  string urn = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.survey.SurveyRequest"
+  string type_name = 9 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{survey_request_id}}"
+  string record_id = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 終了日時
+  int64 completed_at = 8 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 4;
+
+  int64 created_at = 5;
+
+  int64 updated_at = 6;
+
+  int64 deleted_at = 7;
+
+  reserved 3;
+}
+
+// 破棄データ
+message Discard {
+  // 破棄ID
+  string discard_id = 1;
+
+  // urn
+  // "urn:mtechnavi.api.survey.SurveyRequest:{{survey_request_id}}"
+  string urn = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.survey.SurveyRequest"
+  string type_name = 9 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{survey_request_id}}"
+  string record_id = 10 [(mtn.visibility) = { scope: GRANTED }];
+
+  // コメント
+  string comment = 3 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 破棄日時
+  int64 discarded_at = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 5;
+
+  int64 created_at = 6;
+
+  int64 updated_at = 7;
+
+  int64 deleted_at = 8;
+}
+
+// 開封済みデータ
+message Opened {
+  // 開封済みID
+  string opened_id = 1;
+
+  // urn
+  // "urn:mtechnavi.api.survey.SurveyRequest:{{survey_request_id}}"
+  string urn = 2 [(mtn.visibility) = { scope: GRANTED }, (mtn.dataproxy) = { index: { name: "urn" } }];
+
+  // "mtechnavi.api.survey.SurveyRequest"
+  string type_name = 3 [(mtn.dataproxy) = { index: { name: "type_name" } }, (mtn.visibility) = { scope: GRANTED }];
+
+  // "{{survey_request_id}}"
+  string record_id = 4 [(mtn.visibility) = { scope: GRANTED }];
+
+  // 開封者情報
+  Process open_user_process = 5 [(mtn.visibility) = { scope: GRANTED }];
+
+  // readonly 共有情報
+  sharelib.EmbeddedSharedProperties shared_properties = 6;
+
+  int64 created_at = 7;
+
+  int64 updated_at = 8;
+
+  int64 deleted_at = 9;
+}

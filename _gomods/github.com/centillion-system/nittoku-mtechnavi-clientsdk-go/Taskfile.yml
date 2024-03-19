@@ -1,0 +1,149 @@
+# https://taskfile.dev
+version: '3'
+
+includes:
+  _:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile._.yml'
+    optional: true
+  go:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.go.yml'
+    optional: true
+  protoc:
+    taskfile: '${MTECHNAVI_CONTRIB_DIR}/scaffold/Taskfile.protoc.yml'
+    optional: true
+
+vars:
+  OBJECT_PREFIX: 'gs://protos-ab57ac03b6f9a27dab9036bf6e341b6a'
+
+  # 参照する内部ライブラリのブランチ/タグ名
+  CONTRIB_VERSION: 20230413r0
+  SHARELIB_VERSION: 20231208r0
+
+  IDP_VERSION: v0.2.0
+  DATAPROXY_VERSION: v0.6.0
+  ASSETINVENTORY_VERSION: v0.3.0
+  NOTIFICATION_VERSION: v0.8.0
+  PROGRAMOPTION_VERSION: v0.4.0
+  COMPANY_VERSION: v0.34.0
+  DLOCK_VERSION: v0.0.1
+  BLUEPRINT_VERSION: v0.4.0
+  FORUM_VERSION: v0.8.0
+  UICONTROLLER_VERSION: v0.1.0
+  ESTIMATION_VERSION: v0.15.0
+  SURVEY_VERSION: v0.19.0
+  BATCH_VERSION: v0.3.0
+  SYSTEMREPORT_VERSION: v0.1.0
+  TENANTPROVISION_VERSION: v0.5.0
+  WORKTASK_VERSION: v0.7.0
+  JOBS_VERSION: v0.1.0
+  TENANTADMIN_VERSION: v0.6.0
+
+tasks:
+  protoc:
+    desc: .protoファイルのコンパイルを実行する
+    vars:
+      PROTO_PATH_FLAGS: |
+        --proto_path='{{.PWD}}/idp/protobuf' \
+        --proto_path='{{.PWD}}/notification/protobuf' \
+        --proto_path='{{.PWD}}/company/protobuf' \
+        --proto_path='{{.PWD}}/blueprint/protobuf' \
+        --proto_path='{{.PWD}}/assetinventory/protobuf' \
+        --proto_path='{{.PWD}}/survey/protobuf' \
+        --proto_path='{{.PWD}}/systemreport/protobuf' \
+        --proto_path='{{.PWD}}/worktask/protobuf' \
+        --proto_path='{{.PWD}}/jobs/protobuf' \
+        --proto_path='{{.PWD}}/tenantadmin/protobuf' \
+        --proto_path='{{.PWD}}/_gomods/github.com/centillion-system/nittoku-mtechnavi-sharelib/protobuf' \
+      PLUGIN_FLAGS: --csv_opt=paths=source_relative --csv_out='.'
+    cmds:
+      - { task: protoc:go, vars: { DIR: './idp/protobuf' } }
+      - { task: protoc:go, vars: { DIR: './dataproxy/protobuf',      PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './assetinventory/protobuf', PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './notification/protobuf',   PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './programoption/protobuf',  PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './company/protobuf',        PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './dlock/protobuf' } }
+      - { task: protoc:go, vars: { DIR: './blueprint/protobuf',      PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './forum/protobuf',          PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './uicontroller/protobuf',   PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './estimation/protobuf',     PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './survey/protobuf',         PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './batch/protobuf',          PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './systemreport/protobuf',   PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './tenantprovision/protobuf',PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './worktask/protobuf',       PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './jobs/protobuf',           PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+      - { task: protoc:go, vars: { DIR: './tenantadmin/protobuf',    PROTO_PATH_FLAGS: '{{.PROTO_PATH_FLAGS}}', PLUGIN_FLAGS: '{{.PLUGIN_FLAGS}}' } }
+
+  protofiles:
+    cmds:
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/idp/{{.IDP_VERSION}}',                          DIR: './idp/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/dataproxy/{{.DATAPROXY_VERSION}}',              DIR: './dataproxy/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/assetinventory/{{.ASSETINVENTORY_VERSION}}',    DIR: './assetinventory/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/notification/{{.NOTIFICATION_VERSION}}',        DIR: './notification/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/programoption/{{.PROGRAMOPTION_VERSION}}',      DIR: './programoption/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/company/{{.COMPANY_VERSION}}',                  DIR: './company/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/dlock/{{.DLOCK_VERSION}}',                      DIR: './dlock/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/blueprint/{{.BLUEPRINT_VERSION}}',              DIR: './blueprint/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/forum/{{.FORUM_VERSION}}',                      DIR: './forum/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/uicontroller/{{.UICONTROLLER_VERSION}}',        DIR: './uicontroller/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/survey/{{.SURVEY_VERSION}}',                    DIR: './survey/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/estimation/{{.ESTIMATION_VERSION}}',            DIR: './estimation/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/batch/{{.BATCH_VERSION}}',                      DIR: './batch/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/systemreport/{{.SYSTEMREPORT_VERSION}}',        DIR: './systemreport/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/tenantprovision/{{.TENANTPROVISION_VERSION}}',  DIR: './tenantprovision/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/worktask/{{.WORKTASK_VERSION}}',                DIR: './worktask/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/jobs/{{.JOBS_VERSION}}',                        DIR: './jobs/protobuf' } }
+      - { task: _protofiles, vars: { SOURCE: 'mtechnavi/api/tenantadmin/{{.TENANTADMIN_VERSION}}',          DIR: './tenantadmin/protobuf' } }
+
+  init:gomods:
+    cmds:
+      - { task: _:rmdir, vars: { DIR: _gomods } }
+      - { task: go:gomod, vars: { URL: https://github.com/centillion-system/nittoku-mtechnavi-sharelib,  VERSION: '{{.SHARELIB_VERSION}}' } }
+      - task: init:protoc-gen-csv
+
+  init:protoc-gen-csv:
+    env:
+      GOBIN: '{{.PWD}}/.local/bin'
+    dir: _gomods/github.com/centillion-system/nittoku-mtechnavi-sharelib
+    cmds:
+      - go install ./cmd/protoc-gen-csv/
+
+  _protofiles:
+    preconditions:
+      - test -n '{{.SOURCE}}'
+      - test -n '{{.DIR}}'
+    cmds:
+      - { task: _:rmdir, vars: { DIR: '{{.DIR}}' } }
+      - mkdir -p '{{.DIR}}'
+      # TODO:取得時に省いているがproto collectorの時点で排除した方がよいかも
+      - gsutil -m rsync -x '^(.+)_internal.proto$|^fileformat/' -rd '{{.OBJECT_PREFIX}}/{{.SOURCE}}' '{{.DIR}}'
+
+  # XXX: Taskfileの実行環境を整えるために実行するため、contribの用意しているスクリプトは使用不可
+  init:contrib:
+    cmds:
+      - cmd: rm -rf .local/opt/mtechnavi-contrib
+        ignore_error: true
+      - |
+        git clone \
+            --branch '{{.CONTRIB_VERSION}}' \
+            --single-branch \
+            --depth 1 \
+            --recurse-submodules \
+            --shallow-submodules \
+            https://github.com/centillion-system/nittoku-mtechnavi-contrib \
+            .local/opt/mtechnavi-contrib
+      - |
+        if [[ -z "${MTECHNAVI_CONTRIB_DIR}" ]]; then
+          export MTECHNAVI_CONTRIB_DIR="{{.PWD}}/.local/opt/mtechnavi-contrib"
+        fi
+        task _:init
+        task go:init
+        task protoc:init
+
+  # 初回実行時には、本Taskfile実行時点で参照先のTaskfileが存在しないため、task呼び出しができない。
+  # 外部コマンドとしてtaskを実行することで、再度参照先のTaskfileを評価し、回避する。
+  init:
+    cmds:
+      - task: init:contrib
+      - cp --no-clobber --verbose envrc.sample .envrc

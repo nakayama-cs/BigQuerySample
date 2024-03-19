@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package mtn;
+
+option go_package = 'mtechnavi/sharelib/protobuf/mtn';
+
+import "google/protobuf/descriptor.proto";
+
+enum Scope {
+  // 自社内
+  PRIVATE = 0;
+  // 共有先
+  GRANTED = 1;
+  // 公開
+  PUBLIC = 2;
+  // 継承
+  // 親のscopeを継承する
+  // ルートエンティティでは宣言不可
+  INHERIT = 3;
+}
+
+message VisibilityOptions {
+  Scope scope = 1;
+}
+
+extend google.protobuf.FieldOptions {
+  VisibilityOptions visibility = 5000;
+}

@@ -1,0 +1,452 @@
+syntax = "proto3";
+
+package mtechnavi.api.blueprint;
+
+import "google/protobuf/empty.proto";
+// import "validate/validate.proto";
+import "import.proto";
+import "nameoption.proto";
+import "reference.proto";
+import "amount.proto";
+import "assetinventory.proto";
+
+option go_package = 'mtechnavi/blueprint/protobuf';
+
+// 項目マスタを取り扱うサービス
+service TransactionUnitService {
+  rpc CreateTransactionUnit(CreateTransactionUnitRequest) returns (TransactionUnit);
+  rpc ListTransactionUnits(ListTransactionUnitsRequest) returns (ListTransactionUnitsResponse);
+  rpc GetTransactionUnit(GetTransactionUnitRequest) returns (TransactionUnit);
+  rpc UpdateTransactionUnit(UpdateTransactionUnitRequest) returns (TransactionUnit);
+  rpc DeleteTransactionUnit(DeleteTransactionUnitRequest) returns (google.protobuf.Empty);
+
+  // 項目取込
+  rpc ImportTransactionUnits(ImportTransactionUnitsRequest) returns (ImportTransactionUnitsResponse);
+  // 取込フォーマット出力
+  rpc ExportTransactionUnits(ExportTransactionUnitsRequest) returns (ExportTransactionUnitsResponse);
+  // 取込フォーマット取得
+  rpc ListTransactionUnitFormats(ListTransactionUnitFormatsRequest) returns (ListTransactionUnitFormatsResponse);
+}
+
+// 図面を取り扱うサービス
+service BlueprintService {
+  rpc CreateBlueprint(CreateBlueprintRequest) returns (Blueprint);
+  rpc ListBlueprints(ListBlueprintsRequest) returns (ListBlueprintsResponse);
+  rpc GetBlueprint(GetBlueprintRequest) returns (Blueprint);
+  rpc UpdateBlueprint(UpdateBlueprintRequest) returns (Blueprint);
+  rpc DeleteBlueprint(DeleteBlueprintRequest) returns (google.protobuf.Empty);
+
+  // 図面取込
+  rpc ImportBlueprints(ImportBlueprintsRequest) returns (ImportBlueprintsResponse);
+  // 取込フォーマット出力
+  rpc ExportBlueprints(ExportBlueprintsRequest) returns (ExportBlueprintsResponse);
+  // 取込フォーマット取得
+  rpc ListBlueprintFormats(ListBlueprintFormatsRequest) returns (ListBlueprintFormatsResponse);
+
+  // 図面紐付け処理
+  rpc LinkAssetToBlueprint(LinkAssetToBlueprintRequest) returns (LinkAssetToBlueprintResponse);
+}
+
+// 項目
+message TransactionUnit {
+  string transaction_unit_id = 1;
+
+  // 項目コード
+  string transaction_unit_code = 2;
+
+  // 項目名
+  // ja:日本語名
+  map<string, string> display_name_lang = 3;
+
+  // 依頼図面
+  BlueprintReference blueprint_reference = 4;
+
+  // カタログ品情報
+  CatalogReference catalog_reference = 5;
+
+  // 数量単位
+  // 名称マスタにおける種別 A0000005 (数量単位) を参照
+  sharelib.NameOption quantity_unit = 6;
+
+  // 工程
+  // 名称マスタにおける種別 A0000006 (工程) を参照
+  // 複数の工程を設定可能とする
+  repeated sharelib.NameOption processs = 7;
+
+  // 大分類 名称マスタにおける種別 A0000007 (大分類（項目）) を参照
+  sharelib.NameOption category1 = 8;
+
+  // 中分類 名称マスタにおける種別 A0000008 (中分類（項目）) を参照
+  sharelib.NameOption category2 = 9;
+
+  // 小分類 名称マスタにおける種別 A0000009 (小分類（項目）) を参照
+  sharelib.NameOption category3 = 10;
+
+  // 連絡事項
+  string contact_matter = 11;
+
+  // 使用
+  // 名称マスタにおける種別 A0000001 (使用) を参照
+  // 空の場合は、システムコード 1 (可) とする
+  sharelib.NameOption usable = 12;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 16;
+
+  // outputonly 型式/図番
+  // 図番-枝番か型式のどちらかが出る（図番優先）
+  // "{blueprint_share_properties.blueprint_number}-{blueprint_share_properties.branch_number}"
+  // "{catalog_reference.model_number}"
+  string transaction_unit_number = 17;
+
+  int64 deleted_at = 13;
+
+  int64 created_at = 14;
+
+  int64 updated_at = 15;
+}
+
+message BlueprintReference {
+  // 図番
+  string blueprint_number = 1;
+
+  // 枝番
+  string branch_number = 2;
+
+  // 改訂番号
+  //
+  // 1以上を指定したとき、特定の改訂番号への参照となる。
+  // 0を指定したとき、最新の改訂番号への参照となる。
+  int32 revision = 3;
+}
+
+message CatalogReference {
+  // 型式/型番
+  string model_number = 1;
+
+  // メーカー
+  string manufacture = 2;
+}
+
+// 図面
+message Blueprint {
+  string blueprint_id = 1;
+
+  // 図番
+  string blueprint_number = 2;
+
+  // 枝番
+  string branch_number = 3;
+
+  // 改訂番号
+  //
+  // 図番-枝番ごとに1から開始され、図面の改訂都度インクリメントされる
+  // 図番-枝番-改訂番号と図面IDは1:1となる
+  //
+  int32 revision = 4;
+
+  // 管理用名称
+  map<string, string> display_name_lang = 5;
+
+  // 図面種類
+  // 部品図 / 組図 のうち一つを選択する
+  //
+  // 製図用語（JIS Z 8114）に規定されている
+  // "図面の名称に関する用語"のうち"内容による用語"で分類
+  //
+  // 名称マスタにおける種別 A0000010 (図面種類) を参照
+  // システムコードによってblueprint_contentで渡る情報が異なる
+  // システムコードが1の場合、部品図の情報
+  // システムコードが2の場合、組立図の情報
+  sharelib.NameOption blueprint_content_type = 6;
+
+  oneof blueprint_content {
+    // 部品図
+    PartDrawingProperties part_drawing_properties = 7;
+    // 組立図
+    AssemblyDrawingProperties assembly_drawing_properties = 8;
+  }
+
+  // 分類
+  // 1: 図面分類 名称マスタにおける種別 A0000011 (図面分類) を参照
+  //      治工具 / 部品 を選択する
+  sharelib.NameOption category = 9;
+
+  // 設計会社
+  string design_company = 10;
+
+  // 機密レベル
+  string confidential_level = 11;
+
+  // 備考
+  string remarks = 12;
+
+  // 改訂情報
+  RevisionProperties revision_properties = 13;
+
+  // 図面ファイル
+  BlueprintFile blueprint_file = 14;
+
+  // 使用
+  //  名称マスタにおける種別 A0000001 (使用) を参照
+  //  空の場合は、システムコード 1 (可) とする
+  sharelib.NameOption usable = 15;
+
+  // readonly タグ（テナント単位で共有）
+  repeated string tags = 19;
+
+  // outputonly 図面登録ステータス
+  BlueprintStatus blueprint_status = 20;
+
+  int64 deleted_at = 16;
+
+  int64 created_at = 17;
+
+  int64 updated_at = 18;
+}
+
+// 図面登録ステータス
+message BlueprintStatus {
+  // ステータス
+  // 状態（category）と状態の詳細（detail）の組み合わせを専用に表現したもの
+  //
+  // 名称マスタにおける種別 A0010004 (図面登録ステータス) を参照
+  sharelib.NameOption status = 1;
+
+  // 状態
+  // 名称マスタにおける種別 A0010005 (図面登録ステータス（状態）) を参照
+  sharelib.NameOption category = 2;
+
+  // 状態の詳細
+  // 名称マスタにおける種別 A0010006 (図面登録ステータス（状態の詳細）) を参照
+  sharelib.NameOption detail = 3;
+}
+
+message PartDrawingProperties {
+  // 分類１〜６（図面）
+  repeated string categorys = 1;
+
+  // 設備
+  string equipment = 2;
+
+  // 寸法
+  Dimension dimension = 3;
+
+  // サイズφ
+  sharelib.DistantAmount diameter = 4;
+
+  // 形状
+  string shape = 5;
+
+  // 材種
+  string material = 6;
+
+  // 表面処理有無
+  bool surface_treatment = 7;
+
+  // 検査有無
+  bool inspection = 8;
+
+  // 要求硬度
+  string request_hardness = 9;
+
+  // CADデータ有無
+  bool has_cad_data = 10;
+}
+
+message Dimension {
+  // サイズX
+  sharelib.DistantAmount x = 1;
+
+  // サイズY
+  sharelib.DistantAmount y = 2;
+
+  // サイズZ
+  sharelib.DistantAmount z = 3;
+}
+
+message AssemblyDrawingProperties {
+  // 組立図の情報
+}
+
+message BlueprintFile {
+  string asset_id = 1;
+
+  map<string, string> metadata = 2;
+}
+
+message RevisionProperties {
+  // 改訂前図面ID
+  //
+  // 改訂時に改訂前の最新（改訂番号が最大）の
+  // 図面ID(blueprint_id)を格納する
+  //
+  string previous_blueprint_id = 1;
+
+  // 改訂日時
+  int64 revised_at = 2;
+
+  // 改訂登録部門
+  sharelib.ComponentUnitReference organization_unit = 3;
+
+  // 改訂登録担当者
+  sharelib.StaffReference staff = 4;
+
+  // 改訂コメント
+  string comment = 5;
+
+  // 技連・通報番号
+  string management_number = 6;
+}
+
+message CreateTransactionUnitRequest {
+  TransactionUnit transaction_unit = 1;
+}
+
+message ListTransactionUnitsRequest {}
+
+message ListTransactionUnitsResponse {
+  int64 total = 1;
+
+  repeated TransactionUnit items = 2;
+}
+
+message GetTransactionUnitRequest {
+  string transaction_unit_id = 1;
+}
+
+message UpdateTransactionUnitRequest {
+  TransactionUnit transaction_unit = 1;
+}
+
+message DeleteTransactionUnitRequest {
+  TransactionUnit transaction_unit = 1;
+}
+
+message CreateBlueprintRequest {
+  Blueprint blueprint = 1;
+}
+
+message ListBlueprintsRequest {}
+
+message ListBlueprintsResponse {
+  int64 total = 1;
+
+  repeated Blueprint items = 2;
+}
+
+message GetBlueprintRequest {
+  string blueprint_id = 1;
+}
+
+message UpdateBlueprintRequest {
+  Blueprint blueprint = 1;
+}
+
+message DeleteBlueprintRequest {
+  Blueprint blueprint = 1;
+}
+
+message ImportTransactionUnitsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportTransactionUnitsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+message ExportTransactionUnitsRequest {
+  // transaction_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportTransactionUnitsResponse {
+  string asset_id = 1;
+}
+
+message ImportBlueprintsRequest {
+  // 取込ファイルアップデート時の書き込みURL
+  string url = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message ImportBlueprintsResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}
+
+message ExportBlueprintsRequest {
+  // transaction_unit_ids
+  repeated string ids = 1;
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+}
+
+message ExportBlueprintsResponse {
+  string asset_id = 1;
+}
+
+message ListTransactionUnitFormatsRequest {}
+
+message ListTransactionUnitFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+message ListBlueprintFormatsRequest {}
+
+message ListBlueprintFormatsResponse {
+  int64 total = 1;
+
+  // ファイルフォーマット
+  repeated sharelib.FileFormat items = 2;
+}
+
+// 図面紐付処理
+message LinkAssetToBlueprintRequest {
+  mtechnavi.api.assetinventory.ListAssetsRequest list_assets_request = 1;
+
+  // ファイルフォーマット
+  sharelib.FileFormat file_format = 2;
+  // 処理（検査/取込）
+  bool dry_run = 3;
+  // エラーファイル出力
+  // trueの場合、エラー内容をCSVで出力する
+  bool export_error = 4;
+}
+
+message LinkAssetToBlueprintResponse {
+  // 処理まとめ
+  sharelib.ImportSummary summary = 1;
+  // エラー内容
+  repeated sharelib.ImportError errors = 2;
+  // エラーファイル
+  string asset_id = 3;
+}

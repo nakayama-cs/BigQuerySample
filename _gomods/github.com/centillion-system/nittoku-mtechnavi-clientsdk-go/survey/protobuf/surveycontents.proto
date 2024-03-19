@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package mtechnavi.api.survey;
+
+import "nameoption.proto";
+import "datetime.proto";
+import "surveyrequest.proto";
+import "surveyresult.proto";
+import "surveystatus.proto";
+
+option go_package = "mtechnavi/survey/protobuf";
+
+// 依頼伝票コンテンツ
+message SurveyBaseRequestContent {
+  // 依頼伝票データ
+  SurveyBaseRequest survey_base_request = 1;
+  // ステータス
+  sharelib.NameOption status = 2;
+  // 取引先件数
+  int64 total_request_unit = 3;
+}
+
+// 依頼明細コンテンツ
+message SurveyRequestContent {
+  // 依頼明細データ
+  SurveyRequest survey_request = 1;
+  // 依頼回答データ
+  SurveyResult survey_result = 2;
+  // 終了データ
+  Complete complete = 3;
+  // 破棄データ
+  Discard discard = 4;
+  // 開府済みデータ
+  Opened opened = 9;
+  // 修正依頼データ
+  SurveyResultChangeRequest survey_result_change_request = 5;
+  // 回答期日変更データ
+  SurveyReplyDueDateChangeResult survey_reply_due_date_change_result = 6;
+  // ステータス
+  sharelib.NameOption status = 7;
+  // 現在回答期日
+  sharelib.Datetime reply_due_date_dt = 8;
+}
+
+// 依頼受信コンテンツ
+message SurveyReceptionContent {
+  // 依頼受信データ
+  SurveyReception survey_reception = 1;
+  // 依頼明細データ
+  SurveyRequest survey_request = 2;
+  // 依頼回答データ
+  SurveyResult survey_result = 3;
+  // 終了データ
+  Complete complete = 4;
+  // 破棄データ
+  Discard discard = 5;
+  // 開府済みデータ
+  Opened opened = 10;
+  // 修正依頼データ
+  SurveyResultChangeRequest survey_result_change_request = 6;
+  // 回答期日変更データ
+  SurveyReplyDueDateChangeResult survey_reply_due_date_change_result = 7;
+  // ステータス
+  sharelib.NameOption status = 8;
+  // 現在回答期日
+  sharelib.Datetime reply_due_date_dt = 9;
+}
