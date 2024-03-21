@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	pb "test/protobuf"
 
@@ -25,7 +25,7 @@ func main() {
 	defer client.Close()
 
 	// クエリーの作成
-	q := client.Query("SELECT 'Hello' as name ")
+	q := client.Query("call nkym_test.pr_sample()")
 
 	// クエリーの実行
 	it, err := q.Read(ctx)
@@ -33,13 +33,22 @@ func main() {
 		panic(err)
 	}
 
+	previousToken := ""
+	if 2 <= len(os.Args) {
+		previousToken = os.Args[1]
+	}
+
+	const maxSize = 12
+	it.PageInfo().MaxSize = maxSize
+	it.PageInfo().Token = previousToken
+
 	// BigQuery->protobufの変換を行うLoaderを用意する
 	messageLoader := &protobq.MessageLoader{
 		Message: &pb.TestMessage{},
 	}
 
 	// クエリー結果をレコードごとに取得する
-	for {
+	for i := 0; i < maxSize; i++ {
 		err := it.Next(messageLoader)
 		if err == iterator.Done {
 			break
@@ -50,6 +59,10 @@ func main() {
 
 		// protobuf変換された結果を取得
 		message := proto.Clone(messageLoader.Message)
-		fmt.Println(message)
+		if testMessage, ok := message.(*pb.TestMessage); ok {
+			log.Println(testMessage)
+		}
 	}
+
+	log.Println("page token: ", it.PageInfo().Token)
 }

@@ -5,6 +5,6 @@ package mtechnavi.api.test;
 option go_package = 'mtechnavi/test/protobuf';
 
 message TestMessage {
-  // name
-  string name = 1;
+  int64 id = 1;
+  string name = 2;
 }
