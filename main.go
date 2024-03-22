@@ -6,13 +6,17 @@ import (
 	bq "test/bp"
 	"test/protobuf"
 
+	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
 )
 
 func main() {
-
 	ctx := context.Background()
-	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample()", protobuf.TestMessage{})
+
+	var option bq.Option
+	option.WithQueryParameter([]bigquery.QueryParameter{})
+
+	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample()", protobuf.TestMessage{}, option)
 	if err != nil {
 		panic(err)
 	}
@@ -28,5 +32,4 @@ func main() {
 
 		log.Println("name is ", v.Name)
 	}
-
 }

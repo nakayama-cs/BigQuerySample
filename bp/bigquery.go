@@ -2,20 +2,25 @@ package bq
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"cloud.google.com/go/bigquery"
 	"go.einride.tech/protobuf-bigquery/encoding/protobq"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type Option struct{}
+type Option struct {
+	projectId  string
+	parameters []bigquery.QueryParameter
+}
 
-func (Option) WithQueryParameter([]*bigquery.QueryParameter) {}
-func (Option) WithLimit(limit int)                           {}
-func (Option) WithPageToken(token string)                    {}
+func (o *Option) WithProjectId(projectId string) {
+	o.projectId = projectId
+}
+
+func (o *Option) WithQueryParameter(parameters []bigquery.QueryParameter) {
+	o.parameters = parameters
+}
 
 type ConstraintProtoMessage[X any] interface {
 	protoreflect.ProtoMessage
@@ -37,32 +42,25 @@ func (i Iterator[T, constraint]) Next() (*T, error) {
 		return nil, err
 	}
 
-	message := proto.Clone(messageLoader.Message)
-	if testMessage, ok := message.(T); ok {
-		log.Println(testMessage)
-	}
-
 	return &v, nil
 }
 
-func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, mtype T, options ...Option) (*Iterator[T, constraint], error) {
-	// 環境変数からGCPのプロジェクトIDを取得する
-	projectId := os.Getenv("GOOGLE_CLOUD_PROJECT")
-
-	// BigQueryのクライアントを取得
+func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, mtype T, option Option) (*Iterator[T, constraint], error) {
+	projectId := option.projectId
+	if projectId == "" {
+		projectId = os.Getenv("GOOGLE_CLOUD_PROJECT")
+	}
 	client, err := bigquery.NewClient(ctx, projectId)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer client.Close()
 
-	// クエリーの作成
 	q := client.Query(query)
-
-	// クエリーの実行
+	q.Parameters = option.parameters
 	it, err := q.Read(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &Iterator[T, constraint]{
