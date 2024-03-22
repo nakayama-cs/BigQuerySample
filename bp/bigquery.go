@@ -31,7 +31,7 @@ type Iterator[T any, constraint ConstraintProtoMessage[T]] struct {
 	it *bigquery.RowIterator
 }
 
-func (i Iterator[T, constraint]) Next() (*T, error) {
+func (i *Iterator[T, constraint]) Next() (*T, error) {
 	var v T
 	messageLoader := &protobq.MessageLoader{
 		Message: constraint(&v),
@@ -45,7 +45,7 @@ func (i Iterator[T, constraint]) Next() (*T, error) {
 	return &v, nil
 }
 
-func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, mtype T, option Option) (*Iterator[T, constraint], error) {
+func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, mtype *T, option Option) (*Iterator[T, constraint], error) {
 	projectId := option.projectId
 	if projectId == "" {
 		projectId = os.Getenv("GOOGLE_CLOUD_PROJECT")

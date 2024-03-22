@@ -16,7 +16,7 @@ func main() {
 	var option bq.Option
 	option.WithQueryParameter([]bigquery.QueryParameter{})
 
-	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample()", protobuf.TestMessage{}, option)
+	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample()", &protobuf.TestMessage{}, option)
 	if err != nil {
 		panic(err)
 	}
