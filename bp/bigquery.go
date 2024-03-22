@@ -57,7 +57,7 @@ func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Conte
 	defer client.Close()
 
 	// クエリーの作成
-	q := client.Query("call nkym_test.pr_sample()")
+	q := client.Query(query)
 
 	// クエリーの実行
 	it, err := q.Read(ctx)
