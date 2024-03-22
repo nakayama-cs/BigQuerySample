@@ -22,30 +22,24 @@ func (o *Option) WithQueryParameter(parameters []bigquery.QueryParameter) {
 	o.parameters = parameters
 }
 
-type ConstraintProtoMessage[X any] interface {
-	protoreflect.ProtoMessage
-	*X
-}
-
-type Iterator[T any, constraint ConstraintProtoMessage[T]] struct {
+type Iterator struct {
 	it *bigquery.RowIterator
 }
 
-func (i *Iterator[T, constraint]) Next() (*T, error) {
-	var v T
+func (i *Iterator) Next(m protoreflect.ProtoMessage) error {
 	messageLoader := &protobq.MessageLoader{
-		Message: constraint(&v),
+		Message: m,
 	}
 
 	err := i.it.Next(messageLoader)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &v, nil
+	return nil
 }
 
-func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, mtype *T, option Option) (*Iterator[T, constraint], error) {
+func ListMessages(ctx context.Context, query string, option Option) (*Iterator, error) {
 	projectId := option.projectId
 	if projectId == "" {
 		projectId = os.Getenv("GOOGLE_CLOUD_PROJECT")
@@ -63,7 +57,7 @@ func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Conte
 		return nil, err
 	}
 
-	return &Iterator[T, constraint]{
+	return &Iterator{
 		it: it,
 	}, nil
 }

@@ -14,15 +14,20 @@ func main() {
 	ctx := context.Background()
 
 	var option bq.Option
-	option.WithQueryParameter([]bigquery.QueryParameter{})
+	option.WithQueryParameter([]bigquery.QueryParameter{
+		{
+			Value: "hoge",
+		},
+	})
 
-	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample()", &protobuf.TestMessage{}, option)
+	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample(?)", option)
 	if err != nil {
 		panic(err)
 	}
 
 	for {
-		v, err := it.Next()
+		m := &protobuf.TestMessage{}
+		err := it.Next(m)
 		if err == iterator.Done {
 			break
 		}
@@ -30,6 +35,6 @@ func main() {
 			panic(err)
 		}
 
-		log.Println("name is ", v.Name)
+		log.Println("name is ", m.Name)
 	}
 }
