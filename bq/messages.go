@@ -14,7 +14,7 @@ var errCast = errors.New("invalid option")
 func getOptionValue[T any](m map[string]interface{}, key string) (T, error) {
 	if v, ok := m[key]; !ok || v == nil {
 		var t T
-		return t, fmt.Errorf("invalid option")
+		return t, fmt.Errorf("invalid option:%s", key)
 	} else if cv, ok := v.(T); ok {
 		return cv, nil
 	}
