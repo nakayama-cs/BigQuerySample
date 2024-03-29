@@ -3,28 +3,44 @@ package bq
 import "cloud.google.com/go/bigquery"
 
 type Option struct {
-	projectId  string
-	parameters []bigquery.QueryParameter
-	pageToken  string
-	maxSize    int
+	values map[string]interface{}
 }
 
-func (o *Option) WithProjectId(projectId string) *Option {
-	o.projectId = projectId
-	return o
+const (
+	optProjectId  = "projectId"
+	optParameters = "parameters"
+	optPageToken  = "pageToken"
+	optMaxSize    = "maxSize"
+)
+
+func WithProjectId(projectId string) *Option {
+	return &Option{
+		values: map[string]interface{}{
+			optProjectId: projectId,
+		},
+	}
 }
 
-func (o *Option) WithQueryParameter(parameters []bigquery.QueryParameter) *Option {
-	o.parameters = parameters
-	return o
+func WithQueryParameter(parameters []bigquery.QueryParameter) *Option {
+	return &Option{
+		values: map[string]interface{}{
+			optParameters: parameters,
+		},
+	}
 }
 
-func (o *Option) WitPageToken(pageToken string) *Option {
-	o.pageToken = pageToken
-	return o
+func WitPageToken(pageToken string) *Option {
+	return &Option{
+		values: map[string]interface{}{
+			optPageToken: pageToken,
+		},
+	}
 }
 
-func (o *Option) WitMaxSize(maxSize int) *Option {
-	o.maxSize = maxSize
-	return o
+func WitMaxSize(maxSize int) *Option {
+	return &Option{
+		values: map[string]interface{}{
+			optMaxSize: maxSize,
+		},
+	}
 }
