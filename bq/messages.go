@@ -25,7 +25,7 @@ func getOptionValue[T any](m map[string]interface{}, key string) (T, error) {
 func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, options ...*Option) (*Iterator[T, constraint], error) {
 	projectId, parameters, pageToken, maxSize, err := func() (string, []bigquery.QueryParameter, string, int, error) {
 		mergedOption := map[string]interface{}{
-			optProjectId:  "",
+			optProjectId:  os.Getenv("BQ_GOOGLE_CLOUD_PROJECT"),
 			optParameters: []bigquery.QueryParameter{},
 			optPageToken:  "",
 			optMaxSize:    0,
@@ -59,9 +59,6 @@ func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Conte
 		return nil, err
 	}
 
-	if projectId == "" {
-		projectId = os.Getenv("BQ_GOOGLE_CLOUD_PROJECT")
-	}
 	client, err := bigquery.NewClient(ctx, projectId)
 	if err != nil {
 		return nil, err
