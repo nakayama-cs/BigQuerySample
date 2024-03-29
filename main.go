@@ -3,38 +3,33 @@ package main
 import (
 	"context"
 	"log"
-	bq "test/bp"
-	"test/protobuf"
 
-	"cloud.google.com/go/bigquery"
-	"google.golang.org/api/iterator"
+	"test/bq"
+	"test/protobuf"
 )
 
 func main() {
 	ctx := context.Background()
 
 	var option bq.Option
-	option.WithQueryParameter([]bigquery.QueryParameter{
-		{
-			Value: "hoge",
-		},
-	})
+	// option.WitPageToken("BGSWLIEJRYAQAAASA4EAAEEAQCAAKGQIBAFBB7X7777QOIFQVYKUVGYCBJWAUGIKBZWXI3RNORQWOLLMMF2GK43UCG53H3TVRYAAAAASFFPTOMRVMY3TCYRWGBQWEOBVG5STKZLGGI2TMOLCMQYGIZBUMQ3WCMJSMQYTANJQMIZRUJBTG42GEYZVMMZS2YRTME2C2NBQME3C2OJQMY2S2YJQGMZWIOJTMNSTGNLDCJCGC3TPNZTGCNJVMI4GKMDFME4TIM3BHFRGIYLGGA4WEMRWMFSWGZRRMZSDONTFGRQTGZLEGY4DGOLGGVQWIYLGHBRTOMJUGZQWIOJSMQZGCNJWDJSWMYJVGVRDQZJQMVQTSNBTME4WEZDBMYYDSYRSGZQWKY3GGFTGINZWMU2GCM3FMQ3DQMZZMY2WCZDBMY4GGNZRGQ3GCZBZGJSDEYJVGYRWIM3EME2DONBSFU2GGMBUFU2DIYJQFU4TSZJVFVRDCNJXMNQTCMJRHFQTM===")
+	option.WitMaxSize(10)
 
-	it, err := bq.ListMessages(ctx, "call nkym_test.pr_sample(?)", option)
+	it, err := bq.ListMessages[protobuf.TestMessage](ctx, "call nkym_test.pr_sample()", option)
 	if err != nil {
 		panic(err)
 	}
 
+	array := []*protobuf.TestMessage{}
 	for {
-		m := &protobuf.TestMessage{}
-		err := it.Next(m)
-		if err == iterator.Done {
+		m, err := it.Next()
+		if err == bq.Done {
 			break
-		}
-		if err != nil {
+		} else if err != nil {
 			panic(err)
 		}
-
-		log.Println("name is ", m.Name)
+		array = append(array, m)
 	}
+	log.Println(array)
+	log.Println(it.PageToken())
 }
