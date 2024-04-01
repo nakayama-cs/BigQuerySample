@@ -2,14 +2,90 @@ package bq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 
 	"cloud.google.com/go/bigquery"
 )
 
-var errCast = errors.New("invalid option")
+func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, options ...*Option) (*Iterator[T, constraint], error) {
+	mergedOption, err := mergeOption(options...)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := bigquery.NewClient(ctx, mergedOption.ProjectId)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	q := client.Query(query)
+	q.Parameters = mergedOption.Parameters
+	it, err := q.Read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if mergedOption.PageToken != "" {
+		it.PageInfo().Token = mergedOption.PageToken
+	}
+	if 0 < mergedOption.MaxSize {
+		it.PageInfo().MaxSize = mergedOption.MaxSize
+	}
+	return &Iterator[T, constraint]{
+		it:      it,
+		maxSize: mergedOption.MaxSize,
+	}, nil
+}
+
+func mergeOption(options ...*Option) (*struct {
+	ProjectId  string
+	Parameters []bigquery.QueryParameter
+	PageToken  string
+	MaxSize    int
+}, error) {
+
+	mergedOption := map[string]interface{}{
+		OptProjectId:  os.Getenv("BQ_GOOGLE_CLOUD_PROJECT"),
+		OptParameters: []bigquery.QueryParameter{},
+		OptPageToken:  "",
+		OptMaxSize:    0,
+	}
+	for _, option := range options {
+		if option != nil {
+			for k, v := range option.values {
+				mergedOption[k] = v
+			}
+		}
+	}
+	projectId, err := getOptionValue[string](mergedOption, OptProjectId)
+	if err != nil {
+		return nil, err
+	}
+	parameters, err := getOptionValue[[]bigquery.QueryParameter](mergedOption, OptParameters)
+	if err != nil {
+		return nil, err
+	}
+	pageToken, err := getOptionValue[string](mergedOption, OptPageToken)
+	if err != nil {
+		return nil, err
+	}
+	maxSize, err := getOptionValue[int](mergedOption, OptMaxSize)
+	if err != nil {
+		return nil, err
+	}
+	return &struct {
+		ProjectId  string
+		Parameters []bigquery.QueryParameter
+		PageToken  string
+		MaxSize    int
+	}{
+		ProjectId:  projectId,
+		Parameters: parameters,
+		PageToken:  pageToken,
+		MaxSize:    maxSize,
+	}, nil
+}
 
 func getOptionValue[T any](m map[string]interface{}, key string) (T, error) {
 	if v, ok := m[key]; !ok || v == nil {
@@ -19,66 +95,5 @@ func getOptionValue[T any](m map[string]interface{}, key string) (T, error) {
 		return cv, nil
 	}
 	var t T
-	return t, errCast
-}
-
-func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, options ...*Option) (*Iterator[T, constraint], error) {
-	projectId, parameters, pageToken, maxSize, err := func() (string, []bigquery.QueryParameter, string, int, error) {
-		mergedOption := map[string]interface{}{
-			optProjectId:  os.Getenv("BQ_GOOGLE_CLOUD_PROJECT"),
-			optParameters: []bigquery.QueryParameter{},
-			optPageToken:  "",
-			optMaxSize:    0,
-		}
-		for _, option := range options {
-			if option != nil {
-				for k, v := range option.values {
-					mergedOption[k] = v
-				}
-			}
-		}
-		projectId, err := getOptionValue[string](mergedOption, optProjectId)
-		if err != nil {
-			return "", []bigquery.QueryParameter{}, "", 0, err
-		}
-		parameters, err := getOptionValue[[]bigquery.QueryParameter](mergedOption, optParameters)
-		if err != nil {
-			return "", []bigquery.QueryParameter{}, "", 0, err
-		}
-		pageToken, err := getOptionValue[string](mergedOption, optPageToken)
-		if err != nil {
-			return "", []bigquery.QueryParameter{}, "", 0, err
-		}
-		maxSize, err := getOptionValue[int](mergedOption, optMaxSize)
-		if err != nil {
-			return "", []bigquery.QueryParameter{}, "", 0, err
-		}
-		return projectId, parameters, pageToken, maxSize, nil
-	}()
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := bigquery.NewClient(ctx, projectId)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	q := client.Query(query)
-	q.Parameters = parameters
-	it, err := q.Read(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if pageToken != "" {
-		it.PageInfo().Token = pageToken
-	}
-	if 0 < maxSize {
-		it.PageInfo().MaxSize = maxSize
-	}
-	return &Iterator[T, constraint]{
-		it:      it,
-		maxSize: maxSize,
-	}, nil
+	return t, ErrCast
 }

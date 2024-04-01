@@ -7,16 +7,16 @@ type Option struct {
 }
 
 const (
-	optProjectId  = "projectId"
-	optParameters = "parameters"
-	optPageToken  = "pageToken"
-	optMaxSize    = "maxSize"
+	OptProjectId  = "projectId"
+	OptParameters = "parameters"
+	OptPageToken  = "pageToken"
+	OptMaxSize    = "maxSize"
 )
 
 func WithProjectId(projectId string) *Option {
 	return &Option{
 		values: map[string]interface{}{
-			optProjectId: projectId,
+			OptProjectId: projectId,
 		},
 	}
 }
@@ -24,7 +24,7 @@ func WithProjectId(projectId string) *Option {
 func WithQueryParameter(parameters []bigquery.QueryParameter) *Option {
 	return &Option{
 		values: map[string]interface{}{
-			optParameters: parameters,
+			OptParameters: parameters,
 		},
 	}
 }
@@ -32,7 +32,7 @@ func WithQueryParameter(parameters []bigquery.QueryParameter) *Option {
 func WitPageToken(pageToken string) *Option {
 	return &Option{
 		values: map[string]interface{}{
-			optPageToken: pageToken,
+			OptPageToken: pageToken,
 		},
 	}
 }
@@ -40,7 +40,7 @@ func WitPageToken(pageToken string) *Option {
 func WitMaxSize(maxSize int) *Option {
 	return &Option{
 		values: map[string]interface{}{
-			optMaxSize: maxSize,
+			OptMaxSize: maxSize,
 		},
 	}
 }

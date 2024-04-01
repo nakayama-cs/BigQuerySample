@@ -7,6 +7,7 @@ import (
 )
 
 var Done = errors.New("done")
+var ErrCast = errors.New("cast error")
 
 type ConstraintProtoMessage[X any] interface {
 	protoreflect.ProtoMessage
