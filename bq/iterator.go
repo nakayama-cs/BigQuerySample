@@ -31,6 +31,6 @@ func (i *Iterator[T, constraint]) Next() (*T, error) {
 	return &v, nil
 }
 
-func (i *Iterator[T, confident]) PageToken() string {
-	return i.it.PageInfo().Token
+func (i *Iterator[T, confident]) PageInfo() *iterator.PageInfo {
+	return i.it.PageInfo()
 }

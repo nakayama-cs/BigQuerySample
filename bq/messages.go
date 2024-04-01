@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"cloud.google.com/go/bigquery"
 )
 
 func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Context, query string, options ...*Option) (*Iterator[T, constraint], error) {
+	s := time.Now()
 	mergedOption, err := mergeOption(options...)
+	e := time.Now()
+	fmt.Println("mergeOption:", e.UnixMicro()-s.UnixMicro())
 	if err != nil {
 		return nil, err
 	}
@@ -20,9 +24,15 @@ func ListMessages[T any, constraint ConstraintProtoMessage[T]](ctx context.Conte
 	}
 	defer client.Close()
 
+	s = time.Now()
 	q := client.Query(query)
+	e = time.Now()
+	fmt.Println("Query:", e.UnixMicro()-s.UnixMicro())
 	q.Parameters = mergedOption.Parameters
+	s = time.Now()
 	it, err := q.Read(ctx)
+	e = time.Now()
+	fmt.Println("Read:", e.UnixMicro()-s.UnixMicro())
 	if err != nil {
 		return nil, err
 	}
